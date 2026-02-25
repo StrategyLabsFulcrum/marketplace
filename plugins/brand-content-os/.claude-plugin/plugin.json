@@ -1,0 +1,12 @@
+{
+  "name": "brand-content-os",
+  "version": "1.0.0",
+  "description": "Brand & Content Operating System — capture brand knowledge, enforce voice consistency, and generate on-brand content across paid ads, email, SMS, Shopify, and social channels. Includes guided brand onboarding, platform-specific prompt templates, and a content multiplier.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "homepage": "https://github.com/strategy-labs/strategy-labs-marketplace",
+  "keywords": ["brand", "content", "marketing", "voice", "ads", "email", "shopify", "ecommerce"],
+  "license": "MIT"
+}

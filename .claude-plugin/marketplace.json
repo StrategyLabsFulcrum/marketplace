@@ -1,0 +1,22 @@
+{
+  "name": "strategy-labs-plugins",
+  "description": "Official plugin marketplace from Strategy Labs — boutique performance marketing tools for eCommerce and lead generation brands.",
+  "owner": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us",
+    "url": "https://strategylabs.us"
+  },
+  "plugins": [
+    {
+      "name": "brand-content-os",
+      "source": "./plugins/brand-content-os",
+      "description": "Brand & Content Operating System — capture brand knowledge, enforce voice consistency, and generate on-brand content across paid ads, email, SMS, Shopify, and social channels.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Strategy Labs"
+      },
+      "keywords": ["brand", "content", "marketing", "voice", "ads", "email", "shopify", "ecommerce"],
+      "license": "MIT"
+    }
+  ]
+}
