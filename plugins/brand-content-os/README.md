@@ -31,7 +31,7 @@ Once brand knowledge is set up, every piece of generated content automatically f
 4. **Start generating** with `/paid-ads`, `/email-sms`, `/shopify-content`, or `/content-multiply`
 5. **Quality check** any content with `/voice-check`
 
-## Multi-User Setup (v2.0)
+## Multi-User Setup
 
 For teams that need shared access to brand files:
 
