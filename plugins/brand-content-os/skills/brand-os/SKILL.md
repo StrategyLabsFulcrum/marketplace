@@ -4,7 +4,7 @@ description: >
   Brand & Content Operating System for managing client brand knowledge and generating on-brand content.
   Use when the user mentions "brand setup", "brand voice", "content generation", "brand guidelines",
   "content strategy", "brand profile", "brand knowledge", "voice guidelines", "content pillars",
-  "brand audit", or wants to create marketing content that follows specific brand rules.
+  "voice check", "brand audit", or wants to create marketing content that follows specific brand rules.
   Also triggers when the user asks about their brand files, positioning, tone, vocabulary,
   or competitive landscape.
 version: 0.1.0
@@ -39,13 +39,56 @@ brand-os/
 └── system-prompt.md          # Auto-assembled AI foundation prompt
 ```
 
-### Alternative: Google Drive Storage
+### Fast.io Remote Storage
 
-If the user prefers Google Drive, brand files can be stored as Google Docs in a shared folder. When using Drive storage, the `platform-config.md` file should note the Drive folder ID. Use the Google Drive MCP tools to fetch content when generating.
+For team collaboration, brand files can sync to a Fast.io workspace using the `/sync-brand-os` command. The sync model works as follows:
+
+- **Fast.io is the source of truth** for shared brand knowledge
+- **`/sync-brand-os pull`** fetches all brand files from Fast.io to the local `brand-os/` directory (run once at session start)
+- **All content generation reads locally** — after pulling, commands read from local files for fast performance
+- **`/sync-brand-os push`** uploads local changes back to Fast.io (run at session end or after editing brand files)
+
+This means the network cost is paid once per session (during pull), not per command. Storage mode is configured in `.brand-os-config.md`.
+
+## Configuration File
+
+An optional `.brand-os-config.md` file controls storage mode and output directories. It sits in the same directory that contains the `brand-os/` folder (one level above brand files). This file is local-only and never synced to Fast.io.
+
+### Config Schema
+
+```markdown
+# Brand OS Configuration
+
+## Storage
+- **mode:** local | fast.io
+- **workspace_id:** [19-digit Fast.io workspace ID, when mode = fast.io]
+- **workspace_name:** [human-readable name]
+
+## Sync
+- **last_pull:** [ISO 8601 timestamp]
+- **last_push:** [ISO 8601 timestamp]
+- **auto_pull_on_start:** true | false
+
+## Output Directories
+- **paid_ads:** paid-ads/
+- **email_sms:** email-sms/
+- **social:** social/
+- **shopify:** shopify/
+- **content_bundles:** content-bundles/
+- **brand_audits:** brand-audits/
+```
+
+### How Commands Use the Config
+
+1. Every content generation command checks for `.brand-os-config.md` as its first step.
+2. If found, it reads the storage mode and output directories.
+3. If `mode` is `fast.io` and `auto_pull_on_start` is `true`, it checks `last_pull`. If stale (>24 hours), it suggests running `/sync-brand-os pull` but never blocks generation.
+4. After generating content, if an output directory is configured, the command auto-saves the content to that directory.
+5. If no config file exists, commands fall back to v1.0 behavior (read locally, present in conversation).
 
 ## Reading Brand Knowledge
 
-Before generating any content, read ALL brand knowledge files from the `brand-os/` directory. If a file is missing or empty, note what's missing and suggest the user run `/brand-setup` to complete it.
+Before generating any content, read ALL brand knowledge files from the `brand-os/` directory. If a file is missing or empty, note what's missing and suggest the user run `/new-brand-setup` to complete it.
 
 ### Priority Loading Order
 

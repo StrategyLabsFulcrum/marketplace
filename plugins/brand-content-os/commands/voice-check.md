@@ -1,20 +1,22 @@
 ---
 description: Review content against brand voice and rewrite to fix violations
-allowed-tools: Read, Write, Edit, Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Edit, Glob, Grep, AskUserQuestion, mcp__72a6dfc4-2caa-4b8c-b086-b5e5ba5e5355__storage, mcp__72a6dfc4-2caa-4b8c-b086-b5e5ba5e5355__upload, mcp__72a6dfc4-2caa-4b8c-b086-b5e5ba5e5355__auth
 argument-hint: "<file path or paste content>"
 ---
 
-# Brand Audit — Voice Review & Rewrite
+# Voice Check — Brand Voice Review & Rewrite
 
 Review any piece of content against the brand's voice guidelines, flag violations, and rewrite to align with the brand identity. This is the quality control command for the Brand & Content OS.
 
 ## Before Auditing
 
+0. **Check configuration**: Look for `.brand-os-config.md` in the working directory (the same directory that contains `brand-os/`). If found, read it to determine storage mode and output directories. If `mode` is `fast.io` and `auto_pull_on_start` is `true`, check `last_pull`. If stale (older than 24 hours or missing), inform the user: "Your local brand files haven't been synced in [X hours/days]. Run `/sync-brand-os pull` to get the latest from Fast.io, or continue with the local copy." Proceed with local files regardless — never block content generation on sync. If no config file is found, continue with default behavior.
+
 1. **Load brand knowledge**: Read these files from `brand-os/`:
    - `voice-guidelines.md` (NEVER list, ALWAYS list, vocabulary, quality filter, tone spectrum)
    - `brand-foundations.md` (positioning, pillars, competitive landscape)
    - `key-messages.md` (preferred phrases and messaging)
-   If missing, suggest running `/brand-setup` first.
+   If missing, suggest running `/new-brand-setup` first.
 
 2. **Get the content to audit**:
    - If `$ARGUMENTS` contains a file path, read that file
@@ -36,7 +38,7 @@ Check the content against each item in the brand's ALWAYS list:
 - Does it reference real scenarios or specifics?
 - Does it include a Brand Recommendation where applicable?
 - Does it have a brand-aligned CTA?
-Mark each ALWAYS rule as ✓ passed or ✗ failed.
+Mark each ALWAYS rule as passed or failed.
 
 ### Step 3: Vocabulary Check
 Cross-reference the content against the brand's vocabulary reference:
@@ -63,7 +65,7 @@ Check if the content could be mistaken for a competitor's:
 ## Output Format
 
 ```
-# Brand Audit Report
+# Voice Check Report
 
 ## Content Reviewed
 [First 50 words of the content or the file name]
@@ -72,12 +74,12 @@ Check if the content could be mistaken for a competitor's:
 
 | Check | Status | Issues Found |
 |-------|--------|-------------|
-| NEVER List | ✓/✗ | [count] violations |
-| ALWAYS List | ✓/✗ | [count] items failed |
-| Vocabulary | ✓/✗ | [count] terms to replace |
-| Tone | ✓/✗ | [notes] |
-| Quality Filter | ✓/✗ | [which questions failed] |
-| Competitive Guard | ✓/✗ | [notes] |
+| NEVER List | pass/fail | [count] violations |
+| ALWAYS List | pass/fail | [count] items failed |
+| Vocabulary | pass/fail | [count] terms to replace |
+| Tone | pass/fail | [notes] |
+| Quality Filter | pass/fail | [which questions failed] |
+| Competitive Guard | pass/fail | [notes] |
 
 ## Detailed Findings
 
@@ -87,7 +89,7 @@ Check if the content could be mistaken for a competitor's:
 | "[word]" | [where in text] | [suggested replacement] |
 
 ### ALWAYS List Failures
-- ✗ [Rule]: [What's missing or wrong]
+- [Rule]: [What's missing or wrong]
 
 ### Vocabulary Swaps
 | Current | Should Be | Reasoning |
@@ -112,10 +114,15 @@ Check if the content could be mistaken for a competitor's:
 - Tone adjusted: [description of tone changes]
 ```
 
+## Auto-Save
+
+After presenting the audit, if `.brand-os-config.md` was found and specifies an output directory for `brand_audits` (default: `brand-audits/`), automatically save the audit report and rewritten version as a markdown file. Use the naming convention: `{content-name}-voice-check-{YYYY-MM-DD}.md`. Overwrite if the file already exists. Inform the user: "Saved to `brand-audits/{filename}`."
+
+If no config file was found, offer to save the rewritten version as a file (current behavior).
+
 ## Follow-Up
 
 After presenting the audit:
 - Ask if the user wants to adjust any of the rewrites
-- Offer to audit additional content
+- Offer to check additional content
 - If many violations were found, suggest reviewing and expanding the brand knowledge files
-- Offer to save the rewritten version as a file

@@ -15,20 +15,32 @@ Once brand knowledge is set up, every piece of generated content automatically f
 
 | Command | Description |
 |---------|-------------|
-| `/brand-setup` | Guided onboarding wizard — captures brand knowledge through interactive questions |
-| `/brand-import` | Parse an existing brand document (upload, paste, or Google Drive) into structured brand files |
+| `/new-brand-setup` | Create a new brand profile — import a document, share a URL, or answer guided questions |
 | `/paid-ads` | Generate Meta Ads and Google Ads content (12 template types) |
 | `/email-sms` | Generate Klaviyo email campaigns and SMS messages (7 template types) |
 | `/shopify-content` | Generate product pages, collection intros, and blog posts |
 | `/content-multiply` | The Multiplier — one product or topic → blog + email + video script + social + carousel |
-| `/brand-audit` | Review any content against brand voice, flag violations, and rewrite |
+| `/voice-check` | Review any content against brand voice, flag violations, and rewrite |
+| `/sync-brand-os` | Sync brand knowledge between local files and Fast.io for team collaboration |
 
 ## Getting Started
 
 1. **Install the plugin** in Claude Cowork
-2. **Run `/brand-setup`** to create your brand profile through guided questions, OR run `/brand-import` if you already have a brand document
-3. **Start generating** with `/paid-ads`, `/email-sms`, `/shopify-content`, or `/content-multiply`
-4. **Quality check** any content with `/brand-audit`
+2. **Run `/new-brand-setup`** — import a brand document, share a URL, or answer guided questions to build your brand profile
+3. **Choose storage**: During setup, you'll be asked whether to store brand files locally or sync to Fast.io for team collaboration
+4. **Start generating** with `/paid-ads`, `/email-sms`, `/shopify-content`, or `/content-multiply`
+5. **Quality check** any content with `/voice-check`
+
+## Multi-User Setup (v2.0)
+
+For teams that need shared access to brand files:
+
+- During `/new-brand-setup`, choose **Fast.io** as the storage mode and provide a workspace ID
+- A `.brand-os-config.md` file is created to track sync state and output directories
+- Run **`/sync-brand-os pull`** at the start of each session to get the latest brand files
+- Run **`/sync-brand-os push`** after editing brand knowledge to share changes with the team
+- Generated content (ads, emails, etc.) is auto-saved to organized output directories (`paid-ads/`, `email-sms/`, `shopify/`, `content-bundles/`, `brand-audits/`)
+- Clients can access brand files through Fast.io Shares with view or edit permissions
 
 ## Brand Knowledge Files
 
@@ -43,7 +55,7 @@ Brand knowledge is stored in a `brand-os/` folder with these files:
 | `platform-config.md` | Social channels, tech stack, team sign-offs |
 | `system-prompt.md` | Auto-assembled AI foundation prompt (generated from all other files) |
 
-These files can also be stored in Google Drive for team collaboration.
+These files can sync to a Fast.io workspace for team collaboration using `/sync-brand-os`.
 
 ## Content Templates
 
@@ -61,4 +73,5 @@ The plugin includes 25+ prompt templates covering:
 - **More brand detail = better output.** The richer your brand knowledge files, the more on-brand the generated content will be.
 - **Expand over time.** Start brief, then add detail as you use the plugin and notice where content could be more specific.
 - **Edit brand files directly.** You can open and edit any file in the `brand-os/` folder to refine your brand knowledge.
-- **Use `/brand-audit` regularly.** It's great for reviewing content from any source — not just content this plugin generated.
+- **Use `/voice-check` regularly.** It's great for reviewing content from any source — not just content this plugin generated.
+- **Run `/sync-brand-os pull` at session start** when working with a team to ensure you have the latest brand files from Fast.io.

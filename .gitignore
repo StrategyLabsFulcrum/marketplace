@@ -12,4 +12,11 @@ Thumbs.db
 node_modules/
 
 # Client brand data (should never be committed)
-brand-os/
+# Matches top-level brand-os/ directories but not skills/brand-os/ inside the plugin
+/brand-os/
+**/brand-os/brand-foundations.md
+**/brand-os/voice-guidelines.md
+**/brand-os/content-pillars.md
+**/brand-os/key-messages.md
+**/brand-os/platform-config.md
+**/brand-os/system-prompt.md

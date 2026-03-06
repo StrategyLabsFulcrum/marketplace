@@ -1,6 +1,6 @@
 ---
 description: Generate Klaviyo email campaigns and SMS messages using brand knowledge
-allowed-tools: Read, Write, Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Glob, Grep, AskUserQuestion, mcp__72a6dfc4-2caa-4b8c-b086-b5e5ba5e5355__storage, mcp__72a6dfc4-2caa-4b8c-b086-b5e5ba5e5355__upload, mcp__72a6dfc4-2caa-4b8c-b086-b5e5ba5e5355__auth
 argument-hint: "<email type or product name>"
 ---
 
@@ -10,7 +10,9 @@ Generate on-brand email campaigns and SMS messages. Automatically applies brand 
 
 ## Before Generating
 
-1. **Load brand knowledge**: Read all files from the `brand-os/` directory. If missing, suggest running `/brand-setup` first.
+0. **Check configuration**: Look for `.brand-os-config.md` in the working directory (the same directory that contains `brand-os/`). If found, read it to determine storage mode and output directories. If `mode` is `fast.io` and `auto_pull_on_start` is `true`, check `last_pull`. If stale (older than 24 hours or missing), inform the user: "Your local brand files haven't been synced in [X hours/days]. Run `/sync-brand-os pull` to get the latest from Fast.io, or continue with the local copy." Proceed with local files regardless — never block content generation on sync. If no config file is found, continue with default behavior.
+
+1. **Load brand knowledge**: Read all files from the `brand-os/` directory. If missing, suggest running `/new-brand-setup` first.
 2. **Load the system prompt**: Read `brand-os/system-prompt.md` as foundational context.
 3. **Load references**:
    - `${CLAUDE_PLUGIN_ROOT}/skills/brand-os/references/platform-prompts.md` (Email and SMS sections)
@@ -91,6 +93,12 @@ B: [Option B]
 ---
 **Brand Voice Check**: ✓ No NEVER list violations
 ```
+
+## Auto-Save
+
+After presenting the content, if `.brand-os-config.md` was found and specifies an output directory for `email_sms` (default: `email-sms/`), automatically save the generated content as a markdown file. Use the naming convention: `{product-or-topic}-{type}-{YYYY-MM-DD}.md` (e.g., `radius-rods-welcome-email-2026-03-06.md` or `march-newsletter-2026-03-06.md`). Overwrite if the file already exists. Inform the user: "Saved to `email-sms/{filename}`."
+
+If no config file was found, offer to save as a markdown file (current behavior).
 
 ## Follow-Up
 

@@ -1,7 +1,7 @@
 {
   "name": "brand-content-os",
-  "version": "1.0.0",
-  "description": "Brand & Content Operating System — capture brand knowledge, enforce voice consistency, and generate on-brand content across paid ads, email, SMS, Shopify, and social channels. Includes guided brand onboarding, platform-specific prompt templates, and a content multiplier.",
+  "version": "1.1.0",
+  "description": "Brand & Content Operating System — capture brand knowledge, enforce voice consistency, and generate on-brand content across paid ads, email, SMS, Shopify, and social channels. Includes guided brand onboarding, platform-specific prompt templates, content multiplier, Fast.io team sync, and organized output directories.",
   "author": {
     "name": "Strategy Labs",
     "email": "scott@strategylabs.us"
