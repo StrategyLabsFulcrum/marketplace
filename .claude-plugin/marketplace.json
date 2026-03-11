@@ -17,6 +17,17 @@
       },
       "keywords": ["brand", "content", "marketing", "voice", "ads", "email", "shopify", "ecommerce"],
       "license": "MIT"
+    },
+    {
+      "name": "customer-driven-optimizations",
+      "source": "./plugins/customer-driven-optimizations",
+      "description": "Analyze recorded customer phone calls to extract competitive intelligence, identify site optimization opportunities, map customer journeys, and generate a deployable HTML dashboard. Supports both audio files and pre-made transcripts. Integrates with Brand Content OS for brand context.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Strategy Labs"
+      },
+      "keywords": ["phone calls", "call analysis", "customer intelligence", "competitor analysis", "customer journey", "site optimization", "dashboard", "voice of customer", "transcription"],
+      "license": "MIT"
     }
   ]
 }

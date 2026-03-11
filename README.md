@@ -7,6 +7,7 @@ Official plugin marketplace from [Strategy Labs](https://strategylabs.us) — bo
 | Plugin | Description | Version |
 |--------|-------------|---------|
 | **brand-content-os** | Brand & Content Operating System — capture brand knowledge, enforce voice consistency, and generate on-brand content across paid ads, email, SMS, Shopify, and social channels. Includes Fast.io team sync and organized output directories. | 1.1.0 |
+| **customer-driven-optimizations** | Analyze recorded customer phone calls to extract competitive intelligence, identify site optimization opportunities, map customer journeys, and generate a deployable HTML dashboard. Supports both audio files and pre-made transcripts. Integrates with Brand Content OS for brand context. | 1.0.0 |
 
 ## Quick Start
 
