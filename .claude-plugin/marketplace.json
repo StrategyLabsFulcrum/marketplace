@@ -21,12 +21,23 @@
     {
       "name": "customer-driven-optimizations",
       "source": "./plugins/customer-driven-optimizations",
-      "description": "Analyze recorded customer phone calls to extract competitive intelligence, identify site optimization opportunities, map customer journeys, and generate a deployable HTML dashboard. Supports both audio files and pre-made transcripts. Integrates with Brand Content OS for brand context.",
+      "description": "Analyze recorded customer phone calls to extract competitive intelligence, identify site optimization opportunities, map customer journeys, and generate a deployable HTML dashboard. Supports both audio files and pre-made transcripts. Integrates with Brand Content OS for brand context. Includes frontend-design skill for production-grade dashboard UI.",
+      "version": "1.1.0",
+      "author": {
+        "name": "Strategy Labs"
+      },
+      "keywords": ["phone calls", "call analysis", "customer intelligence", "competitor analysis", "customer journey", "site optimization", "dashboard", "voice of customer", "transcription", "frontend design"],
+      "license": "MIT"
+    },
+    {
+      "name": "local-business-marketing-os",
+      "source": "./plugins/local-business-marketing-os",
+      "description": "Full marketing operating system for local restaurants and hospitality businesses. Includes brand onboarding, review responses, email/SMS campaigns, weekly social content briefs, digital asset organization, and inbox management.",
       "version": "1.0.0",
       "author": {
         "name": "Strategy Labs"
       },
-      "keywords": ["phone calls", "call analysis", "customer intelligence", "competitor analysis", "customer journey", "site optimization", "dashboard", "voice of customer", "transcription"],
+      "keywords": ["restaurant", "marketing", "email", "sms", "reviews", "social media", "content", "hospitality", "local business", "klaviyo", "asset management", "inbox"],
       "license": "MIT"
     }
   ]

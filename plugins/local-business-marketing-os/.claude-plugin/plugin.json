@@ -1,0 +1,23 @@
+{
+  "name": "local-business-marketing-os",
+  "version": "1.0.0",
+  "description": "Full marketing operating system for local restaurants and hospitality businesses. Includes brand onboarding, review responses, email/SMS campaigns, weekly social content briefs, digital asset organization, and inbox management. Run brand-setup first to configure for your business.",
+  "author": {
+    "name": "Strategy Labs"
+  },
+  "keywords": [
+    "restaurant",
+    "marketing",
+    "email",
+    "sms",
+    "reviews",
+    "social media",
+    "content",
+    "hospitality",
+    "local business",
+    "klaviyo",
+    "vista social",
+    "asset management",
+    "inbox"
+  ]
+}

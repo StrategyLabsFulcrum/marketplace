@@ -24,7 +24,7 @@ Build a 4-page static HTML dashboard from the structured analysis files in `cust
 
 ## Design System
 
-All pages share a consistent design system defined in the design-system reference. Key principles:
+All pages share a consistent design system defined in the design-system reference. For elevated visual quality, apply the principles from the `frontend-design` skill — choose intentional typography, commit to a cohesive aesthetic, and avoid generic AI aesthetics. Key principles:
 
 - **Color palette**: Dark navy (`#1B2A3D`), burnt orange accent (`#D4782F`), warm beige background (`#F5F0EB`), white cards.
 - **Typography**: System font stack (`-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`).
