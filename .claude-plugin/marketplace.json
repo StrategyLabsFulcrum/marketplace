@@ -30,6 +30,17 @@
       "license": "MIT"
     },
     {
+      "name": "competitive-landscape",
+      "source": "./plugins/competitive-landscape",
+      "description": "Track competitors, analyze their ad strategies across Meta and Google, map customer journeys on competitor sites, and generate competitive intelligence reports and deployable dashboards.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Strategy Labs"
+      },
+      "keywords": ["competitor analysis", "competitive intelligence", "ad analysis", "meta ads", "google ads", "customer journey", "market research", "brand strategy"],
+      "license": "MIT"
+    },
+    {
       "name": "local-business-marketing-os",
       "source": "./plugins/local-business-marketing-os",
       "description": "Full marketing operating system for local restaurants and hospitality businesses. Includes brand onboarding, review responses, email/SMS campaigns, weekly social content briefs, digital asset organization, and inbox management.",

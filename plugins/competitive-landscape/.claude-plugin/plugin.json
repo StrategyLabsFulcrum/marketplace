@@ -1,0 +1,23 @@
+{
+  "name": "competitive-landscape",
+  "version": "1.0.0",
+  "description": "Track competitors, analyze their ad strategies across Meta and Google, map customer journeys on competitor sites, and generate competitive intelligence reports. Provides a complete toolkit for understanding and outmaneuvering the competitive landscape any brand operates in.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "homepage": "https://strategylabs.us",
+  "keywords": [
+    "competitor analysis",
+    "competitive intelligence",
+    "ad analysis",
+    "meta ads",
+    "google ads",
+    "customer journey",
+    "market research",
+    "brand strategy",
+    "competitive positioning",
+    "ad trends"
+  ],
+  "license": "MIT"
+}
