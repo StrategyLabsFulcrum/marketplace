@@ -1,0 +1,22 @@
+{
+  "name": "lead-list-builder",
+  "version": "1.0.0",
+  "description": "Lead List Builder — research and generate targeted lead lists, draft personalized outreach, track lead status, and deploy interactive dashboards. Uses web research to find leads by type, title, geography, and industry. Integrates with Brand Knowledge Center for brand-aware prospecting.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": [
+    "lead generation",
+    "prospecting",
+    "outreach",
+    "lead list",
+    "sales",
+    "business development",
+    "lead tracking",
+    "dashboard",
+    "CRM"
+  ],
+  "license": "MIT",
+  "homepage": "https://strategylabs.us"
+}
