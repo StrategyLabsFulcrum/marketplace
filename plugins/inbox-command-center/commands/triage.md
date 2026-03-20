@@ -11,6 +11,7 @@ Triggers on: "check my email", "triage", "what did I miss", "any new emails", "i
 3. Load VIP contacts from `inbox-command-center/vip-contacts.md`.
 4. Load voice profile from `inbox-command-center/voice-profile.md` (needed for drafting).
 5. If Brand Knowledge Center exists, load `brand-identity.md` for brand-voice drafting.
+6. **Monthly VIP check:** Read `last_vip_review` from config. If 30+ days since last review, trigger the Monthly VIP Review prompt (from setup-wizard.md) before starting triage. Update the date after review or skip.
 
 ---
 

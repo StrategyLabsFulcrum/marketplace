@@ -265,6 +265,38 @@ For each VIP, capture:
 
 Save to `inbox-command-center/vip-contacts.md`.
 
+### Monthly VIP Review
+
+Set a recurring monthly review prompt. On the first triage of each month, surface:
+
+```
+📋 MONTHLY VIP REVIEW — It's been 30 days since your last review.
+
+CURRENT VIPs: [count] contacts
+
+ACTIVITY SINCE LAST REVIEW:
+├── Most active: [Name] — [X] emails exchanged
+├── Least active: [Name] — 0 emails in 30 days
+├── New frequent contacts not on VIP list:
+│   ├── [Name] — [X] emails, avg response time [X] hours
+│   └── [Name] — [X] emails
+│
+├── Inactive VIPs (0 emails in 30 days):
+│   ├── [Name] — still a VIP? [Keep / Remove]
+│   └── [Name] — still a VIP? [Keep / Remove]
+
+SUGGESTED ADDITIONS:
+├── [Name] — [X] emails this month, you respond within [X] hours
+│   Add as VIP? [Yes — relationship: ___] [No]
+
+SUGGESTED CHANGES:
+├── [Name] — priority notes still accurate? [Yes / Edit]
+
+[Update list / Skip until next month]
+```
+
+The monthly review ensures the VIP list stays current as relationships evolve — new clients, departing team members, seasonal vendors, etc. Save the last review date in `inbox-command-center/config.md` to track cadence.
+
 ---
 
 ## Step 7: Set Up Task Tracker & Scheduled Briefing
