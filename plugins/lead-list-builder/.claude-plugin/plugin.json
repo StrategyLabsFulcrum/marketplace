@@ -1,7 +1,7 @@
 {
   "name": "lead-list-builder",
-  "version": "1.0.0",
-  "description": "Lead List Builder — research and generate targeted lead lists, draft personalized outreach, track lead status, and deploy interactive dashboards. Uses web research to find leads by type, title, geography, and industry. Integrates with Brand Knowledge Center for brand-aware prospecting.",
+  "version": "2.0.0",
+  "description": "Lead List Builder — complete lead generation and pipeline management system. Research leads, draft personalized outreach, track status, deploy interactive dashboards, connect CRM/email/calendar/social tools, automate new lead discovery, and manage daily/weekly/monthly workflow with alerts, reviews, and reports. Integrates with Brand Knowledge Center.",
   "author": {
     "name": "Strategy Labs",
     "email": "scott@strategylabs.us"

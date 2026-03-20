@@ -1,96 +1,151 @@
 # Lead List Builder
 
-Research, generate, and manage targeted lead lists with personalized outreach, status tracking, and interactive dashboards. Built by Strategy Labs.
+A complete lead generation and pipeline management system — from initial research through ongoing discovery, outreach, tracking, reporting, and tool integrations. Built by Strategy Labs.
 
 ## What It Does
 
-The Lead List Builder uses web research to find real leads matching your brand, industry, and target criteria. It generates structured lead lists, drafts personalized outreach messages, tracks lead status through a pipeline, and deploys interactive HTML dashboards for visualizing your prospecting efforts.
+The Lead List Builder uses web research to find real leads, generates structured lists, drafts personalized outreach, tracks leads through a pipeline, discovers new leads automatically, connects to your CRM/email/calendar/social tools, and provides daily/weekly/monthly workflow management with interactive dashboards.
 
 ## Commands
 
+### Setup & Research
 | Command | Description |
 |---------|-------------|
-| `/build-lead-list` | Full wizard: brand context → lead types → geography → research → generate list + dashboard |
+| `/build-lead-list` | Full wizard: brand context → tool connections → lead types → geography → research → generate list + dashboard |
+| `/connect-tools` | Configure integrations with CRM, email, calendar, LinkedIn, Facebook, Meta Ads, etc. |
+
+### Outreach & Tracking
+| Command | Description |
+|---------|-------------|
 | `/lead-outreach` | Draft personalized outreach messages per lead type and channel with follow-up sequences |
 | `/update-leads` | Track status, add notes, find net-new leads, refresh stale leads, bulk updates |
 | `/lead-dashboard` | Generate or regenerate an interactive HTML dashboard for any lead list |
 
+### Workflow & Reporting
+| Command | Description |
+|---------|-------------|
+| `/daily-alerts` | Morning briefing: overdue follow-ups, new responses, proximity opportunities, scheduled meetings |
+| `/weekly-review` | Pipeline performance: movement, velocity, wins/losses, stale leads, recommended actions |
+| `/monthly-report` | Conversion metrics, channel analysis, strategy recommendations, quarterly ROI audit |
+
+### Growth
+| Command | Description |
+|---------|-------------|
+| `/lead-discovery` | Automated research for net-new leads with deduplication, smart scoring, and enrichment |
+
 ## Getting Started
 
 1. **Install the plugin** in Claude Cowork
-2. **(Recommended)** Run the Brand Knowledge Center plugin first to set up your brand profile
-3. **Run `/build-lead-list`** to start the research wizard
-4. **Review leads** as they're found, adjust relevance, and confirm
-5. **Run `/lead-outreach`** to draft personalized messages
-6. **Run `/lead-dashboard`** to generate a visual tracker
-7. **Use `/update-leads`** ongoing to manage your pipeline
+2. **(Recommended)** Run the Brand Knowledge Center plugin first
+3. **Run `/build-lead-list`** — walks through the full setup:
+   - Load brand context
+   - Connect your tools (CRM, email, calendar, social)
+   - Define lead types and geography
+   - Research and generate leads
+   - Set up automated discovery
+4. **Run `/daily-alerts`** each morning for your action plan
+5. **Run `/weekly-review`** every Monday to track performance
+6. **Run `/lead-discovery`** weekly to grow your list
 
-## Lead Types
+## Workflow Cadence
 
-The plugin suggests lead types based on your brand and business model:
+| Frequency | Command | Time | What Happens |
+|-----------|---------|------|--------------|
+| Daily | `/daily-alerts` | 5-10 min | Follow-up reminders, new responses, proximity drop-ins, meeting prep |
+| After each action | `/update-leads` | 30 sec | Log calls, emails, meetings, status changes |
+| Weekly | `/weekly-review` | 15-20 min | Pipeline review, velocity metrics, plan the week |
+| Weekly | `/lead-discovery` | 10 min | Find new leads, detect changes, grow the list |
+| Bi-weekly | `/lead-outreach` | 10 min | Batch draft outreach messages |
+| Monthly | `/monthly-report` | 30 min | Conversion metrics, channel analysis, strategy |
+| Quarterly | `/monthly-report` | 1 hour | Full ROI audit, expansion planning, pipeline health |
 
-- **Retail/Wholesale Buyers** — Stores and shops to carry your products
-- **Influencers/Creators** — Social media partnerships and content
-- **Media/Press** — Journalists and bloggers for coverage
-- **Partnership Leads** — Complementary brands for collaboration
-- **Event/Pop-up Organizers** — In-person sales and visibility
-- **Corporate/Gift Buyers** — Bulk and custom orders
-- **Custom types** — Define your own with specific titles and criteria
+## Lead Lifecycle
 
-## Research Sources
+```
+SETUP → DISCOVER → QUALIFY → OUTREACH → FOLLOW UP → CONVERT → NURTURE → EXPAND
+  ↑                                                       |              |
+  |                     Referral chains ←─────────────────┘              |
+  └──────────────── New lead types / expanded geo ←──────────────────────┘
+```
 
-The plugin searches across public sources:
-- Google Search (targeted queries by title, industry, location)
-- LinkedIn (public profiles)
-- Google Maps (local businesses)
-- Instagram (influencers and creators)
-- Industry directories and trade associations
-- Press databases and media sites
+## Lead Discovery
+
+The plugin continuously grows your list by monitoring:
+- **New business filings** — Companies opening in your area
+- **Professional directories** — New attorneys, adjusters, professionals
+- **Franchise announcements** — New SERVPRO, PuroClean, etc. locations
+- **Firm website changes** — New hires at target companies
+- **Google Maps** — Recently added businesses in target categories
+- **Referral chains** — Introductions from converted leads
+
+All new leads are deduplicated, scored, enriched, and presented for approval before being added.
+
+## Tool Connections
+
+Connect your existing tools for seamless lead management:
+
+| Priority | Tools | Integration Type |
+|----------|-------|-----------------|
+| Must Have | CRM (House Call Pro, HubSpot, Salesforce) | Auto CSV export |
+| Must Have | Email (Gmail, Outlook, Klaviyo) | Outreach draft formatting |
+| Must Have | Calendar (Google, Outlook, Apple) | .ics meeting generation |
+| High Value | LinkedIn, Facebook | Profile tracking + outreach drafts |
+| High Value | Phone/SMS | Click-to-call + scripts |
+| Nice to Have | Meta Ads, Google Ads | Audience export + source tracking |
+| Nice to Have | QuickBooks | Revenue tracking for ROI |
+
+Dashboard action buttons connect directly to your tools: `[Email] [Call] [LinkedIn] [Facebook] [Schedule] [SMS]`
+
+## Dashboard Features
+
+The interactive HTML dashboard includes:
+- **Morning alerts** — Follow-ups due, responses, proximity leads
+- **Pipeline funnel** — Visual flow from discovery through conversion
+- **Filter bar** — By type, location, relevance, status, channel + full-text search
+- **Sortable lead table** — Click to expand for full details, outreach history, action buttons
+- **Outreach tracker** — Follow-ups due, recent activity, stale alerts
+- **CSV export** — Download filtered views for CRM import
+
+## Reports
+
+- **Weekly:** Pipeline movement, velocity metrics, channel performance, recommended actions
+- **Monthly:** Conversion rates, ROI analysis, strategy recommendations, discovery summary
+- **Quarterly:** Full audit — ROI, win/loss patterns, list health, expansion planning
+
+## Integration
+
+Works best with the **Brand Knowledge Center** plugin. Brand context enables:
+- Smarter lead type suggestions
+- Outreach messages in brand voice
+- Channel recommendations aligned to your platforms
+- Tool auto-detection from your digital ecosystem
 
 ## Output Structure
 
 ```
 lead-lists/
-├── [list-name].csv                    # Full structured data (CRM-importable)
-├── [list-name].md                     # Human-readable lead details
-├── [list-name]-outreach.md            # Drafted outreach messages + follow-up sequences
-└── [list-name]-dashboard.html         # Interactive visual dashboard
+├── [list-name].csv                     # Full lead data (CRM-importable)
+├── [list-name].md                      # Human-readable lead details
+├── [list-name]-outreach.md             # Outreach drafts + follow-up sequences
+├── [list-name]-dashboard.html          # Interactive dashboard
+├── .config/
+│   ├── connections.md                  # Tool integration settings
+│   ├── discovery-settings.md           # Discovery frequency + sources
+│   └── discovery-log.md               # Discovery run history
+├── .exports/
+│   ├── [crm]-import.csv               # CRM-formatted export
+│   ├── meta-audience.csv              # Meta Custom Audience export
+│   └── events/                         # .ics calendar files
+└── reports/
+    ├── weekly-[date].md               # Weekly review reports
+    └── monthly-[month]-[year].md      # Monthly/quarterly reports
 ```
-
-## Lead Pipeline
-
-Each lead moves through a tracked pipeline:
-
-```
-Not Started → Drafted → Sent → Responded → Converted
-                                    ↘ Declined
-                         ↘ Stale (30+ days no response)
-```
-
-## Dashboard Features
-
-The interactive HTML dashboard includes:
-- **Summary cards** — Total leads, by type, by status, pipeline funnel
-- **Filter bar** — Filter by type, location, relevance, status, channel + full-text search
-- **Sortable lead table** — Click to expand details, outreach notes, and suggested messages
-- **Outreach tracker** — Follow-ups due, recent activity, stale lead alerts
-- **CSV export** — Download filtered views for import into other tools
-
-Zero dependencies — single HTML file that works in any browser.
-
-## Integration
-
-Works best with the **Brand Knowledge Center** plugin. Brand context enables:
-- Smarter lead type suggestions based on your business model
-- Outreach messages that match your brand voice
-- Channel recommendations aligned to your active platforms
-- Positioning-aware messaging that highlights your differentiators
 
 ## Tips
 
-- **Start with Brand Knowledge Center** for better targeting and outreach messaging
-- **Review leads in batches** — confirm each lead type before moving to the next
-- **Use the dashboard daily** — open the HTML file to track follow-ups and pipeline status
-- **Run `/update-leads` weekly** to mark status changes and discover net-new leads
-- **Net-new leads are deduplicated** — the plugin checks against your existing list before adding
-- **Export CSV to your CRM** — the CSV format is compatible with HubSpot, Salesforce, Zoho, and most CRM import tools
+- **Start with Brand Knowledge Center** for auto-detected tools and brand-voice outreach
+- **Run `/daily-alerts` every morning** — it takes 5 minutes and keeps your pipeline moving
+- **Drop-in visits win** — if you're already in the area, stop by. In-person converts at 2-3x email
+- **Discovery keeps the list fresh** — run weekly to catch new businesses, hires, and opportunities
+- **Track job values on converted leads** — this powers the quarterly ROI analysis
+- **Export to your CRM regularly** — the CSV auto-updates, just import after each update cycle

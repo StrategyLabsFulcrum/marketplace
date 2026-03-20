@@ -42,7 +42,45 @@ Ask:
 
 ---
 
-## Step 2: Lead Types
+## Step 2: Tool Connections
+
+Run the tool connections audit. This can also be done separately with `/connect-tools`.
+
+### Auto-Detect
+
+If `digital-ecosystem.md` was loaded in Step 1, present detected tools:
+
+> "Based on your Brand Knowledge Center, I see you're using:
+> - **CRM:** [detected]
+> - **Email/SMS:** [detected]
+> - **Advertising:** [detected]
+> - **Social:** [detected]
+>
+> I'll configure these for lead management. You can adjust anytime with `/connect-tools`."
+
+### Quick Setup
+
+For each detected tool, auto-configure with default mappings. Ask about tools not detected:
+- "What calendar do you use?" (Google Calendar, Outlook, Apple Calendar)
+- "Do you have LinkedIn for outreach?" (URL)
+
+### Channel Routing
+
+Based on detected tools and lead types (once selected in Step 3), configure outreach channel routing:
+
+| Lead Type | Primary | Secondary | Fallback |
+|-----------|---------|-----------|----------|
+| [auto-suggested based on lead type] | | | |
+
+### Save Config
+
+Save connections to `lead-lists/.config/connections.md` and create export directories.
+
+> "Tools connected. Your dashboard will include action buttons for: [list connected tools]. Outreach drafts will be formatted for your preferred channels."
+
+---
+
+## Step 3: Lead Types
 
 Based on brand context, suggest lead type categories. Tailor suggestions to the brand's business model.
 
@@ -65,7 +103,7 @@ For each selected lead type, ask for specifics:
 
 ---
 
-## Step 3: Geographic Rules
+## Step 4: Geographic Rules
 
 Ask the user to define their target geography:
 
@@ -85,7 +123,7 @@ For each option, gather specifics:
 
 ---
 
-## Step 4: Additional Filters
+## Step 5: Additional Filters
 
 Ask optional qualifying questions:
 
@@ -97,7 +135,7 @@ Ask optional qualifying questions:
 
 ---
 
-## Step 5: Research
+## Step 6: Research
 
 Execute web research based on all criteria gathered. For each lead type:
 
@@ -137,7 +175,7 @@ After researching each lead type, present the batch for review before moving to 
 
 ---
 
-## Step 6: Outreach Planning
+## Step 7: Outreach Planning
 
 After all leads are researched and confirmed, for each lead:
 
@@ -158,7 +196,7 @@ If the user wants drafts now, generate 2-3 template variations per lead type (se
 
 ---
 
-## Step 7: Generate Files
+## Step 8: Generate Files
 
 Create the following files in `lead-lists/`:
 
@@ -176,7 +214,7 @@ Ask the user for a list name, or suggest one based on context:
 
 ---
 
-## Step 8: Dashboard
+## Step 9: Dashboard
 
 Ask the user:
 > "Want me to generate an interactive dashboard for this lead list? It'll let you filter, search, and track status visually."
@@ -185,7 +223,23 @@ If yes, generate `lead-lists/[list-name]-dashboard.html` per the dashboard spec 
 
 ---
 
-## Step 9: Completion
+## Step 10: Discovery Setup
+
+Configure automated lead discovery for ongoing list growth:
+
+> "Want to set up automated lead discovery? This will search for new leads on a recurring basis."
+
+If yes, run the discovery setup from `/lead-discovery`:
+- Set frequency (weekly recommended)
+- Configure discovery sources
+- Initialize discovery log
+
+> "Discovery configured. I'll search for net-new leads [weekly/bi-weekly/monthly].
+> Run `/lead-discovery` anytime to search manually, or `/daily-alerts` will remind you when discovery is due."
+
+---
+
+## Step 11: Completion
 
 Present the final summary:
 
@@ -209,7 +263,11 @@ Files generated:
 Next steps:
 - Review leads and adjust relevance scores if needed
 - Run /lead-outreach to draft personalized messages
-- Run /update-leads to track status or add new leads
+- Run /daily-alerts each morning for your action plan
+- Run /weekly-review every Monday for pipeline performance
+- Run /lead-discovery to find new leads (auto-runs per your schedule)
+- Run /monthly-report for conversion metrics and strategy
 - Open the dashboard HTML to filter and search interactively
-- Import the CSV into your CRM or email tool
+- Import the CRM export into [CRM name]
+- Run /connect-tools to modify integrations anytime
 ```
