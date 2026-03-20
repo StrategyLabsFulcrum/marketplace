@@ -1,8 +1,8 @@
 # Triage
 
-The core daily command — pulls unread emails, Slack messages, and calendar events, applies rules, categorizes everything, and presents in prioritized batches with inline actions.
+The core daily command — pulls unread emails, Slack messages, iMessages, and calendar events, applies rules, categorizes everything, and presents in prioritized batches with inline actions.
 
-Triggers on: "check my email", "triage", "what did I miss", "any new emails", "inbox", "check my messages", "clean up my inbox"
+Triggers on: "check my email", "triage", "what did I miss", "any new emails", "inbox", "check my messages", "check my texts", "check iMessage", "clean up my inbox"
 
 ## Before Starting
 
@@ -11,7 +11,9 @@ Triggers on: "check my email", "triage", "what did I miss", "any new emails", "i
 3. Load VIP contacts from `inbox-command-center/vip-contacts.md`.
 4. Load voice profile from `inbox-command-center/voice-profile.md` (needed for drafting).
 5. If Brand Knowledge Center exists, load `brand-identity.md` for brand-voice drafting.
-6. **Monthly VIP check:** Read `last_vip_review` from config. If 30+ days since last review, trigger the Monthly VIP Review prompt (from setup-wizard.md) before starting triage. Update the date after review or skip.
+6. **Version check:** Compare `Plugin Version` in config against current plugin version. If updated, show the update briefing (see SKILL.md → Plugin Update Notifications) before starting triage. Walk through new feature setup if the user chooses.
+7. **Pending update check:** If `pending_update_setup` is set in config, show a brief reminder: "You have new features from [version] that need setup. Say 'set up updates' to configure." (stops after 3 reminders)
+8. **Monthly VIP check:** Read `last_vip_review` from config. If 30+ days since last review, trigger the Monthly VIP Review prompt (from setup-wizard.md) before starting triage. Update the date after review or skip.
 
 ---
 
@@ -52,6 +54,14 @@ Search for:
 - DMs to the user (unread)
 - @mentions in priority channels
 - Messages in priority channels since last check
+
+### iMessage (if connected)
+
+Pull unread iMessage conversations via macOS AppleScript/Shortcuts:
+- Unread 1:1 conversations since last triage
+- Unread group chat messages since last triage
+- Messages from VIP contacts (always surface)
+- Match phone numbers/emails to VIP contact list and address book for display names
 
 ### Other Messaging Platforms (if connected)
 
@@ -166,6 +176,21 @@ Annie posted the weekly metrics report. Revenue up 12% WoW.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+💬 iMESSAGE (2 items)
+
+[#10] 🔴 — Kory Davis
+"Hey can you send me the updated contract?
+Client is asking for it today"
+
+→ [Draft Reply] [Remind Me] [Mark Read]
+
+[#11] 🟡 — Family Group Chat
+Mom shared a photo and asked about weekend plans.
+
+→ [Draft Reply] [Mark Read] [Skip]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 📅 CALENDAR — Today
 ├── ❓ 10:00 AM — "Vendor Review" (unresponded — from Sarah Kim)
 ├── ✅ 2:00 PM — "Client Sync" (Bryan Howell — confirmed)
@@ -181,7 +206,8 @@ Annie posted the weekly metrics report. Revenue up 12% WoW.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Give me your calls — e.g. "1: draft, 2: remind tomorrow 9am, 3: read, 4-7: delete, 8: draft, 9: read, C1: accept"
+Give me your calls — e.g. "1: draft, 2: remind tomorrow 9am, 3: read, 4-7: delete, 8: draft, 9: read, 10: draft, 11: skip, C1: accept"
+(Tip: add "via imessage", "via slack", or "via channel" to any remind action to override your default reminder channel)
 ```
 
 ---
@@ -211,10 +237,26 @@ For each `draft`:
 6. Only save after approval
 
 ### Remind Actions
-For each `remind [time]`:
+For each `remind [time]` or `remind [time] via [channel]`:
 1. Add row to task tracker Google Sheet
 2. Create Google Calendar event with context
-3. Confirm: "✓ T017 created — remind you about Jim's projections tomorrow at 9am"
+3. Schedule reminder delivery via the user's configured channel (Slack channel, Slack DM, or iMessage) — or the channel specified with `via imessage` / `via slack` / `via channel`
+4. If delivering to Slack channel: post a formatted reminder message to the configured channel (e.g., `#inbox-reminders`) at the scheduled time
+5. If delivering to iMessage: send a formatted iMessage to the user at the scheduled time
+6. Confirm: "✓ T017 created — remind you about Jim's projections tomorrow at 9am via [channel]"
+
+### Standalone Remind (outside triage)
+Users can create reminders at any time without being in a triage session:
+
+> "Remind me to follow up with Joel about wholesale pricing tomorrow at 2pm"
+> "Set a reminder for Friday 9am to send the updated contract to Kory"
+> "Remind me every Monday at 9am to check the client dashboard"
+
+Process:
+1. Parse task description, time, and any recurrence pattern
+2. Add to task tracker + calendar + schedule delivery via configured channel
+3. For recurring reminders: store the recurrence pattern, auto-schedule next instance after each fires
+4. Confirm: "✓ T018 created — I'll remind you to [task] at [time] via [channel]"
 
 ### Delegate Actions
 For each `delegate [name]`:
@@ -253,6 +295,7 @@ Processed: [X] messages
 ├── 📤 Delegated: [X]
 ├── ⚡ Auto-processed by rules: [X]
 ├── 📅 Calendar actions: [X]
+├── 💬 iMessage processed: [X]
 
 📋 Open tasks: [X] (including [X] new from this triage)
 

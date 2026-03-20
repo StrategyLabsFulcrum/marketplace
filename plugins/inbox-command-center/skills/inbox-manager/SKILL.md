@@ -1,18 +1,19 @@
 ---
 name: inbox-manager
 description: >
-  Inbox Command Center for managing email, Slack, and messaging platforms.
+  Inbox Command Center for managing email, Slack, iMessage, and messaging platforms.
   Use when the user mentions "check my email", "inbox", "triage", "what did I miss",
   "clean up my inbox", "draft a reply", "inbox zero", "unsubscribe", "email manager",
-  "comms manager", "check Slack", "any important emails", "what do I need to respond to",
-  "create a rule", "message rules", "voice profile", "daily briefing", "morning update",
-  "check my messages", or anything related to email, messaging, or communications management.
-version: 1.0.0
+  "comms manager", "check Slack", "check iMessage", "check my texts", "any important emails",
+  "what do I need to respond to", "create a rule", "message rules", "voice profile",
+  "daily briefing", "morning update", "check my messages", "send me a reminder",
+  or anything related to email, messaging, or communications management.
+version: 1.1.0
 ---
 
 # Inbox Command Center
 
-An AI communications manager that triages email, Slack, and messaging platforms — categorizes messages, drafts replies in the user's authentic voice, manages calendar, tracks tasks, enforces smart rules, and delivers scheduled briefings.
+An AI communications manager that triages email, Slack, iMessage, and messaging platforms — categorizes messages, drafts replies in the user's authentic voice, manages calendar, tracks tasks, enforces smart rules, and delivers scheduled briefings and reminders via the user's preferred channel.
 
 ## How It Works
 
@@ -23,8 +24,8 @@ The Inbox Command Center has seven layers:
 3. **Triage Layer** — Categorizes remaining messages as RESPOND, FYI, JUNK, or UNSUBSCRIBE. Presents in prioritized batches with inline actions.
 4. **Voice Layer** — Maintains a living voice profile built from meeting transcripts, sent emails, and A/B calibration. Drafts replies that sound like the user.
 5. **Calendar Layer** — Detects conflicts, unresponded invites, marathon blocks, and meetings needing prep.
-6. **Task Layer** — Tracks reminders and follow-ups via Google Sheet + Calendar events.
-7. **Briefing Layer** — Delivers scheduled daily summaries via Slack, email, or calendar.
+6. **Task Layer** — Tracks reminders and follow-ups via Google Sheet + Calendar events. Delivers scheduled reminders via a dedicated Slack channel or iMessage.
+7. **Briefing Layer** — Delivers scheduled daily summaries and reminders via Slack, iMessage, email, or calendar.
 
 ## Connection Methods
 
@@ -37,12 +38,21 @@ Claude's built-in MCP integrations for:
 - Google Calendar (read, create, respond to events)
 - Fireflies.ai (meeting transcripts)
 
+### iMessage Connection
+iMessage is connected via macOS AppleScript/Shortcuts integration:
+- **Read:** Pull recent iMessage conversations, unread messages, and group chats
+- **Write:** Send iMessage replies and new messages to contacts
+- **Scheduled reminders:** Send timed reminder messages to yourself via iMessage (alternative to Slack DM reminders)
+- **Requires:** macOS with Messages app configured, iMessage account active
+- **Note:** iMessage integration runs locally on the user's Mac via AppleScript automation through Rube or direct shell access
+
 ### Rube Connection
 For tools not available via MCP, use Rube to connect:
 - Outlook / Microsoft 365
 - Otter.ai, Gong, Fathom (meeting transcripts)
 - Zoom cloud recordings
 - SMS platforms (Twilio, etc.)
+- iMessage (via macOS AppleScript/Shortcuts as a fallback if direct connection isn't available)
 - Any tool with an API that Rube can reach
 
 ### Connection Config
@@ -57,6 +67,7 @@ Stored in `inbox-command-center/config.md`:
 |------|-----------|---------|--------|
 | Gmail | MCP | [email] | Active |
 | Slack | MCP | [workspace] | Active |
+| iMessage | AppleScript | [phone/email] | Active |
 | Google Calendar | MCP | primary | Active |
 | Fireflies | MCP | [account] | Active |
 
@@ -70,9 +81,14 @@ Stored in `inbox-command-center/config.md`:
 [number] emails per batch (default: 10)
 
 ## Scheduled Briefing
-- Delivery: [Slack DM / Email / Calendar / None]
+- Delivery: [Slack DM / iMessage / Email / Calendar / None]
 - Time: [HH:MM AM/PM]
 - Days: [Mon-Fri / Daily / Custom]
+
+## Reminder Delivery
+- Channel: [Slack Channel / Slack DM / iMessage]
+- Slack Channel: [#inbox-reminders or custom name]
+- Default: [user's preference]
 ```
 
 ## Rules Engine
@@ -260,6 +276,7 @@ Stored in `inbox-command-center/voice-profile.md`:
 |---------|------------------|
 | Email | [description] |
 | Slack | [description] |
+| iMessage | [description] |
 | SMS | [description] |
 
 ## Email Length Preference
@@ -343,7 +360,7 @@ Received: [Day, Date, Time]
 | Code | Action |
 |------|--------|
 | `draft` | Draft a reply in user's voice |
-| `remind [time]` | Add to task tracker + calendar event |
+| `remind [time]` | Add to task tracker + calendar event + deliver via configured channel |
 | `read` | Mark as read, no action |
 | `delete` | Flag for deletion |
 | `unsub` | Unsubscribe |
@@ -370,7 +387,135 @@ Channel-level rules from setup:
 
 ### Integration with Email Triage
 
-Slack items are numbered after email items in the same batch (email #1-8, Slack #9-10) so user can rapid-fire across both platforms in one response.
+Slack items are numbered after email items in the same batch (email #1-8, Slack #9-10, iMessage #11-12) so user can rapid-fire across all platforms in one response.
+
+## iMessage Triage
+
+### Connection
+iMessage is connected via macOS AppleScript/Shortcuts integration. The Messages app must be running on the user's Mac.
+
+### Categorization
+
+Same system as email and Slack:
+- 🔴 RESPOND — Direct messages asking questions, time-sensitive requests, VIP contacts
+- 🟡 FYI — Confirmations, shared links/photos, casual updates
+- ⏭️ SKIP — Group chat chatter, reactions, tapbacks
+
+### Message Pulling
+- Pull unread iMessage conversations since last triage
+- Include both 1:1 conversations and group chats
+- Prioritize VIP contacts and messages containing questions or action items
+- Show contact name (matched from VIP list and contacts) alongside phone number/email
+
+### iMessage Actions
+| Code | Action |
+|------|--------|
+| `draft` | Draft an iMessage reply in user's voice (casual/SMS style) |
+| `remind [time]` | Create task + send yourself an iMessage reminder at the specified time |
+| `read` | Mark conversation as read |
+| `skip` | Leave for later |
+
+### Integration with Triage Batches
+iMessage items are numbered after Slack items in the same batch so the user can rapid-fire actions across email, Slack, and iMessage in a single response.
+
+### iMessage as Reminder Delivery Channel
+Users can choose iMessage instead of (or in addition to) Slack for scheduled reminders:
+- **Task reminders** — When a `remind [time]` action fires, send an iMessage to the user at the scheduled time instead of a Slack DM
+- **Briefing delivery** — Morning briefings can be sent via iMessage
+- **Follow-up nudges** — Stale follow-up reminders delivered via iMessage
+- Configured in `config.md` under `Reminder Delivery` — user chooses Slack channel, Slack DM, or iMessage as their default reminder channel
+
+## Scheduled Reminders
+
+The reminder system lets users create, schedule, and deliver future reminders through their preferred channel — a dedicated Slack channel, Slack DM, or iMessage.
+
+### Creating Reminders
+
+Reminders can be created from multiple entry points:
+
+| Entry Point | How |
+|-------------|-----|
+| **During triage** | `remind [time]` or `remind [time] via [channel]` on any message |
+| **Standalone** | "Remind me to [task] at [time]" or "Set a reminder for [time]" |
+| **From rules** | Rules can auto-create reminders (e.g., stale follow-ups) |
+| **Recurring** | "Remind me every [Monday/day/week] to [task]" |
+
+### Reminder Delivery Channels
+
+| Channel | How It Works | Best For |
+|---------|-------------|----------|
+| **Slack Channel** | Posts reminder to a dedicated channel (e.g., `#inbox-reminders`) — created during setup or on first use | Teams who want a visible reminder log; easy to review history |
+| **Slack DM** | Sends reminder as a DM to yourself | Personal/quiet reminders within Slack |
+| **iMessage** | Sends reminder as an iMessage to yourself at the scheduled time | Users who live on their phone; reminders that follow you outside of work tools |
+
+### Dedicated Slack Reminder Channel
+
+During setup (or on first reminder if not yet configured), the plugin offers to create a dedicated Slack channel for reminders:
+
+> "Would you like me to create a dedicated Slack channel for your reminders? This gives you a single place to see all upcoming and past reminders."
+>
+> - **Yes, create #inbox-reminders** — Creates a private channel named `#inbox-reminders` (or custom name)
+> - **Use a different name** — User specifies channel name
+> - **Use an existing channel** — User picks from existing channels
+> - **No, use DMs instead** — Reminders go to Slack DM
+> - **No, use iMessage** — Reminders go to iMessage
+
+When posting to the Slack reminder channel:
+```
+📬 REMINDER — [Time]
+
+[Task context / original message summary]
+
+Source: [Email from Jim Schlosser / Slack DM from Scott / Manual]
+Created: [date] during triage
+Task ID: T017
+
+→ [Mark Done] [Snooze 1hr] [Snooze Tomorrow]
+```
+
+### Reminder Format by Channel
+
+**Slack Channel / DM:**
+```
+📬 Reminder: [Brief description]
+Due: [time]
+Context: [1-2 sentence summary of the original message or task]
+Task: T017 | Source: [Email / Slack / iMessage / Manual]
+```
+
+**iMessage:**
+```
+📬 Reminder: [Brief description]
+[1-2 sentence context]
+(from Inbox Command Center)
+```
+
+### Standalone Reminder Creation
+
+Users can create reminders outside of triage:
+
+> "Remind me to follow up with Joel about the wholesale pricing tomorrow at 2pm"
+> "Set a reminder for Friday 9am to review the Q2 projections"
+> "Remind me every Monday at 8am to check the client dashboard"
+
+The plugin:
+1. Parses the task, time, and any recurrence
+2. Adds to task tracker Google Sheet
+3. Creates Google Calendar event
+4. Schedules delivery via the user's configured channel (or asks if not yet configured)
+5. Confirms: "✓ T018 created — I'll remind you to follow up with Joel tomorrow at 2pm via [channel]"
+
+### Recurring Reminders
+
+For recurring reminders:
+- Stored in task tracker with recurrence pattern
+- Each instance is scheduled independently
+- After each reminder fires, the next instance is auto-scheduled
+- User can cancel the series or skip individual instances
+- Examples:
+  - "Remind me every Monday at 9am to check the weekly report"
+  - "Remind me on the 1st of every month to send invoices"
+  - "Remind me every Friday at 4pm to update the client dashboard"
 
 ## Calendar Triage
 
@@ -405,7 +550,7 @@ Sheet name: **"Inbox Task Tracker"** (created during setup if doesn't exist)
 | ID | T001, T002... |
 | Created | Date added |
 | Due | Target date/time |
-| Source | Email, Slack, Calendar, Manual |
+| Source | Email, Slack, iMessage, Calendar, Manual |
 | From | Sender name |
 | Subject | Brief description |
 | Summary | 1-2 sentence context |
@@ -420,6 +565,7 @@ When a task is created:
 1. Add row to Google Sheet
 2. Create Google Calendar event: "📬 [Task ID]: [Description]"
 3. Event description includes task context + link to sheet
+4. Schedule reminder delivery via the user's configured channel (Slack channel, Slack DM, or iMessage)
 
 ### Morning Integration
 
@@ -434,9 +580,10 @@ During morning triage, after email/Slack batch 1:
 | Method | How It Works |
 |--------|-------------|
 | **Slack DM** | Auto-send summary to user at configured time |
+| **iMessage** | Send summary as an iMessage to the user at configured time |
 | **Email Digest** | Send summary email to user's inbox |
 | **Calendar Block** | Create/update recurring event with briefing in description |
-| **All Three** | Maximum coverage |
+| **All** | Maximum coverage — deliver via all connected channels |
 
 ### Briefing Content
 
@@ -447,6 +594,9 @@ During morning triage, after email/Slack batch 1:
 ├── 🔴 [Top 3 RESPOND items with sender + subject + 1-line summary]
 
 💬 SLACK: [X] unread ([X] 🔴 need response)
+├── 🔴 [Top items]
+
+💬 iMESSAGE: [X] unread ([X] 🔴 need response)
 ├── 🔴 [Top items]
 
 📅 CALENDAR: [X] meetings today, [X] unresponded, [X] conflicts
@@ -465,20 +615,75 @@ During morning triage, after email/Slack batch 1:
 
 ```markdown
 ## Scheduled Briefing
-- **Delivery:** Slack DM
+- **Delivery:** Slack DM / iMessage / Email / Calendar / All
 - **Time:** 7:30 AM
 - **Days:** Monday through Friday
-- **Include:** Email summary, Slack summary, Calendar flags, Task reminders, Rules summary
+- **Include:** Email summary, Slack summary, iMessage summary, Calendar flags, Task reminders, Rules summary
+```
+
+## Plugin Update Notifications
+
+When the Inbox Command Center (or any Strategy Labs marketplace plugin) is updated, the plugin detects the version change and presents the user with a guided update message on the next session. This is powered by the marketplace-wide update notification system (see `UPDATE-NOTIFICATIONS.md` at the marketplace root).
+
+### How It Works
+
+1. Each plugin stores its installed version in `config.md` under `Plugin Version`
+2. The plugin's `CHANGELOG.md` tracks all version changes with new features, connections, and setup steps
+3. On load, the plugin compares the installed version vs. the current plugin version
+4. If a new version is detected, the plugin presents an update briefing before any other action
+
+### Update Briefing Format
+
+```
+🆕 INBOX COMMAND CENTER — Updated to v1.1.0
+
+Here's what's new:
+
+NEW FEATURES:
+├── 💬 iMessage Integration — Read, write, and triage iMessages alongside email and Slack
+├── ⏰ Scheduled Reminders — Create, schedule, and deliver reminders via Slack channel, Slack DM, or iMessage
+├── 📢 Dedicated Slack Reminder Channel — All reminders in one place (#inbox-reminders)
+├── 🔁 Recurring Reminders — "Remind me every Monday at 9am to..."
+
+SETUP NEEDED:
+├── 1. iMessage — Connect your iMessage account [Set up now]
+├── 2. Reminder Channel — Choose where reminders are delivered [Configure]
+├── 3. Slack Reminder Channel — Create #inbox-reminders [Create now / Skip]
+
+[Set up all new features] [Set up later] [Show full changelog]
+```
+
+### Guided Setup for New Features
+
+When the user chooses "Set up all new features" or "Set up now" on any item:
+- Walk through only the new/changed setup steps (not the full setup wizard)
+- Pre-fill existing configuration where possible
+- Update `config.md` with new settings
+- Mark the update as acknowledged
+
+If the user chooses "Set up later":
+- Save a flag in `config.md`: `pending_update_setup: v1.1.0`
+- On next triage, show a brief reminder: "You have new features from v1.1.0 that need setup. Say 'set up updates' to configure."
+- After 3 reminders, stop prompting (user can always say "set up updates" manually)
+
+### Version Tracking in Config
+
+```markdown
+## Plugin Version
+- Installed: 1.1.0
+- Last update acknowledged: 1.1.0
+- Pending setup: none
 ```
 
 ## File Structure
 
 ```
 inbox-command-center/
-├── config.md                 # Connected tools, preferences, schedule
+├── config.md                 # Connected tools, preferences, schedule, version tracking
 ├── voice-profile.md          # Living voice profile
 ├── vip-contacts.md           # Priority contact list with relationship tags
 ├── rules.md                  # Active message rules
 ├── rule-suggestions.md       # Pending learned suggestions
-└── task-tracker-link.md      # Link to Google Sheet
+├── task-tracker-link.md      # Link to Google Sheet
+└── CHANGELOG.md              # Version history and update notes
 ```

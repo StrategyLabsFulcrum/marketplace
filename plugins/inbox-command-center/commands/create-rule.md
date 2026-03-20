@@ -21,9 +21,10 @@ When the user runs `/create-rule` directly:
 > "What should trigger this rule? Pick one or combine multiple:"
 
 ### Sender-Based
-> - **Specific sender:** "Emails from [email address]"
+> - **Specific sender:** "Messages from [email address / phone number]"
 > - **Domain:** "Emails from anyone @[domain.com]"
 > - **Sender type:** "Emails from mailing lists / newsletters / no-reply addresses"
+> - **Platform:** "Only from [Email / Slack / iMessage / All]"
 > - **New senders:** "First-time senders not in my contacts"
 
 If from triage context, pre-fill:

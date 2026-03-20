@@ -110,7 +110,7 @@ Voice profile updated.
 
 ## Batch 2: Channel-Specific (recommended)
 
-> "Now let's calibrate for different channels. Your tone might shift on Slack vs. email vs. text."
+> "Now let's calibrate for different channels. Your tone might shift on Slack vs. iMessage vs. email vs. text."
 
 ### Slack Messages (5 pairs)
 
@@ -131,6 +131,26 @@ OPTION A:
 
 OPTION B:
 "Looks great, thanks for getting this done. I'll take a look this afternoon and follow up if I have questions."
+
+Which sounds more like you? [A / B / Neither]
+```
+
+### iMessage (5 pairs)
+
+Test for:
+- Tone difference from Slack (iMessage is often more personal)
+- Emoji and tapback usage
+- Response length for personal vs. professional iMessage contacts
+- How style shifts between 1:1 and group chats
+
+```
+SCENARIO iM1: Responding to a friend/contact asking for a quick favor via iMessage
+
+OPTION A:
+"Yeah for sure — send me the details and I'll take a look tonight"
+
+OPTION B:
+"Sure thing! I'll check it out later today 👍"
 
 Which sounds more like you? [A / B / Neither]
 ```

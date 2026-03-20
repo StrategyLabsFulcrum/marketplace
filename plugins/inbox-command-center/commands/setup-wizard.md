@@ -36,6 +36,7 @@ Save to config:
 |------|-----------|---------|------|
 | Gmail | MCP | [email] | Primary |
 | Gmail | MCP | [email2] | Secondary |
+| iMessage | AppleScript | [phone/email] | Messaging |
 ```
 
 ---
@@ -50,6 +51,17 @@ Save to config:
 >   - "Which channels should I skip?" (e.g., #random, #watercooler)
 >   - "Any specific people whose DMs are always priority?"
 > - **No** → Skip Slack.
+
+### iMessage
+
+> "Do you use iMessage?"
+> - **Yes** → Test iMessage connection via macOS AppleScript/Shortcuts.
+>   - Requires: macOS with Messages app configured and iMessage account active
+>   - "What's your iMessage ID?" (phone number or Apple ID email)
+>   - "Which conversations should I always check?" (e.g., specific contacts, group chats)
+>   - "Any contacts whose iMessages are always priority?" (auto-matched with VIP list)
+>   - "Would you like to receive scheduled reminders via iMessage instead of Slack?" (default: Slack)
+> - **No** → Skip iMessage.
 
 ### Other Messaging Platforms
 
@@ -328,10 +340,22 @@ If Google Sheet:
 > "How do you want it delivered?"
 >
 > - **Slack DM** — Message to yourself at a set time
+> - **iMessage** — Text to yourself at a set time (requires iMessage connected)
 > - **Email digest** — Summary email to your inbox
 > - **Calendar block** — Recurring 15-min event with briefing in description
 > - **All of the above**
 > - **None** — I'll just be ready when you say "triage"
+>
+> "Where should I send scheduled reminders?" (when you say `remind [time]` during triage or create one standalone)
+>
+> - **Slack Channel** (recommended) — Post reminders to a dedicated channel for easy tracking
+>   - "Create a new channel? I'd suggest `#inbox-reminders` (private). Or pick an existing channel."
+>   - If yes: Create the private channel via Slack MCP. Confirm: "✓ Created #inbox-reminders. All reminders will post here."
+>   - If existing: "Which channel?" → Confirm selection
+> - **Slack DM** — Reminder sent as a Slack message to yourself
+> - **iMessage** — Reminder sent as an iMessage to yourself
+> - "You can override this per-reminder during triage by saying `remind tomorrow 9am via imessage` or `remind tomorrow 9am via slack`"
+> - "You can also create reminders anytime by saying 'Remind me to [task] at [time]' — they'll be delivered to your chosen channel."
 >
 > "What time?" (default: 7:30 AM on weekdays)
 > "Which days?" (default: Monday-Friday)
@@ -416,6 +440,7 @@ Inbox Command Center — Setup Complete!
 CONNECTED:
 ├── 📧 Email: [account(s)]
 ├── 💬 Slack: [workspace] ([X] priority channels, [X] muted)
+├── 💬 iMessage: [phone/email] ([X] priority contacts)
 ├── 📅 Calendar: [type]
 ├── 🎙️ Transcripts: [tool] ([X] analyzed)
 ├── [Other messaging platforms]
@@ -431,12 +456,16 @@ TASK TRACKER: [type + location]
 RULES: [X] active rules
 BRIEFING: [delivery method] at [time] on [days]
 
+REMINDER CHANNEL: [#inbox-reminders / Slack DM / iMessage]
+
 DAILY COMMANDS:
 ├── "Check my email" or "triage" — Full triage
 ├── "Any new emails?" — Quick scan since last check
 ├── "Draft a reply to [person]" — Compose in your voice
 ├── "Check Slack" — Slack triage
+├── "Check iMessage" — iMessage triage
 ├── "Show my tasks" — Task tracker review
+├── "Remind me to [task] at [time]" — Create a standalone reminder
 ├── /create-rule — Build a new message rule
 ├── /voice-calibration — Refine your voice profile
 
