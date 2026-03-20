@@ -1,0 +1,21 @@
+{
+  "name": "brand-knowledge-center",
+  "version": "1.0.0",
+  "description": "Brand Knowledge Center — a step-by-step setup wizard that builds a comprehensive brand profile covering business fundamentals, financials, digital presence, brand identity, audience messaging, and competitive landscape. Generates a structured brand-knowledge-center/ folder that serves as the foundation for all Strategy Labs marketplace plugins.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": [
+    "brand setup",
+    "brand knowledge",
+    "brand onboarding",
+    "business profile",
+    "competitive landscape",
+    "brand guidelines",
+    "audience messaging",
+    "financial context"
+  ],
+  "license": "MIT",
+  "homepage": "https://strategylabs.us"
+}
