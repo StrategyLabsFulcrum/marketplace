@@ -1,0 +1,21 @@
+{
+  "name": "brand-asset-manager",
+  "version": "1.0.0",
+  "description": "Brand Asset Manager — organize, rename, describe, and catalog brand photos and videos into a searchable folder structure. Analyzes each asset, generates descriptions, suggests channel usage, flags duplicates, and maintains a searchable manifest. Integrates with Brand Knowledge Center for brand-aware categorization.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": [
+    "brand assets",
+    "photo organization",
+    "video organization",
+    "asset management",
+    "image catalog",
+    "metadata",
+    "duplicate detection",
+    "content library"
+  ],
+  "license": "MIT",
+  "homepage": "https://strategylabs.us"
+}
