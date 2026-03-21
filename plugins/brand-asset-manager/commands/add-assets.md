@@ -1,40 +1,63 @@
-# Add Assets
+# /add-assets
 
-Add new photos and videos to an existing brand asset library. Checks for duplicates against the current manifest, analyzes new assets, organizes them into the established folder structure, and updates the manifest.
+Add new photos and videos to an existing brand asset library. The recommended workflow is to drop new assets into the `_inbox/` folder and run this command — Claude scans, analyzes, proposes organization, and **waits for your approval before copying or renaming anything**.
+
+## Invoke Options
+
+```
+/add-assets                  ← scan _inbox/ folder automatically
+/add-assets [folder path]    ← point to a specific folder of new assets
+```
+
+---
 
 ## Before Starting
 
-1. Check if a `brand-assets/` directory exists with an `asset-manifest.csv`.
-   - If it exists, proceed with this command.
-   - If it does NOT exist, inform the user: "No existing asset library found. Run `/organize-assets` first to set up your library."
-2. Read the existing `asset-manifest.csv` to load the current inventory.
+1. Check if `brand-assets/` exists with an `asset-manifest.csv`.
+   - If it does NOT exist, say: "No asset library found. Run `/asset-setup` to build your folder structure first."
+2. Read `asset-manifest.csv` to load the current inventory.
+3. Report the current library state:
+
+> "Your asset library currently has **[X] photos** and **[Y] videos** across [Z] categories. Last updated: [date]. Ready to add new assets."
 
 ---
 
-## Step 1: Load Existing Library
+## Step 1: Find New Assets
 
-Read and report the current state:
+### Default: Check `_inbox/`
 
-> "Your current asset library has:
-> - **[X] photos** and **[Y] videos** across [Z] categories
-> - Last updated: [date]
-> - Folder structure: [list top-level folders]
->
-> Ready to add new assets."
+If no folder path is provided, check `brand-assets/_inbox/` for files.
+
+If `_inbox/` is empty:
+> "The inbox is empty. Drop new photos or videos into `brand-assets/_inbox/` and run `/add-assets` again. Or provide a folder path: `/add-assets [path]`"
+
+If `_inbox/` has files, report:
+> "Found **[X] photos** and **[Y] videos** in your inbox. Analyzing before any changes are made..."
+
+### Custom folder path
+
+If a path is provided, scan that folder recursively for image and video files and report what was found.
 
 ---
 
-## Step 2: Source New Assets
+## Step 2: Analyze All New Assets
 
-Ask the user where the new assets are:
+**Analyze every new asset completely BEFORE proposing any organization.** Do not copy, move, or rename anything in this step.
 
-"Where are the new photos/videos? Provide a folder path, or upload them directly."
+For each photo:
+1. View/read the image
+2. Identify: subject, products visible, shot type, setting, mood, lighting, composition quality, colors, people, seasonality
+3. Determine the best category/subfolder within the existing structure
+4. Generate a descriptive filename (check sequence numbers against existing files in the target folder)
+5. Write the full description and tags
+6. Assess quality (High / Medium / Low)
 
-### Scanning
-
-1. Recursively scan for all image and video files
-2. Report what was found:
-   > "Found **23 new photos** and **4 new videos**. Checking for duplicates before organizing..."
+For each video:
+1. Read the video file
+2. Identify: duration, content summary, subjects, shot types, audio, mood, aspect ratio
+3. Determine category, generate filename, write description
+4. Identify 2-3 thumbnail candidate frames with timestamps
+5. Assess quality
 
 ---
 
@@ -42,99 +65,123 @@ Ask the user where the new assets are:
 
 Compare every new asset against the existing manifest:
 
-### Exact Duplicate Check
-- Compare file size and dimensions against every entry in `asset-manifest.csv`
-- If an exact match is found, flag it immediately
+**Exact duplicate:** Same file size AND same dimensions → flag immediately
 
-### Near Duplicate Check
-- Analyze the new asset's subject, composition, and context
-- Compare description against existing manifest descriptions in the same category
-- Flag if a new asset appears to be a near-duplicate of an existing one
-
-### Report Duplicates Before Proceeding
-
-If duplicates are found:
-
-> "Duplicate check complete. Found:
-> - **3 exact duplicates** (identical to files already in your library)
-> - **2 near duplicates** (very similar to existing assets)
->
-> **Exact duplicates:**
-> 1. `IMG_5501.jpg` → matches `product-flatlay-workman-flannel-rust-01.jpg`
-> 2. `IMG_5502.jpg` → matches `lifestyle-forest-trail-flannel-03.jpg`
-> 3. `DSC_0098.jpg` → matches `product-onmodel-ridgeline-hoodie-01.jpg`
->
-> **Near duplicates:**
-> 1. `IMG_5510.jpg` → similar to `product-flatlay-workman-flannel-rust-01.jpg` (same product, slightly different angle)
-> 2. `MVI_1002.mp4` → similar to `video-product-beanie-showcase-01.mp4` (same subject, different edit)
->
-> How would you like to handle these?
-> - **Skip all duplicates** — don't add them
-> - **Add near duplicates, skip exact** — keep the maybes, skip the identical ones
-> - **Add all anyway** — organize everything, I'll sort it out later
-> - **Let me review each one** — I'll show you side by side"
-
-Process based on user's choice.
+**Near duplicate:** Analyze subject and composition, compare against existing manifest entries in the same category. Flag if a new asset appears to be a near-duplicate.
 
 ---
 
-## Step 4: Process New Assets
+## Step 4: Present Proposal — APPROVAL REQUIRED
 
-For each new non-duplicate asset, follow the same analysis workflow as `/organize-assets`:
+After analyzing all assets and checking for duplicates, present the full proposal **before doing anything**:
 
-1. **Analyze** — Subject, shot type, mood, quality, etc.
-2. **Categorize** — Assign to existing folder structure
-3. **Name** — Generate descriptive filename
-4. **Check sequence numbers** — Read existing files in the target folder to continue the numbering sequence (if `lifestyle-flannel-mountain-trail-03.jpg` exists, the next one is `-04.jpg`)
-5. **Copy** — Duplicate to the appropriate subfolder with the new name
-6. **Video thumbnails** — Generate for any new videos
+```
+New Asset Proposal
+─────────────────────────────────────────────
 
-### New Category Detection
+23 photos and 4 videos analyzed from _inbox/.
 
-If a new asset doesn't fit any existing category:
+Proposed organization:
+  product-photography/flat-lay/     →  8 assets
+  product-photography/on-model/     →  6 assets
+  lifestyle/outdoor/                →  7 assets
+  campaigns/spring-2026/            →  4 assets
+  video/social-clips/               →  4 assets (vertical, <60s)
+  _duplicates/                      →  2 assets flagged
 
-> "This asset doesn't fit your current folder structure:
-> - `IMG_5520.jpg` — Aerial drone shot of a mountain landscape
->
-> Would you like to:
-> - Create a new subfolder? (e.g., `lifestyle/aerial/`)
-> - Put it in an existing folder? (suggest closest match)
-> - Skip it for now?"
+Naming examples:
+  IMG_7823.jpg  → product-flatlay-trail-runner-black-05.jpg
+  IMG_7831.jpg  → lifestyle-outdoor-morning-run-03.jpg
+  VID_0042.mp4  → video-social-clips-spring-launch-01.mp4
+
+Duplicates found: 2 files
+  IMG_7800.jpg → near-duplicate of product-flatlay-trail-runner-black-02.jpg
+  IMG_7801.jpg → exact duplicate of lifestyle-outdoor-morning-run-01.jpg
+
+Quality:
+  High: 21  |  Medium: 4  |  Low: 2 (will be organized but flagged)
+
+─────────────────────────────────────────────
+Ready to organize. This will:
+  ✓ COPY assets from _inbox/ to their organized folders with new names
+  ✓ Move duplicate files to _duplicates/
+  ✓ Update asset-manifest.csv and asset-manifest.md
+  ✓ Clear processed files from _inbox/
+
+Type 'approve' to proceed, or ask questions/request changes first.
+```
+
+If the user requests changes (different category, different name, exclude a file), apply changes and re-present.
 
 ---
 
-## Step 5: Update Manifest
+## Step 5: Execute
 
-After all new assets are processed:
+Only after approval:
 
+1. **Process each approved asset:**
+   - Copy from `_inbox/` (or source folder) to the appropriate subfolder with the new name
+   - Check existing sequence numbers in the target folder before numbering
+   - Copy flagged duplicates to `_duplicates/` with original names
+   - Add entry to manifest data
+
+2. **New category detection:** If an asset doesn't fit any existing category, propose creating a new subfolder before proceeding.
+
+3. **Clear inbox:** After successful processing, remove the original files from `_inbox/` (or leave them if the source was a custom folder — never modify files outside `brand-assets/`).
+
+4. Report progress every 15 files.
+
+---
+
+## Step 6: Update Manifest
+
+After all assets are processed:
 1. **Append** new entries to `asset-manifest.csv`
-2. **Regenerate** `asset-manifest.md` with updated counts and new entries
-3. **Update** `_duplicates/flagged-duplicates.md` if new duplicates were flagged
-4. **Update summary counts** at the top of `asset-manifest.md`
+2. **Regenerate** `asset-manifest.md` with updated counts and new entries added to their category sections
+3. **Update summary counts** at the top of `asset-manifest.md`
+4. **Update** `_duplicates/flagged-duplicates.md` if new duplicates were flagged
 
 ---
 
-## Step 6: Completion
-
-Present what was added:
+## Step 7: Completion
 
 ```
 New Assets Added!
 
-Added: 18 photos, 4 videos
-Skipped: 3 exact duplicates, 2 near duplicates
+Added: 21 photos, 4 videos
+Skipped: 2 duplicates (moved to _duplicates/)
 
-New assets by category:
-- Product Photography: 8
-- Lifestyle: 6
-- Video/Social Clips: 4
-- Team/BTS: 4
+Added to:
+  Product Photography: 14
+  Lifestyle:            7
+  Video/Social Clips:   4
 
-Updated totals:
-- Total library: 90 photos, 16 videos (was 72 photos, 12 videos)
-- Manifest updated: asset-manifest.csv + asset-manifest.md
+Updated library totals:
+  Photos: [previous] → [new]
+  Videos: [previous] → [new]
+  Last updated: [date]
 
-Next steps:
-- Search asset-manifest.md for your new assets
-- Review any flagged duplicates in _duplicates/
+Inbox cleared ✓
+
+Next: Drop more assets in brand-assets/_inbox/ anytime and run /add-assets
 ```
+
+---
+
+## Inbox Folder Convention
+
+The `_inbox/` folder is the permanent drop zone for the ongoing workflow:
+
+```
+New shoot / new content
+        ↓
+brand-assets/_inbox/     ← drop files here
+        ↓
+/add-assets              ← run this command
+        ↓
+Analyze → Propose → Approve → Organize
+        ↓
+brand-assets/[category]/ ← files land here, named + tagged
+```
+
+Assets in `_inbox/` are never modified until approved. If you cancel before approving, all files remain in `_inbox/` unchanged.

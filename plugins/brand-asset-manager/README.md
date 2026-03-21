@@ -1,61 +1,122 @@
 # Brand Asset Manager
 
-Organize, rename, describe, and catalog your brand's photos and videos into a searchable, categorized library. Built by Strategy Labs.
+Set up a structured brand asset library, organize existing photos and videos, and manage an ongoing inbox-based workflow for adding new assets. Built by Strategy Labs.
+
+---
 
 ## What It Does
 
-The Brand Asset Manager takes a messy folder of photos and videos and turns it into a structured, searchable asset library with:
-
-- **Smart categorization** — Assets sorted into folders based on your brand's products, channels, and content types
+- **Setup wizard** — Builds a custom folder structure before any assets exist, tailored to your brand's products, channels, and content types
+- **Smart analysis** — Reads every photo and video and writes a full description covering subject, mood, shot type, lighting, seasonality, and channel fit
+- **Approval gate** — Presents the full organization plan for review before copying or renaming anything
 - **Descriptive renaming** — `IMG_4392.jpg` becomes `lifestyle-flannel-mountain-trail-01.jpg`
-- **Rich descriptions** — Every asset gets a detailed description covering subject, mood, shot type, lighting, and more
-- **Channel suggestions** — Each asset is tagged with recommended platforms (Instagram, Meta Ads, Shopify, Email, etc.)
-- **Duplicate detection** — Exact and near-duplicate photos/videos are flagged before you waste storage
-- **Video thumbnails** — Key frames identified as thumbnail candidates for each video
-- **Searchable manifest** — A CSV and markdown index so you can find any asset by keyword, mood, season, channel, or product
+- **Searchable manifest** — CSV and markdown index so you can find any asset by keyword, mood, season, channel, or product
+- **Duplicate detection** — Exact and near-duplicate files are flagged before you waste storage
+- **Inbox workflow** — Drop new assets into `_inbox/` and run `/add-assets` — Claude handles the rest
+
+---
 
 ## Commands
 
-| Command | Description |
+| Command | When to Use |
 |---------|-------------|
-| `/organize-assets` | Set up a new asset library from scratch — full wizard with brand context, folder structure, and batch processing |
-| `/add-assets` | Add new photos/videos to an existing library with duplicate checking |
+| `/asset-setup` | Starting from scratch — builds folder structure first, then guides asset loading |
+| `/organize-assets` | Have an existing messy folder of assets to organize for the first time |
+| `/add-assets` | Ongoing — add new photos/videos from `_inbox/` or a folder to an existing library |
+
+---
 
 ## Getting Started
 
-1. **Install the plugin** in Claude Cowork
-2. **Run `/organize-assets`**
-3. **Provide brand context** — If you've already set up a Brand Knowledge Center, it loads automatically. Otherwise, answer a few quick questions.
-4. **Confirm folder structure** — Review and customize the proposed categories
-5. **Point to your assets** — Provide a folder path or upload files
-6. **Review results** — Check the manifest, flagged duplicates, and organized folders
+### New brand (no library yet)
 
-## Output Structure
+1. Run `/asset-setup`
+2. Answer a few questions about your brand (or it reads Brand Knowledge Center automatically)
+3. Review and approve the proposed folder structure
+4. Folders are created — including a permanent `_inbox/` drop zone
+5. Drop existing assets into `_inbox/` and run `/add-assets`, or point to an existing folder
+
+### Have existing unorganized assets
+
+1. Run `/organize-assets`
+2. Provide brand context (or reads Brand Knowledge Center)
+3. Review and approve the proposed folder structure and organization plan
+4. Assets are copied (originals untouched) into the organized structure with new names
+
+### Adding new assets (ongoing)
+
+```
+New photos/videos
+      ↓
+brand-assets/_inbox/    ← drop files here
+      ↓
+/add-assets             ← run this
+      ↓
+Review proposal → approve → organized + tagged
+```
+
+---
+
+## Folder Structure
 
 ```
 brand-assets/
-├── asset-manifest.csv          # Searchable spreadsheet of all assets
-├── asset-manifest.md           # Human-readable index with descriptions
-├── _duplicates/                # Flagged duplicate files + review log
-├── product-photography/        # Product shots (flat lay, on-model, detail)
-├── lifestyle/                  # Lifestyle and environmental shots
-├── team-behind-the-scenes/     # Team, workspace, BTS content
-├── ugc-community/              # User-generated content
-├── campaigns/                  # Seasonal and launch campaign assets
-├── logos-brand-marks/          # Logo files and brand marks
-└── video/                      # Video files + generated thumbnails
+├── asset-manifest.csv          ← searchable spreadsheet of all assets
+├── asset-manifest.md           ← human-readable index with full descriptions
+├── README.md                   ← library guide
+├── _inbox/                     ← drop new assets here for processing
+├── _duplicates/                ← flagged duplicate files + review log
+│   └── flagged-duplicates.md
+├── product-photography/
+│   ├── flat-lay/
+│   ├── on-model/
+│   ├── detail-shots/
+│   └── lifestyle-product/
+├── lifestyle/
+│   ├── outdoor/
+│   └── seasonal/
+├── team-behind-the-scenes/
+├── ugc-community/
+├── campaigns/
+│   └── [season or campaign name]/
+├── logos-brand-marks/
+│   ├── primary/
+│   ├── secondary/
+│   └── icons/
+└── video/
+    ├── product/
+    ├── lifestyle/
+    ├── social-clips/
+    └── thumbnails/
 ```
 
-Folder structure is customized per brand based on products, channels, and content types.
+Folder structure is customized per brand. Product lines, channel-specific folders, and campaign subfolders are added based on your brand context.
+
+---
+
+## How the Approval Gate Works
+
+No files are ever copied, moved, or renamed without your explicit approval.
+
+1. Claude analyzes all assets and builds the full organization plan
+2. A complete summary is presented: folder assignments, naming examples, duplicate groups, quality breakdown
+3. You type **"approve"** (or request changes first)
+4. Only then does Claude execute — copying files, updating the manifest, clearing the inbox
+
+If you cancel before approving, all source files remain exactly where they were.
+
+---
 
 ## Integration
 
 Works best with the **Brand Knowledge Center** plugin. If a `brand-knowledge-center/` folder exists, the Asset Manager automatically reads your brand identity, products, channels, and content pillars to make smarter categorization and channel suggestions.
 
+---
+
 ## Tips
 
-- **Run Brand Knowledge Center first** for the best results — brand context makes categorization and descriptions significantly more accurate
-- **Use the manifest to search** — Open `asset-manifest.md` and search for "Instagram", "fall", "flannel", or any keyword
-- **Review duplicates promptly** — Check `_duplicates/flagged-duplicates.md` after each run
-- **Add assets incrementally** — Use `/add-assets` as you create new content rather than re-running the full organizer
-- **Original files are never modified** — The plugin always copies, never moves or renames your source files
+- **Run Brand Knowledge Center first** — brand context makes categorization and descriptions significantly more accurate
+- **Use `_inbox/` consistently** — it's the permanent drop zone; always drop new content there before running `/add-assets`
+- **Original files are never modified** — copies are created in the organized structure; your source files are untouched
+- **Search the manifest** — open `asset-manifest.md` and search for "Instagram", "fall", "flannel", or any keyword to find assets instantly
+- **Review duplicates promptly** — check `_duplicates/flagged-duplicates.md` after each run
