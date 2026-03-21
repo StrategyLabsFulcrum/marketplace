@@ -1,5 +1,30 @@
 # Inbox Command Center — Changelog
 
+## v1.2.0
+
+### New Features
+
+#### Cross-Device Sync via iCloud
+- **Automatic iCloud sync** — All user data (config, voice profile, rules, VIP contacts) stored in iCloud Drive and synced across macOS devices automatically
+- **Data path:** `~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/`
+- **Zero-friction sync** — No manual pull/push needed; changes propagate within seconds
+- **New device detection** — When the plugin finds an existing iCloud config from another device, it auto-syncs and verifies connections
+- **Conflict handling** — Detects iCloud conflict copies and prompts user to resolve with a diff summary
+- **Local fallback** — If iCloud Drive is unavailable, falls back to local storage with a warning
+- **Setup:** New Step 0 in the setup wizard — choose iCloud sync or local-only storage
+
+### Changes
+- Triage now resolves the data path (iCloud → local fallback) before loading config
+- Setup wizard detects existing iCloud config from other devices and skips to verification
+- Config now tracks sync settings, storage path, and device list
+- File structure documentation updated to distinguish plugin source vs. synced user data
+
+### Setup Required for Existing Users
+1. Run the setup wizard — Step 0 will offer to migrate your existing config to iCloud
+2. On your second device, the plugin will auto-detect the synced config on first run
+
+---
+
 ## v1.1.0
 
 ### New Features

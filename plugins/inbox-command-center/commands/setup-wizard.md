@@ -4,9 +4,37 @@ Complete onboarding for the Inbox Command Center — connect accounts, build voi
 
 ## Before Starting
 
-1. Check if `inbox-command-center/config.md` already exists.
+1. **Check for existing iCloud sync:** Look for `~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/config.md`
+   - If found: "Found your Inbox Command Center config synced via iCloud from another device. You're all set — want to verify connections on this device, or jump to `/triage`?"
+   - Auto-detect device name and add to the devices list in config
+   - Verify MCP connections (Gmail, Slack, etc.) are active on this device — prompt to re-authenticate any that aren't
+   - Skip to Step 11 (Review & Activate) with existing config
+2. Check if `inbox-command-center/config.md` exists locally.
    - If yes: "You've already set up the Inbox Command Center. Want to reconfigure, or jump straight to `/triage`?"
-2. Create the `inbox-command-center/` directory if it doesn't exist.
+3. If no config found anywhere, start fresh setup. Create the data directory (location chosen in Step 0).
+
+---
+
+## Step 0: Cross-Device Sync
+
+> "Do you use Claude on more than one device? I can sync your Inbox Command Center config, voice profile, rules, and VIP contacts across devices automatically."
+>
+> - **Yes, sync via iCloud** (recommended for Mac users) — Stores all user data in iCloud Drive so it's available on every Mac signed into the same Apple ID
+>   - Checks that iCloud Drive is available: `~/Library/Mobile Documents/com~apple~CloudDocs/`
+>   - Creates: `~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/`
+>   - "What's this device? (e.g., MacBook Pro, iMac)" — saved to config for tracking
+> - **No, keep local only** — Data stays in `inbox-command-center/` in the working directory. Fine for single-device use.
+>
+> Note: Your task tracker (Google Sheets), calendar events, and Slack messages already sync via their own cloud services. This setting controls your plugin config, voice profile, rules, and VIP contacts.
+
+Save the choice to config:
+```markdown
+## Cross-Device Sync
+- Enabled: Yes / No
+- Storage: iCloud Drive / Local
+- Path: [resolved path]
+- Devices: [device name]
+```
 
 ---
 

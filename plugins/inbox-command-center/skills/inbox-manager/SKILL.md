@@ -8,7 +8,6 @@ description: >
   "what do I need to respond to", "create a rule", "message rules", "voice profile",
   "daily briefing", "morning update", "check my messages", "send me a reminder",
   or anything related to email, messaging, or communications management.
-version: 1.1.0
 ---
 
 # Inbox Command Center
@@ -90,6 +89,74 @@ Stored in `inbox-command-center/config.md`:
 - Slack Channel: [#inbox-reminders or custom name]
 - Default: [user's preference]
 ```
+
+## Cross-Device Sync
+
+The Inbox Command Center supports syncing all user data across multiple macOS devices via iCloud Drive. This ensures your configuration, voice profile, rules, VIP contacts, and triage state are consistent whether you're on your laptop or desktop.
+
+### How It Works
+
+All user data files are stored in a shared iCloud Drive folder instead of a local-only directory:
+
+```
+~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/
+├── config.md                 # Connected tools, preferences, schedule, version tracking
+├── voice-profile.md          # Living voice profile
+├── vip-contacts.md           # Priority contact list with relationship tags
+├── rules.md                  # Active message rules
+├── rule-suggestions.md       # Pending learned suggestions
+├── task-tracker-link.md      # Link to Google Sheet
+└── CHANGELOG.md              # Version history and update notes
+```
+
+### Data Path Resolution
+
+When loading or saving user data, the plugin resolves the data directory in this order:
+
+1. **iCloud path** (preferred): `~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/`
+2. **Local fallback**: `inbox-command-center/` in the current working directory
+
+On first run, the setup wizard asks whether to enable cross-device sync. If enabled, all user data is created in and read from the iCloud path. If the iCloud path is not available (e.g., iCloud Drive is disabled or not signed in), the plugin falls back to local storage and warns the user.
+
+### What Syncs
+
+| Data | Syncs via iCloud | Notes |
+|------|-----------------|-------|
+| config.md | Yes | All preferences, connected accounts, schedule, version tracking |
+| voice-profile.md | Yes | Full voice profile — consistent drafting voice across devices |
+| vip-contacts.md | Yes | VIP list stays current on both devices |
+| rules.md | Yes | Rules apply everywhere |
+| rule-suggestions.md | Yes | Learned suggestions accumulate across devices |
+| task-tracker-link.md | Yes | Points to the same Google Sheet |
+| Google Sheet tasks | Already cloud | Google Sheets syncs independently — no action needed |
+| Google Calendar events | Already cloud | Calendar syncs independently |
+| Slack reminders | Already cloud | Slack messages sync independently |
+
+### Conflict Handling
+
+iCloud Drive handles file-level sync automatically. In rare cases where the same file is edited on two devices simultaneously before sync completes:
+- iCloud creates a conflict copy (e.g., `config 2.md`)
+- On next plugin load, the plugin detects conflict copies and prompts: "A sync conflict was detected in [file]. Which version do you want to keep?" Shows a diff summary of the two versions.
+- After resolution, the conflict copy is deleted
+
+### Sync Status in Config
+
+```markdown
+## Cross-Device Sync
+- Enabled: Yes
+- Storage: iCloud Drive
+- Path: ~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/
+- Devices: [MacBook Pro, iMac]
+- Last synced: [auto-managed by iCloud]
+```
+
+### Setup on a New Device
+
+When the plugin detects that iCloud sync is enabled (the iCloud folder exists with a valid `config.md`) but is running on a device not yet listed:
+1. Auto-detect the device name
+2. Add it to the devices list in config
+3. Confirm: "Synced! Found your Inbox Command Center config from [other device]. You're all set."
+4. Verify MCP connections are active on this device (Gmail, Slack, etc. may need re-authentication per device)
 
 ## Rules Engine
 
@@ -635,20 +702,22 @@ When the Inbox Command Center (or any Strategy Labs marketplace plugin) is updat
 ### Update Briefing Format
 
 ```
-🆕 INBOX COMMAND CENTER — Updated to v1.1.0
+🆕 INBOX COMMAND CENTER — Updated to v1.2.0
 
 Here's what's new:
 
 NEW FEATURES:
+├── 🔄 Cross-Device Sync — Config, voice profile, rules, and VIP contacts sync across Macs via iCloud
 ├── 💬 iMessage Integration — Read, write, and triage iMessages alongside email and Slack
 ├── ⏰ Scheduled Reminders — Create, schedule, and deliver reminders via Slack channel, Slack DM, or iMessage
 ├── 📢 Dedicated Slack Reminder Channel — All reminders in one place (#inbox-reminders)
 ├── 🔁 Recurring Reminders — "Remind me every Monday at 9am to..."
 
 SETUP NEEDED:
-├── 1. iMessage — Connect your iMessage account [Set up now]
-├── 2. Reminder Channel — Choose where reminders are delivered [Configure]
-├── 3. Slack Reminder Channel — Create #inbox-reminders [Create now / Skip]
+├── 1. Cross-Device Sync — Enable iCloud sync for your config and data [Set up now / Skip]
+├── 2. iMessage — Connect your iMessage account [Set up now]
+├── 3. Reminder Channel — Choose where reminders are delivered [Configure]
+├── 4. Slack Reminder Channel — Create #inbox-reminders [Create now / Skip]
 
 [Set up all new features] [Set up later] [Show full changelog]
 ```
@@ -677,13 +746,36 @@ If the user chooses "Set up later":
 
 ## File Structure
 
+### Plugin Source (in marketplace repo)
 ```
-inbox-command-center/
-├── config.md                 # Connected tools, preferences, schedule, version tracking
+plugins/inbox-command-center/
+├── .claude-plugin/plugin.json   # Plugin metadata and version
+├── CHANGELOG.md                 # Version history and update notes
+├── README.md                    # Plugin overview
+├── commands/                    # Command files (setup-wizard, triage, create-rule, voice-calibration)
+└── skills/inbox-manager/SKILL.md  # This file — full skill documentation
+```
+
+### User Data (synced via iCloud or local)
+
+When cross-device sync is enabled:
+```
+~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/
+├── config.md                 # Connected tools, preferences, schedule, version tracking, sync settings
 ├── voice-profile.md          # Living voice profile
 ├── vip-contacts.md           # Priority contact list with relationship tags
 ├── rules.md                  # Active message rules
 ├── rule-suggestions.md       # Pending learned suggestions
-├── task-tracker-link.md      # Link to Google Sheet
-└── CHANGELOG.md              # Version history and update notes
+└── task-tracker-link.md      # Link to Google Sheet
+```
+
+When local only:
+```
+inbox-command-center/
+├── config.md
+├── voice-profile.md
+├── vip-contacts.md
+├── rules.md
+├── rule-suggestions.md
+└── task-tracker-link.md
 ```

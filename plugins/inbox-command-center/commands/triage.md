@@ -6,10 +6,11 @@ Triggers on: "check my email", "triage", "what did I miss", "any new emails", "i
 
 ## Before Starting
 
-1. Load config from `inbox-command-center/config.md` — connected tools, batch size, preferences.
-2. Load rules from `inbox-command-center/rules.md`.
-3. Load VIP contacts from `inbox-command-center/vip-contacts.md`.
-4. Load voice profile from `inbox-command-center/voice-profile.md` (needed for drafting).
+0. **Resolve data path:** Check for iCloud sync first: `~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/config.md`. If found, use the iCloud path for all user data files. Otherwise, fall back to `inbox-command-center/` locally. Also check for iCloud conflict copies (e.g., `config 2.md`) — if found, prompt the user to resolve before proceeding.
+1. Load config from `[data-path]/config.md` — connected tools, batch size, preferences, sync settings.
+2. Load rules from `[data-path]/rules.md`.
+3. Load VIP contacts from `[data-path]/vip-contacts.md`.
+4. Load voice profile from `[data-path]/voice-profile.md` (needed for drafting).
 5. If Brand Knowledge Center exists, load `brand-identity.md` for brand-voice drafting.
 6. **Version check:** Compare `Plugin Version` in config against current plugin version. If updated, show the update briefing (see SKILL.md → Plugin Update Notifications) before starting triage. Walk through new feature setup if the user chooses.
 7. **Pending update check:** If `pending_update_setup` is set in config, show a brief reminder: "You have new features from [version] that need setup. Say 'set up updates' to configure." (stops after 3 reminders)

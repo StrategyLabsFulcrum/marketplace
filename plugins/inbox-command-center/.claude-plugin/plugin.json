@@ -1,6 +1,6 @@
 {
   "name": "inbox-command-center",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Inbox Command Center — AI communications manager that triages Gmail, Slack, iMessage, and messaging platforms. Auto-categorizes messages, drafts replies in your authentic voice (learned from transcripts, sent emails, and A/B calibration), manages calendar conflicts, tracks tasks, creates smart rules, delivers scheduled daily briefings, and sends reminders via dedicated Slack channel, Slack DM, or iMessage. Integrates with Brand Knowledge Center for brand-voice drafting.",
   "author": {
     "name": "Strategy Labs",
