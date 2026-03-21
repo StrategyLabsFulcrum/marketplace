@@ -30,6 +30,10 @@
       --gray: #6b7280;
       --gray-dim: rgba(107,114,128,0.12);
       --gray-border: rgba(107,114,128,0.28);
+      --teal: #14b8a6;
+      --teal-dim: rgba(20,184,166,0.12);
+      --teal-border: rgba(20,184,166,0.3);
+      --teal-glow: rgba(20,184,166,0.18);
       --text: #e5e7eb;
       --text-muted: #9ca3af;
       --text-dim: #6b7280;
@@ -96,6 +100,7 @@
       color: var(--text);
       background: rgba(255,255,255,0.06);
     }
+    .nav-link-teal:hover { color: var(--teal) !important; }
 
     /* ── LAYOUT ── */
     .container {
@@ -115,6 +120,10 @@
       text-transform: uppercase;
       color: var(--blue);
       margin-bottom: 12px;
+    }
+
+    .section-label-teal {
+      color: var(--teal);
     }
 
     .section-title {
@@ -183,6 +192,11 @@
       50% { opacity: 0.4; }
     }
 
+    @keyframes pulseTeal {
+      0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--teal); }
+      50% { opacity: 0.5; box-shadow: 0 0 16px var(--teal); }
+    }
+
     .hero-title {
       font-size: clamp(36px, 5vw, 64px);
       font-weight: 800;
@@ -227,11 +241,254 @@
     }
 
     .hero-stat-num span { color: var(--blue); }
+    .hero-stat-num span.teal { color: var(--teal); }
 
     .hero-stat-label {
       font-size: 13px;
       color: var(--text-dim);
       font-weight: 500;
+    }
+
+    /* ── FULCRUM ECOSYSTEM ── */
+    #fulcrum {
+      padding: 96px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #fulcrum::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(ellipse at center, rgba(20,184,166,0.07) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .fulcrum-header-card {
+      background: var(--bg-card);
+      border: 1px solid var(--teal-border);
+      border-radius: 20px;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .fulcrum-header-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--teal), transparent);
+    }
+
+    .fulcrum-header-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(ellipse at bottom right, rgba(20,184,166,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .fulcrum-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .fulcrum-tag-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .fulcrum-tag {
+      display: inline-block;
+      background: var(--teal-dim);
+      border: 1px solid var(--teal-border);
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+
+    .fulcrum-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.3);
+      color: #f59e0b;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+
+    .fulcrum-status::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #f59e0b;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .fulcrum-name {
+      font-size: clamp(22px, 3vw, 30px);
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+
+    .fulcrum-name span {
+      background: linear-gradient(135deg, var(--teal) 0%, #67e8f9 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .fulcrum-tagline {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.75;
+      max-width: 780px;
+      margin-top: 12px;
+    }
+
+    /* Pillar cards */
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .pillar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s, transform 0.25s, background 0.25s;
+    }
+
+    .pillar-card:hover {
+      border-color: var(--teal-border);
+      transform: translateY(-3px);
+      background: var(--bg-card-hover);
+    }
+
+    .pillar-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 16px 16px 0 0;
+      background: var(--teal);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .pillar-card:hover::before { opacity: 1; }
+
+    .pillar-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--teal-dim);
+      border: 1px solid var(--teal-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      color: var(--teal);
+      flex-shrink: 0;
+    }
+
+    .pillar-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.2px;
+      margin-bottom: 10px;
+      line-height: 1.3;
+    }
+
+    .pillar-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 18px;
+    }
+
+    .pillar-features {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .pillar-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    .pillar-feature-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--teal);
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .agents-integrate-note {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 24px;
+      padding: 14px 20px;
+      background: var(--teal-dim);
+      border: 1px solid var(--teal-border);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .agents-integrate-note strong {
+      color: var(--teal);
+    }
+
+    .fulcrum-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--teal);
+      flex-shrink: 0;
+      animation: pulseTeal 2.5s ease-in-out infinite;
     }
 
     /* ── HOW IT WORKS ── */
@@ -802,14 +1059,17 @@
       .container { padding: 0 16px; }
       section { padding: 72px 0; }
       #hero { padding: 80px 0 64px; }
+      #fulcrum { padding: 72px 0; }
       .hero-stats { gap: 32px; }
       .foundation-card { padding: 28px 24px; }
+      .fulcrum-header-card { padding: 28px 24px; }
       .steps-container { grid-template-columns: 1fr; }
       .step-card:first-child { border-radius: 14px 14px 0 0; }
       .step-card:last-child { border-radius: 0 0 14px 14px; }
       .step-card:not(:last-child) { border-right: 1px solid var(--border); border-bottom: none; }
       .step-arrow { display: none; }
       .launch-card { padding: 28px 24px; }
+      .pillars-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 480px) {
@@ -825,6 +1085,7 @@
 <nav>
   <a href="#hero" class="nav-brand">Strategy Labs</a>
   <div class="nav-links">
+    <a href="#fulcrum" class="nav-link-teal">Fulcrum</a>
     <a href="#foundation">Foundation</a>
     <a href="#orchestrators">Orchestrators</a>
     <a href="#copywriters">Copywriters</a>
@@ -841,10 +1102,10 @@
   <div class="container">
     <div class="hero-badge">AI Marketing Team</div>
     <h1 class="hero-title">Strategy Labs<br /><span>AI Marketing Team</span></h1>
-    <p class="hero-subtitle">A full-stack AI marketing department — 24 specialized agents working in a coordinated hierarchy from strategy to execution to optimization.</p>
+    <p class="hero-subtitle">A full-stack AI marketing department — 25 specialized agents working in a coordinated hierarchy from strategy to execution to optimization, powered by the Fulcrum ecosystem.</p>
     <div class="hero-stats">
       <div class="hero-stat">
-        <div class="hero-stat-num">24<span>+</span></div>
+        <div class="hero-stat-num">25<span>+</span></div>
         <div class="hero-stat-label">Specialized Agents</div>
       </div>
       <div class="hero-stat">
@@ -856,9 +1117,109 @@
         <div class="hero-stat-label">Coordination Loops</div>
       </div>
       <div class="hero-stat">
-        <div class="hero-stat-num">1</div>
-        <div class="hero-stat-label">Shared Foundation</div>
+        <div class="hero-stat-num" style="background: linear-gradient(135deg, var(--teal) 0%, #67e8f9 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">1</div>
+        <div class="hero-stat-label">Fulcrum Platform</div>
       </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── FULCRUM ECOSYSTEM ── -->
+<section id="fulcrum">
+  <div class="container">
+    <div class="section-label section-label-teal">Powering the Ecosystem</div>
+    <h2 class="section-title">The Fulcrum Platform</h2>
+    <p class="section-desc">The infrastructure layer in development at Strategy Labs that will connect every agent to the data, assets, and intelligence they need to operate at full capability.</p>
+
+    <div class="fulcrum-header-card">
+      <div class="fulcrum-top">
+        <div>
+          <div class="fulcrum-tag-row">
+            <span class="fulcrum-tag">Strategy Labs</span>
+            <span class="fulcrum-status">In Development</span>
+          </div>
+          <div class="fulcrum-name">Fulcrum <span>Ecosystem</span></div>
+          <p class="fulcrum-tagline">Fulcrum is the operating layer beneath the agent team — a unified platform that gives every agent access to clean brand data, approved assets, cross-brand intelligence, and current platform knowledge. Today the agents operate from files in a shared folder. Fulcrum replaces that with a live, connected system where data flows in automatically, assets are indexed and searchable, performance is benchmarked against a real cohort, and best practices stay current without manual updates.</p>
+        </div>
+      </div>
+      <div class="agents-integrate-note">
+        <div class="fulcrum-dot"></div>
+        <span><strong>All 25 agents</strong> in this system are being designed to integrate natively with Fulcrum — the same commands and workflows, with live data replacing manual file uploads.</span>
+      </div>
+    </div>
+
+    <div class="pillars-grid">
+
+      <!-- Pillar 1: Data Layer -->
+      <div class="pillar-card">
+        <div class="pillar-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
+        </div>
+        <div class="pillar-name">Data Infrastructure</div>
+        <p class="pillar-desc">Connects brands to all the data sources their agents need — then automatically pulls, cleans, normalizes, and stores it so every agent always works from current numbers.</p>
+        <div class="pillar-features">
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Native connectors to Meta, Google Ads, GA4, Klaviyo, Shopify, Stripe, and more</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Automated ingestion pipeline — no manual data exports needed</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Data cleaning and normalization across sources with unified schema</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Historical archive that grows richer with every campaign</div>
+        </div>
+      </div>
+
+      <!-- Pillar 2: Asset Management -->
+      <div class="pillar-card">
+        <div class="pillar-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+          </svg>
+        </div>
+        <div class="pillar-name">Asset Management Layer</div>
+        <p class="pillar-desc">A structured repository where approved copy and organized brand assets are stored, tagged, and instantly accessible to any agent — no searching through folders.</p>
+        <div class="pillar-features">
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Approved copy library searchable by channel, hook type, and performance</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Organized visual asset library with AI-generated tags and channel suggestions</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Every copywriter checks here before writing — winning copy surfaces first</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>New assets flow from inbox → organized → tagged → available to all agents</div>
+        </div>
+      </div>
+
+      <!-- Pillar 3: Industry Intelligence -->
+      <div class="pillar-card">
+        <div class="pillar-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><path d="M2 20h20"/>
+          </svg>
+        </div>
+        <div class="pillar-name">Industry Intelligence Network</div>
+        <p class="pillar-desc">A repository of anonymized performance data across the entire Fulcrum brand database — enabling industry benchmarks, trend reporting, and cohort comparisons no single brand could generate alone.</p>
+        <div class="pillar-features">
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Aggregate benchmarks for CTR, ROAS, CVR, CAC, and LTV by industry vertical</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Trend detection across the full brand database — platform shifts surface early</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Cohort comparison — see how your brand performs against relevant peers</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Seasonality and spend pattern intelligence from real multi-brand data</div>
+        </div>
+      </div>
+
+      <!-- Pillar 4: Best Practices Repository -->
+      <div class="pillar-card">
+        <div class="pillar-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+          </svg>
+        </div>
+        <div class="pillar-name">Knowledge &amp; Best Practices Repository</div>
+        <p class="pillar-desc">The living knowledge base every agent references — platform best practices, ad specs, algorithm updates, and creative frameworks — maintained and updated automatically so agents never operate on stale information.</p>
+        <div class="pillar-features">
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Continuously crawls Meta, Google, Klaviyo, TikTok, LinkedIn, and Pinterest docs</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Structured update reports with before/after diffs for every agent reference file</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Platform spec changes (ad formats, character limits, algorithm shifts) propagate automatically</div>
+          <div class="pillar-feature"><div class="pillar-feature-dot"></div>Shared across all brands — one update benefits every agent on the platform</div>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -892,7 +1253,7 @@
             </div>
             <div class="flow-step-content">
               <div class="flow-step-name">Campaign Strategist</div>
-              <div class="flow-step-desc">Receives business goal, produces complete campaign brief</div>
+              <div class="flow-step-desc">Receives business goal, produces complete campaign brief — approval-gated before any agents deploy</div>
             </div>
           </div>
           <div class="flow-step">
@@ -999,8 +1360,8 @@
               <div class="flow-line"></div>
             </div>
             <div class="flow-step-content">
-              <div class="flow-step-name">Content Library</div>
-              <div class="flow-step-desc">Accumulates every piece of approved copy — searchable before new copy is written</div>
+              <div class="flow-step-name">Content Library + Asset Manager</div>
+              <div class="flow-step-desc">Approved copy and organized assets accumulate — every agent searches before creating new</div>
             </div>
           </div>
           <div class="flow-step">
@@ -1050,7 +1411,7 @@
           <span class="cmd">/analytics-setup</span>
         </div>
       </div>
-      <p class="foundation-desc">The constitution every agent reads before doing anything. Contains brand positioning, audience profile, voice rules (NEVER/ALWAYS), proof points, differentiators, and campaign context. Every agent in the system loads this first — it is the single source of truth that keeps 24 agents consistent across every output, every channel, every campaign.</p>
+      <p class="foundation-desc">The constitution every agent reads before doing anything. Contains brand positioning, audience profile, voice rules (NEVER/ALWAYS), proof points, differentiators, and campaign context. Every agent in the system loads this first — it is the single source of truth that keeps 25 agents consistent across every output, every channel, every campaign.</p>
       <div class="foundation-features">
         <div class="foundation-feature">Brand Positioning</div>
         <div class="foundation-feature">Audience Profile</div>
@@ -1070,7 +1431,7 @@
   <div class="container">
     <div class="section-label">Agent Tiers</div>
     <h2 class="section-title">The Agent Team</h2>
-    <p class="section-desc">24 specialized agents organized across 6 tiers — orchestrators that coordinate, specialists that execute, and support agents that keep the system learning.</p>
+    <p class="section-desc">25 specialized agents organized across 6 tiers — orchestrators that coordinate, specialists that execute, and support agents that keep the system learning and current.</p>
 
     <div class="tier-header">
       <span class="tier-badge tier-blue">Tier 1 — Orchestrators</span>
@@ -1084,7 +1445,7 @@
           <div class="card-name">Campaign Strategist</div>
           <span class="role-tag role-blue">Strategy</span>
         </div>
-        <p class="card-desc">Top of the chain. Takes a business goal, produces a complete campaign brief, then fires Creative Director and Performance Marketing in parallel to begin execution simultaneously.</p>
+        <p class="card-desc">Top of the chain. Takes a business goal, produces a complete campaign brief — approval-gated before any agents deploy — then fires Creative Director and Performance Marketing in parallel.</p>
         <div class="card-commands">
           <span class="cmd">/campaign-new</span>
           <span class="cmd">/campaign-list</span>
@@ -1155,7 +1516,7 @@
             <div class="card-name">Ad Copywriter</div>
             <span class="role-tag role-green">Copy</span>
           </div>
-          <p class="card-desc">Writes paid ad copy for Meta, Google RSA, TikTok, LinkedIn, and Pinterest. Checks the content library before writing. Delivers a minimum of 3 variants per hook angle.</p>
+          <p class="card-desc">Writes paid ad copy for Meta, Google RSA, TikTok, LinkedIn, and Pinterest. Checks the content library before writing — surfaces approved winning copy first. Delivers 3+ variants per hook angle.</p>
         </div>
 
         <div class="agent-card card-green">
@@ -1212,7 +1573,7 @@
 
         <div class="agent-card card-purple">
           <div class="card-header">
-            <div class="card-name">UX & Website Designer</div>
+            <div class="card-name">UX &amp; Website Designer</div>
             <span class="role-tag role-purple">Design</span>
           </div>
           <p class="card-desc">Wireframes, UX copy (form labels, error messages, microcopy), CRO hypotheses, and accessibility requirements for all web and app experiences.</p>
@@ -1236,7 +1597,7 @@
 
         <div class="agent-card card-purple">
           <div class="card-header">
-            <div class="card-name">Packaging & Brand Design Agent</div>
+            <div class="card-name">Packaging &amp; Brand Design Agent</div>
             <span class="role-tag role-purple">Design</span>
           </div>
           <p class="card-desc">Panel-by-panel packaging specs, trade show displays, corporate identity systems, and presentation templates aligned to brand standards.</p>
@@ -1306,7 +1667,7 @@
       <div class="tier-header">
         <span class="tier-badge tier-gray">Support Layer</span>
         <div class="tier-line"></div>
-        <span class="tier-count">3 agents</span>
+        <span class="tier-count">4 agents</span>
       </div>
       <div class="cards-grid">
 
@@ -1315,11 +1676,24 @@
             <div class="card-name">Content Library</div>
             <span class="role-tag role-gray">Support</span>
           </div>
-          <p class="card-desc">Indexed backlog of all approved copy and a searchable asset catalogue. Every copywriter checks here before writing — existing winning copy surfaces first.</p>
+          <p class="card-desc">Indexed backlog of all approved copy. Every copywriter checks here before writing — existing winning copy surfaces first. New copy is approval-gated before entering the library.</p>
           <div class="card-commands">
             <span class="cmd">/content-find</span>
             <span class="cmd">/content-store</span>
             <span class="cmd">/content-browse</span>
+          </div>
+        </div>
+
+        <div class="agent-card card-gray">
+          <div class="card-header">
+            <div class="card-name">Brand Asset Manager</div>
+            <span class="role-tag role-gray">Support</span>
+          </div>
+          <p class="card-desc">Sets up a structured visual asset library from scratch, organizes existing photos and videos with descriptive names and channel tags, and manages an ongoing inbox-based workflow for new assets — approval-gated before anything is renamed or moved.</p>
+          <div class="card-commands">
+            <span class="cmd">/asset-setup</span>
+            <span class="cmd">/organize-assets</span>
+            <span class="cmd">/add-assets</span>
           </div>
         </div>
 
@@ -1339,7 +1713,7 @@
             <div class="card-name">Analytics &amp; Data Setup</div>
             <span class="role-tag role-gray">Support</span>
           </div>
-          <p class="card-desc">Connects data sources, audits historical performance, and establishes the benchmarks every agent uses as their performance baseline before campaigns begin.</p>
+          <p class="card-desc">Connects data sources, audits historical performance across paid media, email, revenue, and tracking health — then establishes the benchmarks every agent uses as their performance baseline.</p>
           <div class="card-commands">
             <span class="cmd">/analytics-setup</span>
           </div>
@@ -1386,7 +1760,7 @@
     <div class="launch-card">
       <div>
         <div class="launch-title">Start Your First Campaign</div>
-        <p class="launch-desc">Describe your business goal. The Campaign Strategist handles everything from brief to brief — creative, media, and execution all follow automatically.</p>
+        <p class="launch-desc">Describe your business goal. The Campaign Strategist handles everything from brief to execution — creative, media, and optimization all follow automatically.</p>
       </div>
       <div class="launch-cmd">/campaign-new</div>
     </div>
@@ -1402,20 +1776,7 @@
 
 <script>
   // Highlight active nav link on scroll
-  const sections = document.querySelectorAll('section[id], div[id]');
   const navLinks = document.querySelectorAll('.nav-links a');
-
-  const sectionMap = {
-    'hero': 'hero',
-    'foundation': 'foundation',
-    'orchestrators': 'orchestrators',
-    'copywriters': 'copywriters',
-    'design': 'design',
-    'media': 'media',
-    'optimization': 'optimization',
-    'support': 'support',
-    'getting-started': 'getting-started'
-  };
 
   function updateActiveLink() {
     const scrollY = window.scrollY + 80;
@@ -1433,8 +1794,8 @@
       link.style.background = '';
       const href = link.getAttribute('href').replace('#', '');
       if (href === current) {
-        link.style.color = 'var(--blue)';
-        link.style.background = 'var(--blue-dim)';
+        link.style.color = href === 'fulcrum' ? 'var(--teal)' : 'var(--blue)';
+        link.style.background = href === 'fulcrum' ? 'var(--teal-dim)' : 'var(--blue-dim)';
       }
     });
   }
