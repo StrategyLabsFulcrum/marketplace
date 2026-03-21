@@ -1,7 +1,12 @@
 {
   "name": "ad-copy",
   "version": "1.0.0",
-  "description": "Writes paid advertising copy for Meta (Facebook/Instagram), Google Ads (RSA), TikTok, LinkedIn, and Pinterest. Specialist agent — receives briefs from the Creative Director and produces platform-specific copy variants within character limits, optimized for the approved hook angles and brand voice.",
-  "skills": [{"name": "ad-copy", "path": "skills/ad-copy/SKILL.md"}],
-  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["creative-director"]}
+  "description": "Ad Copywriter — writes paid advertising copy for Meta (Facebook/Instagram), Google RSA, TikTok, LinkedIn, and Pinterest. Checks the content library for existing approved copy before writing new copy. Surfaces character-limit-compliant variants with multiple hook angles for A/B testing.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["ad copy", "Meta ads", "Google ads", "TikTok ads", "LinkedIn ads", "paid social", "copywriting", "ad variants", "headlines", "RSA"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

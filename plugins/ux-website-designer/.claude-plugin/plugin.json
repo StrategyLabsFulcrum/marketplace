@@ -1,7 +1,12 @@
 {
   "name": "ux-website-designer",
   "version": "1.0.0",
-  "description": "Designs the web experience — landing pages, microsites, user flows, and web components. Produces wireframe descriptions, page structure, UX copy (microcopy, form copy, error states), CRO hypotheses, and responsive design specifications. Specialist agent directed by the Art Director.",
-  "skills": [{"name": "ux-website-designer", "path": "skills/ux-website-designer/SKILL.md"}],
-  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["art-director", "direct-response-copy"]}
+  "description": "UX and Website Designer — produces wireframe documents, UX copy (form labels, error messages, microcopy, success states), CRO hypotheses, responsive design notes, and accessibility requirements for landing pages and web experiences.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["UX design", "website design", "wireframe", "landing page design", "UX copy", "microcopy", "CRO", "responsive design", "web design", "user experience"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

@@ -1,27 +1,12 @@
 {
   "name": "performance-marketing",
   "version": "1.0.0",
-  "description": "Translates campaign strategy and creative packages into live paid media campaigns. Builds the media plan, configures platform campaigns (Meta, Google, LinkedIn, TikTok, Email), sets up tracking and UTMs, and executes optimization actions from the Marketing Analytics Orchestrator. The activation and optimization layer of the multi-agent marketing system.",
-  "skills": [
-    {
-      "name": "performance-marketing",
-      "path": "skills/performance-marketing/SKILL.md"
-    }
-  ],
-  "commands": [
-    {
-      "name": "campaign-launch",
-      "path": "commands/campaign-launch.md",
-      "description": "Build the media plan and set up campaigns across all channels — from strategy brief to launch-ready configuration"
-    },
-    {
-      "name": "campaign-optimize",
-      "path": "commands/campaign-optimize.md",
-      "description": "Execute optimization actions from the Marketing Analytics Orchestrator on live campaigns"
-    }
-  ],
-  "dependencies": {
-    "required": ["brand-intelligence-center"],
-    "recommended": ["campaign-strategist", "creative-director", "marketing-analytics"]
-  }
+  "description": "Performance Marketing Agent — builds media plans, platform campaign setup documents, and UTM/tracking infrastructure for Meta, Google, Email, LinkedIn, and TikTok. Manages the optimization loop using structured action lists from the Marketing Analytics agent.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["performance marketing", "paid media", "Meta ads", "Google ads", "media plan", "campaign setup", "UTM tracking", "Klaviyo", "TikTok ads", "LinkedIn ads", "paid social"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

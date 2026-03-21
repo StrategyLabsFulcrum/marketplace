@@ -1,7 +1,12 @@
 {
   "name": "email-copy",
   "version": "1.0.0",
-  "description": "Writes email marketing copy — welcome series, promotional campaigns, abandoned cart sequences, nurture flows, cold outreach, newsletters, and lifecycle emails. Specialist agent — receives briefs from the Creative Director and produces complete sequences with subject lines, preview text, body copy, and CTAs.",
-  "skills": [{"name": "email-copy", "path": "skills/email-copy/SKILL.md"}],
-  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["creative-director"]}
+  "description": "Email Copywriter — writes marketing email sequences: welcome series, promotional campaigns, abandoned cart, nurture flows, re-engagement, and cold outreach. Checks the content library for existing approved copy before writing new copy.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["email copy", "email marketing", "email sequence", "welcome series", "abandoned cart", "nurture sequence", "subject lines", "Klaviyo", "email campaign", "cold outreach"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

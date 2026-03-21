@@ -1,7 +1,12 @@
 {
   "name": "seo-copy",
   "version": "1.0.0",
-  "description": "Writes SEO-optimized content — blog posts, pillar pages, content clusters, comparison pages, programmatic pages, and any content designed to rank in organic search. Specialist agent — analyzes SERP intent, builds content architecture, and produces copy with complete on-page optimization.",
-  "skills": [{"name": "seo-copy", "path": "skills/seo-copy/SKILL.md"}],
-  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["creative-director"]}
+  "description": "SEO Copywriter — writes search-optimized content by analyzing SERP competition, classifying search intent, and building content architecture before writing. Covers blog posts, pillar pages, comparison pages, and programmatic templates. Checks the content library for existing approved copy before writing.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["SEO", "SEO copywriting", "blog post", "pillar page", "content marketing", "search intent", "E-E-A-T", "featured snippet", "keyword optimization", "organic content"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

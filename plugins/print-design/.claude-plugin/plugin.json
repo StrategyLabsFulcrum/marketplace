@@ -1,7 +1,12 @@
 {
   "name": "print-design",
   "version": "1.0.0",
-  "description": "Produces print design specifications — magazine ads, newspaper ads, direct mail (postcards, brochures), and printed collateral. Complete CMYK color specs, typography, image requirements, and production notes. Specialist agent directed by the Art Director.",
-  "skills": [{"name": "print-design", "path": "skills/print-design/SKILL.md"}],
-  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["art-director"]}
+  "description": "Print Design Agent — creates print production specifications with CMYK/Pantone color values, bleed and trim setup, ink density limits, and pre-production checklists. Covers magazines, newspapers, direct mail, brochures, flyers, and multi-panel fold layouts.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["print design", "CMYK", "Pantone", "print production", "brochure", "direct mail", "print specs", "bleed", "trim", "print advertising"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

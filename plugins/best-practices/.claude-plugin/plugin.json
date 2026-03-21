@@ -1,8 +1,12 @@
 {
   "name": "best-practices",
   "version": "1.0.0",
-  "description": "Crawls official platform documentation (Meta, Google, Klaviyo, TikTok, LinkedIn, Pinterest) to surface changes that should be reflected in agent reference files. Produces structured update reports with before/after text for recommended changes. No reference file edits without approval.",
-  "skills": [{"name": "best-practices", "path": "skills/best-practices/SKILL.md"}],
-  "commands": [{"name": "best-practices-review", "path": "commands/best-practices-review.md", "description": "Review platform documentation for updates and recommend changes to agent reference files"}],
-  "dependencies": {"required": [], "recommended": []}
+  "description": "Best Practices Updater — crawls official platform documentation from Meta, Google, Klaviyo, TikTok, LinkedIn, and Pinterest to surface changes that should be reflected in agent reference files. Produces structured update reports with before/after text. No reference file edits without approval.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["best practices", "platform updates", "Meta ads", "Google ads", "Klaviyo", "TikTok", "LinkedIn", "documentation", "ad specs", "platform changes"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

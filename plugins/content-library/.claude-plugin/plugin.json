@@ -1,15 +1,12 @@
 {
   "name": "content-library",
   "version": "1.0.0",
-  "description": "The indexed backlog of all approved marketing copy and the searchable catalogue of brand visual assets. Prevents duplication by making existing approved content findable before new content is commissioned. Integrated with brand-asset-manager for asset discovery.",
-  "skills": [{"name": "content-library", "path": "skills/content-library/SKILL.md"}],
-  "commands": [
-    {"name": "content-find", "path": "commands/content-find.md", "description": "Search the Content Library for existing copy or assets"},
-    {"name": "content-store", "path": "commands/content-store.md", "description": "Add approved copy or asset references to the library"},
-    {"name": "content-browse", "path": "commands/content-browse.md", "description": "Browse the full library or a specific category; run audits"}
-  ],
-  "dependencies": {
-    "required": ["brand-intelligence-center"],
-    "recommended": ["brand-asset-manager", "campaign-strategist", "creative-director"]
-  }
+  "description": "Content Library — the indexed backlog of all approved marketing copy and the searchable catalogue of brand visual assets. Surfaces existing approved copy before new copy is written. Prompts for approval and storage after every copy session. Integrated with brand-asset-manager for asset discovery.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["content library", "approved copy", "asset library", "copy backlog", "content management", "ad copy library", "email copy", "brand assets", "content database"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

@@ -1,7 +1,12 @@
 {
   "name": "direct-response-copy",
   "version": "1.0.0",
-  "description": "Writes landing pages, sales pages, and VSL scripts — long-form conversion copy structured around persuasion architecture, awareness-level matching, objection handling, and risk reversal. Specialist agent — receives briefs from the Creative Director.",
-  "skills": [{"name": "direct-response-copy", "path": "skills/direct-response-copy/SKILL.md"}],
-  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["creative-director"]}
+  "description": "Direct Response Copywriter — writes landing pages, sales pages, and VSL scripts using Schwartz awareness levels and proven persuasion architecture. Checks the content library for existing approved copy before writing new copy.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["direct response", "landing page copy", "sales page", "VSL script", "conversion copy", "persuasion", "copywriting", "long-form copy", "direct response copywriting"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

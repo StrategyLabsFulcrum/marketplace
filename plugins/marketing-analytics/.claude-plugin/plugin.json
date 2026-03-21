@@ -1,27 +1,12 @@
 {
   "name": "marketing-analytics",
   "version": "1.0.0",
-  "description": "Tracks marketing KPIs and performance metrics across all channels, surfaces actionable insights, and routes structured recommendations back to the Campaign Strategist, Performance Marketing Agent, and Creative Director. Closes the feedback loop in the multi-agent marketing system.",
-  "skills": [
-    {
-      "name": "marketing-analytics",
-      "path": "skills/marketing-analytics/SKILL.md"
-    }
-  ],
-  "commands": [
-    {
-      "name": "analytics-report",
-      "path": "commands/analytics-report.md",
-      "description": "Run a full performance report across campaigns — KPI scorecard, channel breakdown, creative analysis, ROI summary"
-    },
-    {
-      "name": "analytics-brief",
-      "path": "commands/analytics-brief.md",
-      "description": "Generate an insight brief and optimization action list — faster than a full report, focused on what to do next"
-    }
-  ],
-  "dependencies": {
-    "required": ["brand-intelligence-center"],
-    "recommended": ["campaign-strategist", "creative-director", "art-director"]
-  }
+  "description": "Marketing Analytics — a team of four specialist analysts (Campaign Performance, Channel Mix, Creative Performance, Revenue/ROI) that review marketing data and produce structured briefs for the Campaign Strategist, Performance Marketing, and Creative Director. Closes the feedback loop between data and strategy.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["marketing analytics", "KPIs", "campaign performance", "ROAS", "CAC", "attribution", "channel mix", "creative performance", "marketing data", "performance reporting"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

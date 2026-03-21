@@ -1,7 +1,12 @@
 {
   "name": "graphic-design",
   "version": "1.0.0",
-  "description": "Produces digital design assets — social ads (Meta, Google, TikTok, LinkedIn), email graphics, and organic social content. Outputs Canva direction, AI image generation prompts, and complete asset specifications. Specialist agent directed by the Art Director.",
-  "skills": [{"name": "graphic-design", "path": "skills/graphic-design/SKILL.md"}],
-  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["art-director", "creative-director"]}
+  "description": "Graphic Design Agent — produces digital ad creative through three paths: detailed Canva direction (field-by-field specs), AI image generation prompts, or design specification documents for human designers. Covers social, display, email, and web formats.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["graphic design", "Canva", "ad creative", "design specs", "AI image prompts", "social media design", "digital ads", "display ads", "creative design"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

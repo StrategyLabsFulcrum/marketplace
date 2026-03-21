@@ -1,15 +1,12 @@
 {
   "name": "cro-orchestrator",
   "version": "1.0.0",
-  "description": "Identifies, prioritizes, and tests changes that increase conversion rates across the marketing funnel — landing pages, product pages, checkout flows, email sequences, and ad-to-page experiences. Produces hypotheses, test designs, and optimization recommendations.",
-  "skills": [{"name": "cro-orchestrator", "path": "skills/cro-orchestrator/SKILL.md"}],
-  "commands": [
-    {"name": "cro-audit", "path": "commands/cro-audit.md", "description": "Full funnel CRO audit with prioritized hypothesis backlog"},
-    {"name": "test-design", "path": "commands/test-design.md", "description": "Design a specific A/B or multivariate test with statistical specifications"},
-    {"name": "checkout-audit", "path": "commands/checkout-audit.md", "description": "Audit and optimize the checkout and purchase flow"}
-  ],
-  "dependencies": {
-    "required": ["brand-intelligence-center"],
-    "recommended": ["campaign-strategist", "marketing-analytics", "ux-website-designer", "direct-response-copy", "performance-marketing"]
-  }
+  "description": "CRO Orchestrator — identifies, prioritizes, and tests changes that increase conversion rates across the marketing funnel. Produces funnel audits, ICE-scored A/B test hypotheses, checkout optimization plans, and test design specifications with sample size calculations.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["CRO", "conversion rate optimization", "A/B testing", "landing page optimization", "funnel analysis", "checkout optimization", "split testing", "conversion hypothesis", "UX testing"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

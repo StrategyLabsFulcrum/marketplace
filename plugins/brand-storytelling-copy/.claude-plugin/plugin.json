@@ -1,7 +1,12 @@
 {
   "name": "brand-storytelling-copy",
   "version": "1.0.0",
-  "description": "Writes brand narrative copy — about pages, founder letters, manifestos, mission/vision/values, thought leadership essays, and long-form brand content. Specialist agent — receives briefs from the Creative Director and writes copy that builds belief and brand identity.",
-  "skills": [{"name": "brand-storytelling-copy", "path": "skills/brand-storytelling-copy/SKILL.md"}],
-  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["creative-director"]}
+  "description": "Brand Storytelling Copywriter — writes brand narrative content: about pages, founder stories, manifestos, mission/vision/values, thought leadership essays, and brand editorial. Checks the content library for existing approved copy before writing new copy.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["brand storytelling", "about page", "founder story", "manifesto", "brand narrative", "thought leadership", "brand voice", "copywriting", "brand copy"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

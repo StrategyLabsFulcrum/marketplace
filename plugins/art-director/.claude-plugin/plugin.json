@@ -1,27 +1,12 @@
 {
   "name": "art-director",
   "version": "1.0.0",
-  "description": "Develops the visual direction system for campaigns and directs all design specialists across digital and non-digital channels. The Art Director translates the Creative Director's creative concept into a complete visual system — color, typography, photography, layout, motion — and briefs graphic design, print, OOH, packaging, and UX design specialists.",
-  "skills": [
-    {
-      "name": "art-director",
-      "path": "skills/art-director/SKILL.md"
-    }
-  ],
-  "commands": [
-    {
-      "name": "visual-direction",
-      "path": "commands/visual-direction.md",
-      "description": "Develop the visual direction system for a campaign and brief design specialists"
-    },
-    {
-      "name": "design-review",
-      "path": "commands/design-review.md",
-      "description": "Review design outputs against the visual direction system and brand standards"
-    }
-  ],
-  "dependencies": {
-    "required": ["brand-intelligence-center"],
-    "recommended": ["creative-director", "campaign-strategist", "competitive-landscape"]
-  }
+  "description": "Art Director — creates visual direction systems for campaigns and reviews design executions. Produces visual direction documents, briefs for graphic design specialists (print, OOH, packaging, digital), and design review verdicts. Works in parallel with the Creative Director.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["art direction", "visual direction", "design brief", "design review", "creative direction", "brand visual", "campaign design", "design system"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

@@ -1,14 +1,12 @@
 {
   "name": "pr-influencer",
   "version": "1.0.0",
-  "description": "Plans and executes earned media campaigns — press coverage, influencer partnerships, creator collaborations, brand ambassador programs, and UGC strategies. Bridges brand-paid media and brand-earned media.",
-  "skills": [{"name": "pr-influencer", "path": "skills/pr-influencer/SKILL.md"}],
-  "commands": [
-    {"name": "influencer-brief", "path": "commands/influencer-brief.md", "description": "Create a creator brief and campaign structure for an influencer campaign"},
-    {"name": "pr-pitch", "path": "commands/pr-pitch.md", "description": "Write a press release or journalist pitch for a launch or announcement"}
-  ],
-  "dependencies": {
-    "required": ["brand-intelligence-center"],
-    "recommended": ["campaign-strategist", "creative-director", "performance-marketing", "content-library"]
-  }
+  "description": "PR and Influencer Agent — plans earned media campaigns including influencer partnerships, press releases, media pitches, brand ambassador programs, and UGC strategies. Produces creator briefs, media target lists, FTC compliance checklists, and campaign tracking setup.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["PR", "influencer marketing", "creator brief", "press release", "media pitch", "ambassador program", "UGC", "earned media", "influencer campaign", "brand partnerships"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }

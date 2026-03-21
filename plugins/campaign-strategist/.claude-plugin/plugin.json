@@ -1,12 +1,12 @@
 {
   "name": "campaign-strategist",
   "version": "1.0.0",
-  "description": "Campaign Strategist — the primary orchestrator for campaign planning and go-to-market strategy. Builds full campaign briefs covering goal, audience, channel mix, budget allocation, KPI framework, and phased timeline. Produces structured handoff briefs for the Creative Director and Performance Marketing Agent. Reads brand-intelligence-center and competitive-landscape data to ground strategy in brand context and market intelligence.",
+  "description": "Campaign Strategist — the top-level marketing campaign orchestrator. Takes a goal and produces a complete campaign brief, then coordinates the Creative Director, Art Director, and Performance Marketing agents in parallel. Owns campaign folder structure, KPI targets, audience brief, and channel strategy.",
   "author": {
     "name": "Strategy Labs",
     "email": "scott@strategylabs.us"
   },
-  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace",
-  "keywords": ["campaign", "campaign strategy", "campaign brief", "go-to-market", "channel strategy", "marketing plan", "KPI", "budget allocation", "campaign planning", "launch strategy", "performance marketing"],
-  "license": "MIT"
+  "keywords": ["campaign strategy", "campaign brief", "marketing strategy", "campaign planning", "campaign manager", "orchestrator", "channel strategy", "KPIs", "audience brief"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
 }
