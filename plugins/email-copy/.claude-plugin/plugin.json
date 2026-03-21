@@ -1,0 +1,7 @@
+{
+  "name": "email-copy",
+  "version": "1.0.0",
+  "description": "Writes email marketing copy — welcome series, promotional campaigns, abandoned cart sequences, nurture flows, cold outreach, newsletters, and lifecycle emails. Specialist agent — receives briefs from the Creative Director and produces complete sequences with subject lines, preview text, body copy, and CTAs.",
+  "skills": [{"name": "email-copy", "path": "skills/email-copy/SKILL.md"}],
+  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["creative-director"]}
+}

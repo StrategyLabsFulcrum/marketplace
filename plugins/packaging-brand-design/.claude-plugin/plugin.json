@@ -1,0 +1,7 @@
+{
+  "name": "packaging-brand-design",
+  "version": "1.0.0",
+  "description": "Designs physical brand touchpoints — product packaging (cartons, labels, pouches), trade show displays, corporate identity (business cards, letterhead, presentation templates), and branded signage. Complete dieline specifications, CMYK/Pantone color, regulatory copy placement, and production notes. Specialist agent directed by the Art Director.",
+  "skills": [{"name": "packaging-brand-design", "path": "skills/packaging-brand-design/SKILL.md"}],
+  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["art-director"]}
+}

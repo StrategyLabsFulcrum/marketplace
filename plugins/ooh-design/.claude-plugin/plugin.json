@@ -1,0 +1,7 @@
+{
+  "name": "ooh-design",
+  "version": "1.0.0",
+  "description": "Designs out-of-home advertising — billboards, transit ads, bus shelters, bus wraps, and street-level media. Enforces strict copy constraints (7 words max for highway) and viewing-distance legibility standards. Complete OOH design specifications and production notes. Specialist agent directed by the Art Director.",
+  "skills": [{"name": "ooh-design", "path": "skills/ooh-design/SKILL.md"}],
+  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["art-director"]}
+}

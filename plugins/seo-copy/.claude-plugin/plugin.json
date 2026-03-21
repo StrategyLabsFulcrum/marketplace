@@ -1,0 +1,7 @@
+{
+  "name": "seo-copy",
+  "version": "1.0.0",
+  "description": "Writes SEO-optimized content — blog posts, pillar pages, content clusters, comparison pages, programmatic pages, and any content designed to rank in organic search. Specialist agent — analyzes SERP intent, builds content architecture, and produces copy with complete on-page optimization.",
+  "skills": [{"name": "seo-copy", "path": "skills/seo-copy/SKILL.md"}],
+  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["creative-director"]}
+}

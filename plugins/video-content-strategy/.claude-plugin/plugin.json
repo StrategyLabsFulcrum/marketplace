@@ -1,0 +1,15 @@
+{
+  "name": "video-content-strategy",
+  "version": "1.0.0",
+  "description": "Plans, structures, and scripts video content across all formats — YouTube strategy, TikTok/Reels content plans, video ad scripts, content calendars, and series development. Produces strategy documents and scripts that direct video production.",
+  "skills": [{"name": "video-content-strategy", "path": "skills/video-content-strategy/SKILL.md"}],
+  "commands": [
+    {"name": "video-script", "path": "commands/video-script.md", "description": "Write a full script or detailed outline for a specific video"},
+    {"name": "video-calendar", "path": "commands/video-calendar.md", "description": "Build a monthly or quarterly video content calendar"},
+    {"name": "channel-strategy", "path": "commands/channel-strategy.md", "description": "Develop a full YouTube or TikTok channel strategy"}
+  ],
+  "dependencies": {
+    "required": ["brand-intelligence-center"],
+    "recommended": ["campaign-strategist", "creative-director", "art-director", "performance-marketing", "content-library"]
+  }
+}

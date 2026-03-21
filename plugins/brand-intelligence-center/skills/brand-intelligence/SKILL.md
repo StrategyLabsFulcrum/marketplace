@@ -805,3 +805,263 @@ Whenever the active brand changes (via `/brand-switch`) or a brand's files are u
 4. Confirm: "Now working on **[Brand Name]**. All marketing skills are loaded with their context."
 
 The root files are always a live copy — never a symlink — so every skill can read them without any special handling.
+
+---
+
+## Team Collaboration
+
+The Brand Intelligence Center supports team review, revision, and sync workflows so multiple team members can stay aligned on brand context.
+
+### Configuration File
+
+`.brand-intel-config.md` — sits one level above `brand-intelligence-center/` (in the working directory root). Local only, never synced.
+
+```markdown
+# Brand Intelligence Config
+
+## Storage
+- **mode:** local | fast.io
+- **workspace_id:** [19-digit Fast.io workspace ID]
+- **workspace_name:** [human-readable name]
+
+## Sync
+- **last_pull:** [ISO 8601 timestamp]
+- **last_push:** [ISO 8601 timestamp]
+- **auto_pull_on_start:** true | false
+
+## Team
+- **team_members:** [comma-separated names or emails for changelog attribution]
+- **review_share_id:** [Fast.io share ID, populated after first /brand-review share]
+```
+
+---
+
+### /brand-review — Generate a Team Review Document
+
+Produces a clean, human-readable brand document for team distribution. Not a raw dump of the markdown files — a formatted, plain-language summary any team member can read and annotate.
+
+**Step 1 — Check for existing config:**
+Read `.brand-intel-config.md`. Note whether Fast.io sync is configured.
+
+**Step 2 — Read all area files:**
+Read all brand-intelligence-center area files for the active brand. Note which areas are complete vs. marked `[Not yet completed]`.
+
+**Step 3 — Check revision history:**
+Read `brand-intelligence-center/changelog.md` if it exists. Note the date of the last revision for each area.
+
+**Step 4 — Generate the review document:**
+
+Read `${CLAUDE_PLUGIN_ROOT}/skills/brand-intelligence/references/review-templates.md` for the full output format.
+
+The review document is written in plain, human-readable language — no raw markdown syntax, no code blocks, no template variables. Written as if a brand strategist summarized the brand for a colleague.
+
+Save to `brand-intelligence-center/review/brand-review-{{YYYY-MM-DD}}.md`.
+
+**Step 5 — Handle `share` argument:**
+
+If `/brand-review share` was invoked:
+1. Authenticate with Fast.io (read config for workspace_id; if not configured, ask and save to config)
+2. Upload the review document to the Fast.io workspace using `upload text-file`
+3. Create a Fast.io share with `share create` (type: "send", access: "anyone_with_link")
+4. Save the share ID to `.brand-intel-config.md` as `review_share_id`
+5. Return the share URL: "Your brand review is ready to share: [URL] — anyone with this link can read it and add comments."
+
+**Step 6 — Report:**
+> Brand review generated for **[Brand Name]** — [N] areas documented.
+>
+> Saved to: `brand-intelligence-center/review/brand-review-{{date}}.md`
+> [If shared]: Share link: {{url}}
+>
+> **Areas to complete:** [list any incomplete areas]
+>
+> To collect team feedback and apply revisions, run `/brand-revise`.
+
+---
+
+### /brand-revise — Apply Team Revisions
+
+Accepts revision input, proposes specific changes as before/after comparisons, requires confirmation, applies changes, rebuilds system-prompt.md, and logs everything.
+
+**Step 1 — Collect revision input:**
+
+> How would you like to provide revision notes?
+> - `[ ]` Paste notes now (copy from email, Slack, a doc, or a review document)
+> - `[ ]` Pull from Fast.io review comments (requires sync to be configured)
+> - `[ ]` Describe changes conversationally
+
+If pasting: accept the input and proceed to Step 2.
+If Fast.io: use `execute` action `ai chat-create` on the review document to extract all comments. Summarize for confirmation before proceeding.
+If conversational: gather changes through dialogue, confirm understanding before proposing.
+
+**Step 2 — Parse revision notes:**
+
+Read the revision input and identify:
+- Which area each revision affects (business, customer, differentiation, voice-identity, proof-goals, digital-ecosystem, financial)
+- Which specific field within that area
+- What the proposed new value is
+- Whether the revision is an addition, edit, or removal
+
+For ambiguous revisions, ask a clarifying question before proposing a change.
+
+**Step 3 — Read current values:**
+
+For each identified area, read the current file content. Extract the specific field values that are being changed.
+
+**Step 4 — Present before/after for each change:**
+
+Present changes one area at a time, grouped. For each field:
+
+```
+─────────────────────────────────────────
+Area: Customer Profile
+Field: Primary Customer
+
+CURRENT:
+  Young professionals aged 28–40, urban, household income $80K+,
+  interested in fitness and outdoor recreation.
+
+PROPOSED:
+  Young professionals aged 25–45, urban and suburban, household
+  income $75K+, interested in fitness, outdoor recreation, and
+  sustainable lifestyle choices.
+
+Confirm? [Y]es / [S]kip / [E]dit
+─────────────────────────────────────────
+```
+
+After all individual changes are presented, offer: "Confirm all [N] changes at once? [Y/N]"
+
+**Step 5 — Apply confirmed changes:**
+
+For each confirmed change:
+1. Read the current area file
+2. Apply the specific field edit
+3. Write the updated file
+4. Note the change in a running log for the changelog entry
+
+Do not apply skipped changes. For edited changes, show the edited version and confirm again before applying.
+
+**Step 6 — Rebuild system-prompt.md:**
+
+After all changes are applied:
+1. Read all updated area files
+2. Re-assemble `system-prompt.md` following the Assembly Rules from the Setup Wizard section
+3. Write the new `system-prompt.md`
+4. In agency mode: also write to `brands/{{slug}}/system-prompt.md` and sync to root
+
+**Step 7 — Update changelog:**
+
+Append to `brand-intelligence-center/changelog.md` (create if it doesn't exist):
+
+```markdown
+## {{YYYY-MM-DD}} — [N] changes applied
+
+**Revised by:** {{team_members from config, or "User"}}
+**Areas updated:** {{list of affected areas}}
+
+### Changes
+
+**{{Area Name}} — {{Field}}**
+- Before: {{previous value}}
+- After: {{new value}}
+
+**{{Area Name}} — {{Field}}**
+- Before: {{previous value}}
+- After: {{new value}}
+```
+
+**Step 8 — Auto-push if sync is configured:**
+
+If `.brand-intel-config.md` exists and `mode` is `fast.io`:
+> Your brand files have been updated. Push the changes to Fast.io so your team has the latest version?
+> `[ ]` Yes — push now
+> `[ ]` No — I'll push manually with `/brand-sync push`
+
+---
+
+### /brand-sync — Fast.io File Synchronization
+
+Syncs `brand-intelligence-center/` files between local and a Fast.io workspace.
+
+**Before starting:**
+1. Read `.brand-intel-config.md`. If not found: offer to set it up (ask for workspace ID) or create a new Fast.io workspace.
+2. If `mode` is `local`: inform user sync is disabled. Offer to switch to `fast.io`.
+3. If `mode` is `fast.io`: proceed.
+
+**Argument routing** (check `$ARGUMENTS`):
+- `pull` → Pull Workflow
+- `push` → Push Workflow
+- `status` → Status Workflow
+- empty → Ask which direction
+
+**Pull Workflow (Fast.io → Local):**
+1. Authenticate (read config; if session inactive, use `auth pkce-login`)
+2. List files in `brand-intelligence-center/` folder in the Fast.io workspace
+3. For each brand area file: fetch from Fast.io, write locally
+4. For agency mode: pull from `brands/{{slug}}/` folder for the active brand
+5. Update `last_pull` in config
+6. Re-assemble `system-prompt.md` from pulled files
+7. Report: "[N] brand files pulled. system-prompt.md rebuilt."
+
+**Push Workflow (Local → Fast.io):**
+1. Authenticate
+2. Read all files in local `brand-intelligence-center/`
+3. Upload each file to the Fast.io workspace's `brand-intelligence-center/` folder using `upload text-file`
+4. For agency mode: upload to `brands/{{slug}}/` folder
+5. Update `last_push` in config
+6. Report: "[N] brand files pushed to [workspace name]."
+
+**Status Workflow:**
+1. Read config — display storage mode, workspace name, last pull/push timestamps (with "X hours/days ago")
+2. List local files with last-modified dates
+3. If `last_pull` > 24 hours: "Your local files may be out of date. Run `/brand-sync pull` to check."
+4. If `last_push` > local file modification dates: "You have local changes not yet pushed. Run `/brand-sync push` to share with your team."
+
+**Sync scope — files included:**
+- All 7 area files (`business.md`, `customer.md`, `differentiation.md`, `voice-identity.md`, `proof-goals.md`, `digital-ecosystem.md`, `financial.md`)
+- `system-prompt.md`
+- `changelog.md`
+- Agency mode: `.active-brand` file
+
+**Sync scope — files excluded:**
+- `review/` directory (review documents are shared outbound via share links, not pulled)
+- `.brand-intel-config.md` (local-only, never synced)
+
+**Error handling:**
+
+| Scenario | Behavior |
+|----------|----------|
+| No config file | Offer to create one (ask for workspace ID) |
+| mode is `local` | Inform sync is disabled. Offer to switch |
+| Auth fails | Trigger `auth pkce-login` flow |
+| Workspace not found | Report workspace ID from config. Suggest verifying |
+| File not found on remote (pull) | Create locally from scratch or skip with note |
+| File not found locally (push) | Skip with note |
+| Network failure | Report which files succeeded/failed. Don't update timestamps if any failed |
+
+---
+
+### Changelog
+
+`brand-intelligence-center/changelog.md` is automatically maintained by the revision workflow. Never edit manually — always through `/brand-revise`.
+
+**Format:**
+```markdown
+# Brand Intelligence Changelog — {{Brand Name}}
+
+## {{YYYY-MM-DD}} — [N] changes applied
+**Revised by:** {{name}}
+**Areas updated:** {{list}}
+
+### Changes
+**{{Area}} — {{Field}}**
+- Before: {{value}}
+- After: {{value}}
+
+---
+
+## {{earlier date}} — [N] changes applied
+...
+```
+
+The changelog travels with the brand files — it syncs to Fast.io alongside the area files so team members can see the full revision history.

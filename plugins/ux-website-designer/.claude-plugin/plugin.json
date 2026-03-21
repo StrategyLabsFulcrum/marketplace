@@ -1,0 +1,7 @@
+{
+  "name": "ux-website-designer",
+  "version": "1.0.0",
+  "description": "Designs the web experience — landing pages, microsites, user flows, and web components. Produces wireframe descriptions, page structure, UX copy (microcopy, form copy, error states), CRO hypotheses, and responsive design specifications. Specialist agent directed by the Art Director.",
+  "skills": [{"name": "ux-website-designer", "path": "skills/ux-website-designer/SKILL.md"}],
+  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["art-director", "direct-response-copy"]}
+}

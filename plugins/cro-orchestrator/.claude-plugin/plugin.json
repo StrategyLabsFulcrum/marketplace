@@ -1,0 +1,15 @@
+{
+  "name": "cro-orchestrator",
+  "version": "1.0.0",
+  "description": "Identifies, prioritizes, and tests changes that increase conversion rates across the marketing funnel — landing pages, product pages, checkout flows, email sequences, and ad-to-page experiences. Produces hypotheses, test designs, and optimization recommendations.",
+  "skills": [{"name": "cro-orchestrator", "path": "skills/cro-orchestrator/SKILL.md"}],
+  "commands": [
+    {"name": "cro-audit", "path": "commands/cro-audit.md", "description": "Full funnel CRO audit with prioritized hypothesis backlog"},
+    {"name": "test-design", "path": "commands/test-design.md", "description": "Design a specific A/B or multivariate test with statistical specifications"},
+    {"name": "checkout-audit", "path": "commands/checkout-audit.md", "description": "Audit and optimize the checkout and purchase flow"}
+  ],
+  "dependencies": {
+    "required": ["brand-intelligence-center"],
+    "recommended": ["campaign-strategist", "marketing-analytics", "ux-website-designer", "direct-response-copy", "performance-marketing"]
+  }
+}

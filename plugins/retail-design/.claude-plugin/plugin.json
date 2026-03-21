@@ -1,0 +1,7 @@
+{
+  "name": "retail-design",
+  "version": "1.0.0",
+  "description": "Designs branded merchandise and retail products — apparel (t-shirts, hoodies, hats, jackets), stickers, decals, tote bags, drinkware, patches, pins, and any physical product a brand sells or gifts. Produces complete production-ready specifications for screen printing, DTG, embroidery, sublimation, vinyl cutting, and print-on-demand platforms. Specialist agent directed by the Art Director.",
+  "skills": [{"name": "retail-design", "path": "skills/retail-design/SKILL.md"}],
+  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["art-director"]}
+}

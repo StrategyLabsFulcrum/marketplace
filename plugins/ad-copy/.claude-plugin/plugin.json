@@ -1,0 +1,7 @@
+{
+  "name": "ad-copy",
+  "version": "1.0.0",
+  "description": "Writes paid advertising copy for Meta (Facebook/Instagram), Google Ads (RSA), TikTok, LinkedIn, and Pinterest. Specialist agent — receives briefs from the Creative Director and produces platform-specific copy variants within character limits, optimized for the approved hook angles and brand voice.",
+  "skills": [{"name": "ad-copy", "path": "skills/ad-copy/SKILL.md"}],
+  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["creative-director"]}
+}

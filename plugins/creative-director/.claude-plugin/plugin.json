@@ -1,0 +1,12 @@
+{
+  "name": "creative-director",
+  "version": "1.0.0",
+  "description": "Creative Director — orchestrates all creative execution for a campaign. Develops the unifying creative concept, issues tailored specialist briefs to copywriters and designers, reviews all outputs against the brand voice rubric, runs copy through the Copy Editor, and assembles the final creative package. Works in campaign mode (receives from Campaign Strategist) or standalone mode (takes a brief directly). The creative concept must be approved before any specialist is briefed.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace",
+  "keywords": ["creative direction", "creative concept", "campaign creative", "copywriting", "ad creative", "creative brief", "brand voice", "creative strategy", "content production"],
+  "license": "MIT"
+}

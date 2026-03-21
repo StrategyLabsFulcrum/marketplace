@@ -1,0 +1,7 @@
+{
+  "name": "brand-storytelling-copy",
+  "version": "1.0.0",
+  "description": "Writes brand narrative copy — about pages, founder letters, manifestos, mission/vision/values, thought leadership essays, and long-form brand content. Specialist agent — receives briefs from the Creative Director and writes copy that builds belief and brand identity.",
+  "skills": [{"name": "brand-storytelling-copy", "path": "skills/brand-storytelling-copy/SKILL.md"}],
+  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["creative-director"]}
+}

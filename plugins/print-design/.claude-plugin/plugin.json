@@ -1,0 +1,7 @@
+{
+  "name": "print-design",
+  "version": "1.0.0",
+  "description": "Produces print design specifications — magazine ads, newspaper ads, direct mail (postcards, brochures), and printed collateral. Complete CMYK color specs, typography, image requirements, and production notes. Specialist agent directed by the Art Director.",
+  "skills": [{"name": "print-design", "path": "skills/print-design/SKILL.md"}],
+  "dependencies": {"required": ["brand-intelligence-center"], "recommended": ["art-director"]}
+}
