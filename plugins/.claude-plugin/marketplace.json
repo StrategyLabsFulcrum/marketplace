@@ -1,0 +1,281 @@
+{
+  "name": "strategy-labs-plugins",
+  "description": "Official plugin marketplace from Strategy Labs — boutique performance marketing tools for eCommerce and lead generation brands.",
+  "owner": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us",
+    "url": "https://strategylabs.us"
+  },
+  "plugins": [
+    {
+      "name": "brand-intelligence-center",
+      "source": "./plugins/brand-intelligence-center",
+      "description": "Brand Intelligence Center — a choice-driven setup wizard that builds a complete brand profile combining operational depth with conversion intelligence. The single source of truth for all Strategy Labs marketing plugins.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["brand setup", "brand profile", "brand onboarding", "customer psychology", "JTBD", "differentiation", "brand voice", "proof points"],
+      "license": "MIT"
+    },
+    {
+      "name": "campaign-strategist",
+      "source": "./plugins/campaign-strategist",
+      "description": "Campaign Strategist — the top-level marketing campaign orchestrator. Takes a goal and produces a complete campaign brief, then coordinates the Creative Director, Art Director, and Performance Marketing agents in parallel.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["campaign strategy", "campaign brief", "marketing strategy", "campaign planning", "orchestrator", "channel strategy", "KPIs", "audience brief"],
+      "license": "MIT"
+    },
+    {
+      "name": "creative-director",
+      "source": "./plugins/creative-director",
+      "description": "Creative Director — translates campaign briefs into creative concepts and coordinates all copywriting specialists in parallel. Owns the creative concept, campaign line, and hook angles.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["creative director", "creative concept", "copywriting", "campaign concept", "creative brief", "copy review", "creative strategy", "brand voice"],
+      "license": "MIT"
+    },
+    {
+      "name": "art-director",
+      "source": "./plugins/art-director",
+      "description": "Art Director — creates visual direction systems for campaigns and reviews design executions. Produces visual direction documents and briefs for all design specialists.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["art direction", "visual direction", "design brief", "design review", "creative direction", "brand visual", "campaign design", "design system"],
+      "license": "MIT"
+    },
+    {
+      "name": "marketing-analytics",
+      "source": "./plugins/marketing-analytics",
+      "description": "Marketing Analytics — a team of four specialist analysts (Campaign Performance, Channel Mix, Creative Performance, Revenue/ROI) that review marketing data and produce structured briefs for the Campaign Strategist, Performance Marketing, and Creative Director.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["marketing analytics", "KPIs", "campaign performance", "ROAS", "CAC", "attribution", "channel mix", "creative performance", "marketing data", "reporting"],
+      "license": "MIT"
+    },
+    {
+      "name": "performance-marketing",
+      "source": "./plugins/performance-marketing",
+      "description": "Performance Marketing Agent — builds media plans, platform campaign setup documents, and UTM/tracking infrastructure for Meta, Google, Email, LinkedIn, and TikTok. Manages the optimization loop using data from Marketing Analytics.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["performance marketing", "paid media", "Meta ads", "Google ads", "media plan", "campaign setup", "UTM tracking", "TikTok ads", "LinkedIn ads", "paid social"],
+      "license": "MIT"
+    },
+    {
+      "name": "ad-copy",
+      "source": "./plugins/ad-copy",
+      "description": "Ad Copywriter — writes paid advertising copy for Meta (Facebook/Instagram), Google RSA, TikTok, LinkedIn, and Pinterest. Checks the content library for existing approved copy before writing new variants.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["ad copy", "Meta ads", "Google ads", "TikTok ads", "LinkedIn ads", "paid social", "copywriting", "ad variants", "headlines", "RSA"],
+      "license": "MIT"
+    },
+    {
+      "name": "email-copy",
+      "source": "./plugins/email-copy",
+      "description": "Email Copywriter — writes marketing email sequences: welcome series, promotional campaigns, abandoned cart, nurture flows, re-engagement, and cold outreach. Checks the content library before writing new copy.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["email copy", "email marketing", "email sequence", "welcome series", "abandoned cart", "nurture sequence", "subject lines", "Klaviyo", "email campaign"],
+      "license": "MIT"
+    },
+    {
+      "name": "direct-response-copy",
+      "source": "./plugins/direct-response-copy",
+      "description": "Direct Response Copywriter — writes landing pages, sales pages, and VSL scripts using Schwartz awareness levels and proven persuasion architecture. Checks the content library before writing new copy.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["direct response", "landing page copy", "sales page", "VSL script", "conversion copy", "persuasion", "copywriting", "long-form copy"],
+      "license": "MIT"
+    },
+    {
+      "name": "brand-storytelling-copy",
+      "source": "./plugins/brand-storytelling-copy",
+      "description": "Brand Storytelling Copywriter — writes brand narrative content: about pages, founder stories, manifestos, mission/vision/values, and thought leadership essays. Checks the content library before writing new copy.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["brand storytelling", "about page", "founder story", "manifesto", "brand narrative", "thought leadership", "brand voice", "copywriting"],
+      "license": "MIT"
+    },
+    {
+      "name": "seo-copy",
+      "source": "./plugins/seo-copy",
+      "description": "SEO Copywriter — writes search-optimized content by analyzing SERP competition, classifying search intent, and building content architecture. Covers blog posts, pillar pages, comparison pages, and programmatic templates.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["SEO", "SEO copywriting", "blog post", "pillar page", "content marketing", "search intent", "E-E-A-T", "featured snippet", "keyword optimization"],
+      "license": "MIT"
+    },
+    {
+      "name": "graphic-design",
+      "source": "./plugins/graphic-design",
+      "description": "Graphic Design Agent — produces digital ad creative through three paths: detailed Canva direction, AI image generation prompts, or design specification documents for human designers.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["graphic design", "Canva", "ad creative", "design specs", "AI image prompts", "social media design", "digital ads", "display ads"],
+      "license": "MIT"
+    },
+    {
+      "name": "ux-website-designer",
+      "source": "./plugins/ux-website-designer",
+      "description": "UX and Website Designer — produces wireframe documents, UX copy (form labels, error messages, microcopy), CRO hypotheses, responsive design notes, and accessibility requirements for landing pages and web experiences.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["UX design", "website design", "wireframe", "landing page design", "UX copy", "microcopy", "CRO", "responsive design", "web design"],
+      "license": "MIT"
+    },
+    {
+      "name": "print-design",
+      "source": "./plugins/print-design",
+      "description": "Print Design Agent — creates print production specifications with CMYK/Pantone color values, bleed and trim setup, ink density limits, and pre-production checklists for magazines, newspapers, direct mail, and brochures.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["print design", "CMYK", "Pantone", "print production", "brochure", "direct mail", "print specs", "bleed", "trim", "print advertising"],
+      "license": "MIT"
+    },
+    {
+      "name": "ooh-design",
+      "source": "./plugins/ooh-design",
+      "description": "OOH Design Agent — creates out-of-home advertising design specifications for billboards, urban posters, bus shelters, subway ads, transit, and digital OOH. Enforces word limits by format and viewing-distance legibility standards.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["OOH", "out of home", "billboard", "poster", "transit advertising", "bus shelter", "subway ads", "digital OOH", "outdoor advertising"],
+      "license": "MIT"
+    },
+    {
+      "name": "packaging-brand-design",
+      "source": "./plugins/packaging-brand-design",
+      "description": "Packaging and Brand Design Agent — produces design specifications for product packaging, trade show displays, corporate identity (business cards, letterhead), and presentation templates.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["packaging design", "brand design", "trade show", "corporate identity", "business cards", "letterhead", "presentation design", "product packaging"],
+      "license": "MIT"
+    },
+    {
+      "name": "retail-design",
+      "source": "./plugins/retail-design",
+      "description": "Retail Design Agent — designs merchandise and retail products: apparel, stickers, drinkware, patches, pins, and tote bags. Covers screen printing, DTG, embroidery, sublimation, and vinyl cutting with POD platform guidance.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["retail design", "merchandise", "apparel design", "stickers", "screen printing", "DTG", "embroidery", "POD", "Printful", "merch design"],
+      "license": "MIT"
+    },
+    {
+      "name": "pr-influencer",
+      "source": "./plugins/pr-influencer",
+      "description": "PR and Influencer Agent — plans earned media campaigns including influencer partnerships, press releases, media pitches, brand ambassador programs, and UGC strategies. Produces creator briefs and FTC compliance checklists.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["PR", "influencer marketing", "creator brief", "press release", "media pitch", "ambassador program", "UGC", "earned media", "influencer campaign"],
+      "license": "MIT"
+    },
+    {
+      "name": "video-content-strategy",
+      "source": "./plugins/video-content-strategy",
+      "description": "Video Content Strategist — plans and scripts video content across all formats: YouTube channel strategy, TikTok and Instagram Reels content plans, video ad scripts, and content calendars.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["video strategy", "YouTube strategy", "TikTok content", "video script", "content calendar", "Reels", "video ads", "short-form video", "YouTube channel"],
+      "license": "MIT"
+    },
+    {
+      "name": "cro-orchestrator",
+      "source": "./plugins/cro-orchestrator",
+      "description": "CRO Orchestrator — identifies, prioritizes, and tests changes that increase conversion rates across the marketing funnel. Produces funnel audits, ICE-scored A/B test hypotheses, and checkout optimization plans.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["CRO", "conversion rate optimization", "A/B testing", "landing page optimization", "funnel analysis", "checkout optimization", "split testing"],
+      "license": "MIT"
+    },
+    {
+      "name": "best-practices",
+      "source": "./plugins/best-practices",
+      "description": "Best Practices Updater — crawls official platform documentation from Meta, Google, Klaviyo, TikTok, LinkedIn, and Pinterest to surface changes that should be reflected in agent reference files. Produces structured update reports with before/after text.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["best practices", "platform updates", "Meta ads", "Google ads", "Klaviyo", "TikTok", "LinkedIn", "documentation", "ad specs", "platform changes"],
+      "license": "MIT"
+    },
+    {
+      "name": "content-library",
+      "source": "./plugins/content-library",
+      "description": "Content Library — the indexed backlog of all approved marketing copy and the searchable catalogue of brand visual assets. Surfaces existing approved copy before new copy is written. Prompts for approval and storage after every copy session.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["content library", "approved copy", "asset library", "copy backlog", "content management", "ad copy library", "email copy", "brand assets"],
+      "license": "MIT"
+    },
+    {
+      "name": "brand-content-os",
+      "source": "./plugins/brand-content-os",
+      "description": "Brand & Content Operating System — capture brand knowledge, enforce voice consistency, and generate on-brand content across paid ads, email, SMS, Shopify, and social channels.",
+      "version": "1.1.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["brand", "content", "marketing", "voice", "ads", "email", "shopify", "ecommerce"],
+      "license": "MIT"
+    },
+    {
+      "name": "customer-driven-optimizations",
+      "source": "./plugins/customer-driven-optimizations",
+      "description": "Analyze recorded customer phone calls to extract competitive intelligence, identify site optimization opportunities, map customer journeys, and generate a deployable HTML dashboard.",
+      "version": "1.1.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["phone calls", "call analysis", "customer intelligence", "competitor analysis", "customer journey", "site optimization", "dashboard", "voice of customer"],
+      "license": "MIT"
+    },
+    {
+      "name": "competitive-landscape",
+      "source": "./plugins/competitive-landscape",
+      "description": "Track competitors, analyze their ad strategies across Meta and Google, map customer journeys on competitor sites, and generate competitive intelligence reports and deployable dashboards.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["competitor analysis", "competitive intelligence", "ad analysis", "meta ads", "google ads", "customer journey", "market research", "brand strategy"],
+      "license": "MIT"
+    },
+    {
+      "name": "local-business-marketing-os",
+      "source": "./plugins/local-business-marketing-os",
+      "description": "Full marketing operating system for local restaurants and hospitality businesses. Includes brand onboarding, review responses, email/SMS campaigns, and weekly social content briefs.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["restaurant", "marketing", "email", "sms", "reviews", "social media", "content", "hospitality", "local business", "klaviyo"],
+      "license": "MIT"
+    },
+    {
+      "name": "brand-knowledge-center",
+      "source": "./plugins/brand-knowledge-center",
+      "description": "Brand Knowledge Center — a step-by-step setup wizard that builds a comprehensive brand profile covering business fundamentals, financials, digital presence, brand identity, audience messaging, and competitive landscape.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["brand setup", "brand knowledge", "brand onboarding", "business profile", "competitive landscape", "brand guidelines", "audience messaging"],
+      "license": "MIT"
+    },
+    {
+      "name": "brand-asset-manager",
+      "source": "./plugins/brand-asset-manager",
+      "description": "Brand Asset Manager — organize, rename, describe, and catalog brand photos and videos into a searchable folder structure. Analyzes each asset, generates descriptions, suggests channel usage, and maintains a searchable manifest.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["brand assets", "photo organization", "video organization", "asset management", "image catalog", "metadata", "duplicate detection", "content library"],
+      "license": "MIT"
+    },
+    {
+      "name": "lead-list-builder",
+      "source": "./plugins/lead-list-builder",
+      "description": "Lead List Builder — complete lead generation and pipeline management system. Research leads, draft personalized outreach, track status, deploy interactive dashboards, and manage daily/weekly/monthly workflow.",
+      "version": "2.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["lead generation", "prospecting", "outreach", "lead list", "sales", "business development", "lead tracking", "dashboard", "CRM"],
+      "license": "MIT"
+    },
+    {
+      "name": "inbox-command-center",
+      "source": "./plugins/inbox-command-center",
+      "description": "Inbox Command Center — AI communications manager that triages Gmail, Slack, iMessage, and messaging platforms. Auto-categorizes messages, drafts replies in your authentic voice, manages calendar conflicts, and delivers scheduled daily briefings.",
+      "version": "1.2.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["email management", "inbox triage", "Gmail", "Slack", "iMessage", "communications", "voice profile", "draft replies", "calendar", "task tracker", "daily briefing"],
+      "license": "MIT"
+    }
+  ]
+}
