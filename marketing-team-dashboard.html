@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Strategy Labs AI Marketing Team</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg-card: #0f0f1a;
+      --bg-card-hover: #141428;
+      --blue: #3b82f6;
+      --blue-dim: rgba(59,130,246,0.15);
+      --blue-border: rgba(59,130,246,0.3);
+      --green: #10b981;
+      --green-dim: rgba(16,185,129,0.12);
+      --green-border: rgba(16,185,129,0.28);
+      --purple: #8b5cf6;
+      --purple-dim: rgba(139,92,246,0.12);
+      --purple-border: rgba(139,92,246,0.28);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245,158,11,0.12);
+      --amber-border: rgba(245,158,11,0.28);
+      --red: #ef4444;
+      --red-dim: rgba(239,68,68,0.12);
+      --red-border: rgba(239,68,68,0.28);
+      --gray: #6b7280;
+      --gray-dim: rgba(107,114,128,0.12);
+      --gray-border: rgba(107,114,128,0.28);
+      --text: #e5e7eb;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --border: rgba(255,255,255,0.07);
+      --nav-h: 64px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--nav-h);
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      gap: 0;
+    }
+
+    .nav-brand {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--blue);
+      letter-spacing: -0.3px;
+      white-space: nowrap;
+      margin-right: 40px;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex: 1;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+    .nav-links a:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.06);
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section {
+      padding: 96px 0;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 600px;
+      line-height: 1.7;
+      margin-bottom: 48px;
+    }
+
+    /* ── HERO ── */
+    #hero {
+      padding: 120px 0 96px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #hero::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 600px;
+      background: radial-gradient(ellipse at center, rgba(59,130,246,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--blue-dim);
+      border: 1px solid var(--blue-border);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--blue);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 8px var(--blue);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hero-title {
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      color: #fff;
+      margin-bottom: 24px;
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, var(--blue) 0%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 600px;
+      line-height: 1.75;
+      margin-bottom: 48px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .hero-stat-num {
+      font-size: 32px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -1px;
+    }
+
+    .hero-stat-num span { color: var(--blue); }
+
+    .hero-stat-label {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .loops-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .loop-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+
+    .loop-card:hover {
+      border-color: rgba(255,255,255,0.14);
+      transform: translateY(-2px);
+    }
+
+    .loop-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .loop-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .loop-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .loop-subtitle {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 500;
+      margin-top: 1px;
+    }
+
+    .flow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      position: relative;
+    }
+
+    .flow-step-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .flow-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .flow-line {
+      width: 1px;
+      flex: 1;
+      min-height: 16px;
+      margin: 2px 0;
+    }
+
+    .flow-step:last-child .flow-line { display: none; }
+
+    .flow-step-content {
+      padding-bottom: 16px;
+      padding-top: 4px;
+    }
+
+    .flow-step:last-child .flow-step-content { padding-bottom: 0; }
+
+    .flow-step-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .flow-step-desc {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    /* Loop color variants */
+    .loop-blue .loop-icon { background: var(--blue-dim); color: var(--blue); }
+    .loop-blue .flow-dot { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue-border); }
+    .loop-blue .flow-line { background: var(--blue-border); }
+    .loop-blue { border-color: var(--blue-border); }
+
+    .loop-green .loop-icon { background: var(--green-dim); color: var(--green); }
+    .loop-green .flow-dot { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+    .loop-green .flow-line { background: var(--green-border); }
+    .loop-green { border-color: var(--green-border); }
+
+    .loop-purple .loop-icon { background: var(--purple-dim); color: var(--purple); }
+    .loop-purple .flow-dot { background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple-border); }
+    .loop-purple .flow-line { background: var(--purple-border); }
+    .loop-purple { border-color: var(--purple-border); }
+
+    /* ── FOUNDATION ── */
+    .foundation-card {
+      background: var(--bg-card);
+      border: 1px solid var(--blue-border);
+      border-radius: 20px;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+
+    .foundation-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blue), transparent);
+    }
+
+    .foundation-card:hover {
+      border-color: rgba(59,130,246,0.5);
+      transform: translateY(-2px);
+    }
+
+    .foundation-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .foundation-title-group {}
+
+    .foundation-tag {
+      display: inline-block;
+      background: var(--blue-dim);
+      border: 1px solid var(--blue-border);
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 100px;
+      margin-bottom: 12px;
+    }
+
+    .foundation-name {
+      font-size: clamp(20px, 2.5vw, 26px);
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    .foundation-commands {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-self: center;
+    }
+
+    .foundation-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.75;
+      margin-bottom: 28px;
+      max-width: 800px;
+    }
+
+    .foundation-features {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .foundation-feature {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .foundation-feature::before {
+      content: '✓';
+      color: var(--blue);
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    /* ── CMD PILL ── */
+    .cmd {
+      display: inline-block;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-family: 'SF Mono', 'Fira Code', 'Fira Mono', monospace;
+      white-space: nowrap;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    /* ── TIER SECTION ── */
+    .tier-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .tier-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border: 1px solid;
+    }
+
+    .tier-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .tier-count {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    /* Tier color variants */
+    .tier-blue { background: var(--blue-dim); color: var(--blue); border-color: var(--blue-border); }
+    .tier-green { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+    .tier-purple { background: var(--purple-dim); color: var(--purple); border-color: var(--purple-border); }
+    .tier-amber { background: var(--amber-dim); color: var(--amber); border-color: var(--amber-border); }
+    .tier-red { background: var(--red-dim); color: var(--red); border-color: var(--red-border); }
+    .tier-gray { background: var(--gray-dim); color: var(--gray); border-color: var(--gray-border); }
+
+    /* ── AGENT CARDS GRID ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .agent-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      transition: transform 0.22s, border-color 0.22s, background 0.22s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .agent-card:hover {
+      transform: translateY(-3px);
+      background: var(--bg-card-hover);
+    }
+
+    /* Card accent line on top */
+    .agent-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      border-radius: 14px 14px 0 0;
+      opacity: 0;
+      transition: opacity 0.22s;
+    }
+
+    .agent-card { position: relative; }
+    .agent-card:hover::before { opacity: 1; }
+
+    .card-blue { border-color: rgba(59,130,246,0.18); }
+    .card-blue:hover { border-color: var(--blue-border); }
+    .card-blue::before { background: var(--blue); }
+
+    .card-green { border-color: rgba(16,185,129,0.15); }
+    .card-green:hover { border-color: var(--green-border); }
+    .card-green::before { background: var(--green); }
+
+    .card-purple { border-color: rgba(139,92,246,0.15); }
+    .card-purple:hover { border-color: var(--purple-border); }
+    .card-purple::before { background: var(--purple); }
+
+    .card-amber { border-color: rgba(245,158,11,0.15); }
+    .card-amber:hover { border-color: var(--amber-border); }
+    .card-amber::before { background: var(--amber); }
+
+    .card-red { border-color: rgba(239,68,68,0.15); }
+    .card-red:hover { border-color: var(--red-border); }
+    .card-red::before { background: var(--red); }
+
+    .card-gray { border-color: rgba(107,114,128,0.15); }
+    .card-gray:hover { border-color: var(--gray-border); }
+    .card-gray::before { background: var(--gray); }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .card-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.2px;
+      line-height: 1.3;
+    }
+
+    .role-tag {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 100px;
+      border: 1px solid;
+    }
+
+    .role-blue { background: var(--blue-dim); color: var(--blue); border-color: var(--blue-border); }
+    .role-green { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+    .role-purple { background: var(--purple-dim); color: var(--purple); border-color: var(--purple-border); }
+    .role-amber { background: var(--amber-dim); color: var(--amber); border-color: var(--amber-border); }
+    .role-red { background: var(--red-dim); color: var(--red); border-color: var(--red-border); }
+    .role-gray { background: var(--gray-dim); color: var(--gray); border-color: var(--gray-border); }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      flex: 1;
+    }
+
+    .card-commands {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    /* ── GETTING STARTED ── */
+    .steps-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0;
+      position: relative;
+      margin-bottom: 48px;
+    }
+
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 28px;
+      transition: background 0.22s, border-color 0.22s;
+      position: relative;
+    }
+
+    .step-card:first-child { border-radius: 14px 0 0 14px; }
+    .step-card:last-child { border-radius: 0 14px 14px 0; }
+
+    .step-card:not(:last-child) { border-right: none; }
+
+    .step-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--blue-border);
+      z-index: 1;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--blue-dim);
+      border: 1px solid var(--blue-border);
+      color: var(--blue);
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .step-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .step-cmd {
+      display: inline-block;
+      background: var(--blue-dim);
+      border: 1px solid var(--blue-border);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--blue);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    /* Arrow between steps */
+    .step-arrow {
+      position: absolute;
+      right: -13px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--blue-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--blue);
+      font-size: 11px;
+    }
+
+    .launch-card {
+      background: linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(129,140,248,0.1) 100%);
+      border: 1px solid var(--blue-border);
+      border-radius: 16px;
+      padding: 36px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+
+    .launch-card:hover {
+      border-color: rgba(59,130,246,0.5);
+      transform: translateY(-2px);
+    }
+
+    .launch-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .launch-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .launch-cmd {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      white-space: nowrap;
+      transition: background 0.2s, transform 0.2s;
+      box-shadow: 0 0 24px rgba(59,130,246,0.35);
+    }
+
+    .launch-cmd:hover {
+      background: #2563eb;
+      transform: scale(1.02);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+    }
+
+    .footer-text {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .footer-text a {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .footer-text a:hover {
+      text-decoration: underline;
+    }
+
+    /* ── DIVIDER ── */
+    .section-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 0 16px; }
+      .nav-brand { margin-right: 16px; font-size: 13px; }
+      .nav-links a { font-size: 12px; padding: 5px 9px; }
+      .container { padding: 0 16px; }
+      section { padding: 72px 0; }
+      #hero { padding: 80px 0 64px; }
+      .hero-stats { gap: 32px; }
+      .foundation-card { padding: 28px 24px; }
+      .steps-container { grid-template-columns: 1fr; }
+      .step-card:first-child { border-radius: 14px 14px 0 0; }
+      .step-card:last-child { border-radius: 0 0 14px 14px; }
+      .step-card:not(:last-child) { border-right: 1px solid var(--border); border-bottom: none; }
+      .step-arrow { display: none; }
+      .launch-card { padding: 28px 24px; }
+    }
+
+    @media (max-width: 480px) {
+      .cards-grid { grid-template-columns: 1fr; }
+      .loops-grid { grid-template-columns: 1fr; }
+      .hero-title { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <a href="#hero" class="nav-brand">Strategy Labs</a>
+  <div class="nav-links">
+    <a href="#foundation">Foundation</a>
+    <a href="#orchestrators">Orchestrators</a>
+    <a href="#copywriters">Copywriters</a>
+    <a href="#design">Design</a>
+    <a href="#media">Media</a>
+    <a href="#optimization">Optimization</a>
+    <a href="#support">Support</a>
+    <a href="#getting-started">Getting Started</a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-badge">AI Marketing Team</div>
+    <h1 class="hero-title">Strategy Labs<br /><span>AI Marketing Team</span></h1>
+    <p class="hero-subtitle">A full-stack AI marketing department — 24 specialized agents working in a coordinated hierarchy from strategy to execution to optimization.</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">24<span>+</span></div>
+        <div class="hero-stat-label">Specialized Agents</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">6</div>
+        <div class="hero-stat-label">Agent Tiers</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">3</div>
+        <div class="hero-stat-label">Coordination Loops</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">1</div>
+        <div class="hero-stat-label">Shared Foundation</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── HOW IT WORKS ── -->
+<section id="how-it-works">
+  <div class="container">
+    <div class="section-label">System Design</div>
+    <h2 class="section-title">How It Works — The Three Loops</h2>
+    <p class="section-desc">Every campaign runs through three interconnected loops that keep strategy, execution, and learning in sync across all agents.</p>
+    <div class="loops-grid">
+
+      <!-- Campaign Loop -->
+      <div class="loop-card loop-blue">
+        <div class="loop-card-header">
+          <div class="loop-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+          <div>
+            <div class="loop-title">Campaign Loop</div>
+            <div class="loop-subtitle">Strategy to execution</div>
+          </div>
+        </div>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <div class="flow-dot">1</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-name">Campaign Strategist</div>
+              <div class="flow-step-desc">Receives business goal, produces complete campaign brief</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <div class="flow-dot">2</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-name">Creative Director + Performance Marketing</div>
+              <div class="flow-step-desc">Fired in parallel — creative concepting and media planning run simultaneously</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <div class="flow-dot">3</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-name">Specialists Execute</div>
+              <div class="flow-step-desc">Copywriters, designers, and platform specialists produce all assets</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <div class="flow-dot">4</div>
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-name">Campaign Runs</div>
+              <div class="flow-step-desc">Live campaign with UTM tracking, platform setup, and performance baseline</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Optimization Loop -->
+      <div class="loop-card loop-green">
+        <div class="loop-card-header">
+          <div class="loop-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </div>
+          <div>
+            <div class="loop-title">Optimization Loop</div>
+            <div class="loop-subtitle">Data back into the system</div>
+          </div>
+        </div>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <div class="flow-dot">1</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-name">Marketing Analytics</div>
+              <div class="flow-step-desc">Four specialist analysts review campaign data and structure findings</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <div class="flow-dot">2</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-name">Campaign Strategist (adjust strategy)</div>
+              <div class="flow-step-desc">Briefs routed back to recalibrate the overall campaign direction</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <div class="flow-dot">3</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-name">Performance Marketing (optimize)</div>
+              <div class="flow-step-desc">Budget reallocation, bid adjustments, audience refinement actions</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <div class="flow-dot">4</div>
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-name">Creative Director / Art Director (refresh)</div>
+              <div class="flow-step-desc">Underperforming assets flagged and creative refreshed accordingly</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Learning Loop -->
+      <div class="loop-card loop-purple">
+        <div class="loop-card-header">
+          <div class="loop-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <div>
+            <div class="loop-title">Learning Loop</div>
+            <div class="loop-subtitle">Institutional memory that compounds</div>
+          </div>
+        </div>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <div class="flow-dot">1</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-name">Content Library</div>
+              <div class="flow-step-desc">Accumulates every piece of approved copy — searchable before new copy is written</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <div class="flow-dot">2</div>
+              <div class="flow-line"></div>
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-name">Best Practices Updater</div>
+              <div class="flow-step-desc">Monitors Meta, Google, Klaviyo, TikTok, LinkedIn docs for changes</div>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-step-left">
+              <div class="flow-dot">3</div>
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-name">Reference Files Stay Current</div>
+              <div class="flow-step-desc">Before/after update reports keep every agent working from accurate platform knowledge</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── FOUNDATION ── -->
+<section id="foundation">
+  <div class="container">
+    <div class="section-label">The Foundation</div>
+    <h2 class="section-title">Brand Intelligence Center</h2>
+    <p class="section-desc">The shared constitution every agent reads before doing anything. Without this, agents work in a vacuum.</p>
+
+    <div class="foundation-card">
+      <div class="foundation-header">
+        <div class="foundation-title-group">
+          <div class="foundation-tag">Core Infrastructure</div>
+          <div class="foundation-name">Brand Intelligence Center</div>
+        </div>
+        <div class="foundation-commands">
+          <span class="cmd">/brand-setup</span>
+          <span class="cmd">/team-setup</span>
+          <span class="cmd">/analytics-setup</span>
+        </div>
+      </div>
+      <p class="foundation-desc">The constitution every agent reads before doing anything. Contains brand positioning, audience profile, voice rules (NEVER/ALWAYS), proof points, differentiators, and campaign context. Every agent in the system loads this first — it is the single source of truth that keeps 24 agents consistent across every output, every channel, every campaign.</p>
+      <div class="foundation-features">
+        <div class="foundation-feature">Brand Positioning</div>
+        <div class="foundation-feature">Audience Profile</div>
+        <div class="foundation-feature">Voice Rules (NEVER / ALWAYS)</div>
+        <div class="foundation-feature">Proof Points</div>
+        <div class="foundation-feature">Differentiators</div>
+        <div class="foundation-feature">Campaign Context</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── TIER 1 ORCHESTRATORS ── -->
+<section id="orchestrators">
+  <div class="container">
+    <div class="section-label">Agent Tiers</div>
+    <h2 class="section-title">The Agent Team</h2>
+    <p class="section-desc">24 specialized agents organized across 6 tiers — orchestrators that coordinate, specialists that execute, and support agents that keep the system learning.</p>
+
+    <div class="tier-header">
+      <span class="tier-badge tier-blue">Tier 1 — Orchestrators</span>
+      <div class="tier-line"></div>
+      <span class="tier-count">5 agents</span>
+    </div>
+    <div class="cards-grid">
+
+      <div class="agent-card card-blue">
+        <div class="card-header">
+          <div class="card-name">Campaign Strategist</div>
+          <span class="role-tag role-blue">Strategy</span>
+        </div>
+        <p class="card-desc">Top of the chain. Takes a business goal, produces a complete campaign brief, then fires Creative Director and Performance Marketing in parallel to begin execution simultaneously.</p>
+        <div class="card-commands">
+          <span class="cmd">/campaign-new</span>
+          <span class="cmd">/campaign-list</span>
+        </div>
+      </div>
+
+      <div class="agent-card card-blue">
+        <div class="card-header">
+          <div class="card-name">Creative Director</div>
+          <span class="role-tag role-blue">Creative</span>
+        </div>
+        <p class="card-desc">Translates campaign briefs into concepts, then briefs all 5 copywriters in parallel. Reviews and quality-gates all copy before it is delivered to the campaign.</p>
+        <div class="card-commands">
+          <span class="cmd">/creative-brief</span>
+          <span class="cmd">/creative-review</span>
+        </div>
+      </div>
+
+      <div class="agent-card card-blue">
+        <div class="card-header">
+          <div class="card-name">Art Director</div>
+          <span class="role-tag role-blue">Design</span>
+        </div>
+        <p class="card-desc">Builds the visual direction system for every campaign. Briefs all design specialists and reviews outputs against an 8-criteria rubric to ensure brand consistency.</p>
+        <div class="card-commands">
+          <span class="cmd">/visual-direction</span>
+          <span class="cmd">/design-review</span>
+        </div>
+      </div>
+
+      <div class="agent-card card-blue">
+        <div class="card-header">
+          <div class="card-name">Marketing Analytics</div>
+          <span class="role-tag role-blue">Analytics</span>
+        </div>
+        <p class="card-desc">Four specialist analysts review campaign data and route structured briefs back to Strategy, Performance, and Creative simultaneously — closing the feedback loop.</p>
+        <div class="card-commands">
+          <span class="cmd">/analytics-report</span>
+          <span class="cmd">/analytics-brief</span>
+        </div>
+      </div>
+
+      <div class="agent-card card-blue">
+        <div class="card-header">
+          <div class="card-name">Performance Marketing</div>
+          <span class="role-tag role-blue">Paid Media</span>
+        </div>
+        <p class="card-desc">Builds media plans, platform setup docs, UTM tracking frameworks, and executes optimization actions when Marketing Analytics routes actionable briefs back.</p>
+        <div class="card-commands">
+          <span class="cmd">/campaign-launch</span>
+          <span class="cmd">/campaign-optimize</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── TIER 2 COPYWRITERS ── -->
+    <div id="copywriters" style="padding-top: 8px;">
+      <div class="tier-header">
+        <span class="tier-badge tier-green">Tier 2 — Copywriter Specialists</span>
+        <div class="tier-line"></div>
+        <span class="tier-count">5 agents</span>
+      </div>
+      <div class="cards-grid">
+
+        <div class="agent-card card-green">
+          <div class="card-header">
+            <div class="card-name">Ad Copywriter</div>
+            <span class="role-tag role-green">Copy</span>
+          </div>
+          <p class="card-desc">Writes paid ad copy for Meta, Google RSA, TikTok, LinkedIn, and Pinterest. Checks the content library before writing. Delivers a minimum of 3 variants per hook angle.</p>
+        </div>
+
+        <div class="agent-card card-green">
+          <div class="card-header">
+            <div class="card-name">Email Copywriter</div>
+            <span class="role-tag role-green">Copy</span>
+          </div>
+          <p class="card-desc">Writes complete email sequences with arc awareness — welcome, promotional, abandoned cart, nurture, re-engagement, and cold outreach flows.</p>
+        </div>
+
+        <div class="agent-card card-green">
+          <div class="card-header">
+            <div class="card-name">Direct Response Copywriter</div>
+            <span class="role-tag role-green">Copy</span>
+          </div>
+          <p class="card-desc">Writes landing pages, sales pages, and VSL scripts using Schwartz awareness levels. Annotates every section with design direction for the layout team.</p>
+        </div>
+
+        <div class="agent-card card-green">
+          <div class="card-header">
+            <div class="card-name">Brand Storytelling Copywriter</div>
+            <span class="role-tag role-green">Copy</span>
+          </div>
+          <p class="card-desc">Writes brand narrative: about pages, founder stories, manifestos, thought leadership, and mission/vision/values frameworks that hold across channels.</p>
+        </div>
+
+        <div class="agent-card card-green">
+          <div class="card-header">
+            <div class="card-name">SEO Copywriter</div>
+            <span class="role-tag role-green">Copy</span>
+          </div>
+          <p class="card-desc">Analyzes SERP before writing. Delivers full content with meta title, description, featured snippet paragraph, and internal link recommendations built in.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── TIER 3 DESIGN ── -->
+    <div id="design" style="padding-top: 8px;">
+      <div class="tier-header">
+        <span class="tier-badge tier-purple">Tier 3 — Design Specialists</span>
+        <div class="tier-line"></div>
+        <span class="tier-count">6 agents</span>
+      </div>
+      <div class="cards-grid">
+
+        <div class="agent-card card-purple">
+          <div class="card-header">
+            <div class="card-name">Graphic Design Agent</div>
+            <span class="role-tag role-purple">Design</span>
+          </div>
+          <p class="card-desc">Digital ad creative via Canva direction, AI image prompts, or design spec documents. Covers social, display, email, and web formats across all major platforms.</p>
+        </div>
+
+        <div class="agent-card card-purple">
+          <div class="card-header">
+            <div class="card-name">UX & Website Designer</div>
+            <span class="role-tag role-purple">Design</span>
+          </div>
+          <p class="card-desc">Wireframes, UX copy (form labels, error messages, microcopy), CRO hypotheses, and accessibility requirements for all web and app experiences.</p>
+        </div>
+
+        <div class="agent-card card-purple">
+          <div class="card-header">
+            <div class="card-name">Print Design Agent</div>
+            <span class="role-tag role-purple">Design</span>
+          </div>
+          <p class="card-desc">Print production specs with exact CMYK/Pantone values, bleed/trim settings, and ink density limits for magazines, newspapers, direct mail, and brochures.</p>
+        </div>
+
+        <div class="agent-card card-purple">
+          <div class="card-header">
+            <div class="card-name">OOH Design Agent</div>
+            <span class="role-tag role-purple">Design</span>
+          </div>
+          <p class="card-desc">Out-of-home specs for billboards (7 words max enforced), urban posters, bus shelters, transit placements, and digital OOH. Strictly enforces word limits by format.</p>
+        </div>
+
+        <div class="agent-card card-purple">
+          <div class="card-header">
+            <div class="card-name">Packaging & Brand Design Agent</div>
+            <span class="role-tag role-purple">Design</span>
+          </div>
+          <p class="card-desc">Panel-by-panel packaging specs, trade show displays, corporate identity systems, and presentation templates aligned to brand standards.</p>
+        </div>
+
+        <div class="agent-card card-purple">
+          <div class="card-header">
+            <div class="card-name">Retail Design Agent</div>
+            <span class="role-tag role-purple">Design</span>
+          </div>
+          <p class="card-desc">Merchandise design for apparel, stickers, drinkware, patches, and tote bags. Covers screen printing, DTG, embroidery, and sublimation production specs.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── TIER 4 EARNED & OWNED ── -->
+    <div id="media" style="padding-top: 8px;">
+      <div class="tier-header">
+        <span class="tier-badge tier-amber">Tier 4 — Earned &amp; Owned Media</span>
+        <div class="tier-line"></div>
+        <span class="tier-count">2 agents</span>
+      </div>
+      <div class="cards-grid">
+
+        <div class="agent-card card-amber">
+          <div class="card-header">
+            <div class="card-name">PR &amp; Influencer Agent</div>
+            <span class="role-tag role-amber">PR</span>
+          </div>
+          <p class="card-desc">Creator tier strategy, influencer briefs, press releases, media pitches, ambassador programs, and UGC systems — with FTC compliance built into every deliverable.</p>
+        </div>
+
+        <div class="agent-card card-amber">
+          <div class="card-header">
+            <div class="card-name">Video Content Strategist</div>
+            <span class="role-tag role-amber">Video</span>
+          </div>
+          <p class="card-desc">YouTube channel strategy, TikTok/Reels content plans, video ad scripts in two-column format, and content calendars tied to campaign timing.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── TIER 5 OPTIMIZATION ── -->
+    <div id="optimization" style="padding-top: 8px;">
+      <div class="tier-header">
+        <span class="tier-badge tier-red">Tier 5 — Optimization</span>
+        <div class="tier-line"></div>
+        <span class="tier-count">1 agent</span>
+      </div>
+      <div class="cards-grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 400px));">
+
+        <div class="agent-card card-red">
+          <div class="card-header">
+            <div class="card-name">CRO Orchestrator</div>
+            <span class="role-tag role-red">CRO</span>
+          </div>
+          <p class="card-desc">Funnel audits, ICE-scored A/B test hypotheses with sample size math, checkout optimization, and post-click experience analysis to lift conversion rates.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SUPPORT LAYER ── -->
+    <div id="support" style="padding-top: 8px;">
+      <div class="tier-header">
+        <span class="tier-badge tier-gray">Support Layer</span>
+        <div class="tier-line"></div>
+        <span class="tier-count">3 agents</span>
+      </div>
+      <div class="cards-grid">
+
+        <div class="agent-card card-gray">
+          <div class="card-header">
+            <div class="card-name">Content Library</div>
+            <span class="role-tag role-gray">Support</span>
+          </div>
+          <p class="card-desc">Indexed backlog of all approved copy and a searchable asset catalogue. Every copywriter checks here before writing — existing winning copy surfaces first.</p>
+          <div class="card-commands">
+            <span class="cmd">/content-find</span>
+            <span class="cmd">/content-store</span>
+            <span class="cmd">/content-browse</span>
+          </div>
+        </div>
+
+        <div class="agent-card card-gray">
+          <div class="card-header">
+            <div class="card-name">Best Practices Updater</div>
+            <span class="role-tag role-gray">Support</span>
+          </div>
+          <p class="card-desc">Crawls Meta, Google, Klaviyo, TikTok, and LinkedIn docs and produces before/after update reports for all reference files to keep every agent current.</p>
+          <div class="card-commands">
+            <span class="cmd">/best-practices-review</span>
+          </div>
+        </div>
+
+        <div class="agent-card card-gray">
+          <div class="card-header">
+            <div class="card-name">Analytics &amp; Data Setup</div>
+            <span class="role-tag role-gray">Support</span>
+          </div>
+          <p class="card-desc">Connects data sources, audits historical performance, and establishes the benchmarks every agent uses as their performance baseline before campaigns begin.</p>
+          <div class="card-commands">
+            <span class="cmd">/analytics-setup</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ── GETTING STARTED ── -->
+<section id="getting-started">
+  <div class="container">
+    <div class="section-label">Getting Started</div>
+    <h2 class="section-title">Up and Running in Three Steps</h2>
+    <p class="section-desc">The system is designed to be operational quickly. Set up once, then let the agents handle the rest.</p>
+
+    <div class="steps-container">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-title">Set Up Your Brand</div>
+        <p class="step-desc">Build the Brand Intelligence Center — the foundation every agent reads first. Establishes your positioning, voice rules, and audience profile.</p>
+        <span class="step-cmd">/brand-setup</span>
+        <div class="step-arrow">›</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-title">Configure Your Team</div>
+        <p class="step-desc">Get a customized recommendation of which agents your brand actually needs based on your channels, budget, and marketing goals.</p>
+        <span class="step-cmd">/team-setup</span>
+        <div class="step-arrow">›</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-title">Connect Your Data</div>
+        <p class="step-desc">Connect your marketing data sources and establish performance benchmarks that every analytics and optimization agent will use as their baseline.</p>
+        <span class="step-cmd">/analytics-setup</span>
+      </div>
+    </div>
+
+    <div class="launch-card">
+      <div>
+        <div class="launch-title">Start Your First Campaign</div>
+        <p class="launch-desc">Describe your business goal. The Campaign Strategist handles everything from brief to brief — creative, media, and execution all follow automatically.</p>
+      </div>
+      <div class="launch-cmd">/campaign-new</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="container">
+    <p class="footer-text">Built by Strategy Labs &nbsp;·&nbsp; <a href="https://github.com/StrategyLabsFulcrum/marketplace" target="_blank" rel="noopener">github.com/StrategyLabsFulcrum/marketplace</a></p>
+  </div>
+</footer>
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('section[id], div[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+
+  const sectionMap = {
+    'hero': 'hero',
+    'foundation': 'foundation',
+    'orchestrators': 'orchestrators',
+    'copywriters': 'copywriters',
+    'design': 'design',
+    'media': 'media',
+    'optimization': 'optimization',
+    'support': 'support',
+    'getting-started': 'getting-started'
+  };
+
+  function updateActiveLink() {
+    const scrollY = window.scrollY + 80;
+    let current = '';
+
+    document.querySelectorAll('[id]').forEach(el => {
+      const top = el.offsetTop;
+      if (scrollY >= top) {
+        current = el.id;
+      }
+    });
+
+    navLinks.forEach(link => {
+      link.style.color = '';
+      link.style.background = '';
+      const href = link.getAttribute('href').replace('#', '');
+      if (href === current) {
+        link.style.color = 'var(--blue)';
+        link.style.background = 'var(--blue-dim)';
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveLink, { passive: true });
+  updateActiveLink();
+</script>
+
+</body>
+</html>
