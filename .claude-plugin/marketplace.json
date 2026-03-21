@@ -8,6 +8,15 @@
   },
   "plugins": [
     {
+      "name": "analytics-setup",
+      "source": "./plugins/analytics-setup",
+      "description": "Analytics and Data Setup Wizard — connects Meta, Google Ads, GA4, Klaviyo, and Shopify, audits historical performance, identifies tracking gaps, and establishes the benchmarks used by every agent in the system. Run once at setup, refresh quarterly.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["analytics setup", "data connection", "benchmarks", "GA4", "Klaviyo", "Shopify", "tracking audit", "historical data", "CAC", "ROAS"],
+      "license": "MIT"
+    },
+    {
       "name": "brand-intelligence-center",
       "source": "./plugins/brand-intelligence-center",
       "description": "Brand Intelligence Center — a choice-driven setup wizard that builds a complete brand profile combining operational depth with conversion intelligence. The single source of truth for all Strategy Labs marketing plugins.",

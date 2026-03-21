@@ -1,0 +1,12 @@
+{
+  "name": "analytics-setup",
+  "version": "1.0.0",
+  "description": "Analytics and Data Setup Wizard — connects marketing data sources (Meta, Google Ads, GA4, Klaviyo, Shopify), audits historical performance, identifies tracking gaps, and establishes the benchmarks used by Marketing Analytics, Performance Marketing, CRO Orchestrator, and Campaign Strategist. Run once at setup, refresh quarterly.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["analytics setup", "data connection", "benchmarks", "Meta ads", "Google Analytics", "GA4", "Klaviyo", "Shopify", "tracking audit", "historical data", "CAC", "ROAS", "CVR benchmarks"],
+  "license": "MIT",
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace"
+}

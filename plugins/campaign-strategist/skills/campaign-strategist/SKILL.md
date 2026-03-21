@@ -226,11 +226,50 @@ The brief includes:
 2. Audience brief (segment, journey stage, psychological lever, belief to create)
 3. Messaging territory (core message, support messages, proof point, competitive angle, tone)
 4. Channel strategy (channel mix table with roles and budget)
-5. KPI framework (primary KPIs, secondary KPIs, tracking requirements)
+5. KPI targets (primary success metrics and targets)
 6. Campaign timeline (phases with dates and milestones)
 7. Creative requirements (what assets are needed — no copy yet, just format/channel specs)
 8. Constraints and approvals
 9. Open questions (anything unresolved that needs input before activation)
+
+---
+
+## Step 4B: Campaign Brief Review & Approval Gate
+
+**Stop here.** Do not proceed to build KPI frameworks, timelines, or handoff briefs until the campaign brief is reviewed and approved.
+
+Present the complete campaign brief to the user, then ask:
+
+---
+
+> ## Campaign Brief Review
+>
+> The campaign brief for **[Campaign Name]** is ready for your review.
+>
+> Please review the brief above and let me know:
+>
+> **1. Core strategy** — Does the goal, audience, and core message reflect your intent?
+>
+> **2. Channel mix** — Are the right channels included? Is the budget allocation correct?
+>
+> **3. Timeline** — Are the dates and phases realistic?
+>
+> **4. Open questions** — [List any unresolved items from the brief that need input]
+>
+> Once you approve, I'll build out the full KPI framework, detailed timeline, and
+> handoff briefs for the Creative Director and Performance Marketing Agent.
+>
+> - `[ ]` **Approved** — proceed with full build-out
+> - `[ ]` **Approved with changes** — [describe changes]
+> - `[ ]` **Revise first** — [describe what needs to change]
+
+---
+
+**If changes are requested:** Update the campaign brief, re-save, and re-present for approval. Repeat until the brief is approved.
+
+**If approved:** Update the brief status to `✅ Approved` and proceed to Steps 5–8.
+
+Do not spawn any child agents (Creative Director, Performance Marketing, Art Director) until the brief has been explicitly approved.
 
 ---
 
