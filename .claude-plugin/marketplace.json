@@ -8,6 +8,17 @@
   },
   "plugins": [
     {
+      "name": "brand-intelligence-center",
+      "source": "./plugins/brand-intelligence-center",
+      "description": "Brand Intelligence Center — a choice-driven setup wizard that builds a complete brand profile combining operational depth (business foundation, financials, digital ecosystem, visual identity) with conversion intelligence (customer psychology, JTBD, switching dynamics, objections, proof points). The single source of truth for all Strategy Labs and marketing skills.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Strategy Labs"
+      },
+      "keywords": ["brand setup", "brand profile", "brand onboarding", "customer psychology", "JTBD", "differentiation", "brand voice", "competitive landscape", "proof points", "digital ecosystem", "financial context"],
+      "license": "MIT"
+    },
+    {
       "name": "brand-content-os",
       "source": "./plugins/brand-content-os",
       "description": "Brand & Content Operating System — capture brand knowledge, enforce voice consistency, and generate on-brand content across paid ads, email, SMS, Shopify, and social channels. Includes Fast.io team sync and organized output directories.",

@@ -1,0 +1,12 @@
+{
+  "name": "brand-intelligence-center",
+  "version": "1.0.0",
+  "description": "Brand Intelligence Center — a guided setup wizard that builds a comprehensive brand profile covering business fundamentals, customer psychology, differentiation, brand voice, proof points, and digital ecosystem. Merges operational brand depth with conversion intelligence. Outputs a structured brand-intelligence-center/ folder that serves as the foundation for all Strategy Labs marketplace plugins.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "homepage": "https://github.com/StrategyLabsFulcrum/marketplace",
+  "keywords": ["brand setup", "brand knowledge", "brand onboarding", "business profile", "competitive landscape", "brand guidelines", "audience messaging", "customer psychology", "JTBD", "differentiation", "brand voice", "proof points"],
+  "license": "MIT"
+}
