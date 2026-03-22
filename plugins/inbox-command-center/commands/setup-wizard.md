@@ -40,31 +40,43 @@ Save the choice to config:
 
 ## Step 1: Connect Email
 
-> "Let's connect your email. I can connect via:"
+> "Let's connect your email. The connection method determines what I can do — including whether I can send replies directly or only create drafts:"
 >
-> **Direct MCP** — If Gmail is available in Claude's tool settings, it's the fastest:
-> - Gmail: Read, search, draft, label — built into Claude
+> **Option A: Gmail via Direct MCP** (simplest setup)
+> - ✅ Read, search, draft, and label emails
+> - ⚠️ Draft only — cannot send directly. You approve each draft and send it manually from Gmail.
+> - Best for: users who want to stay in control of every send, no additional tool needed
 >
-> **Rube** — For tools not available via MCP:
-> - Outlook / Microsoft 365
-> - Other email providers with API access
+> **Option B: Gmail via Rube** (full read + write)
+> - ✅ Read, search, draft, label AND send directly on your behalf
+> - ✅ After you approve a draft, I send it — no manual step required
+> - Best for: users who want a fully hands-off workflow after approval
 >
-> "Which email account(s) do you want to manage?"
+> **Option C: Outlook / Microsoft 365** — Connect via Rube (full read + write/send)
+>
+> **Option D: Other email providers** — Connect via Rube if they have an API
+>
+> **Recommendation:** If you want me to send replies after you approve them — not just draft them — connect Gmail via Rube. If drafts-only is fine, Gmail MCP is the simpler setup.
+>
+> "Which email account(s) do you want to manage? And how do you want to connect?"
 
 For each account:
-1. Detect if the Gmail MCP tool is available — if so, test it by searching for a recent email
-2. If not available, suggest: "Connect Gmail in Claude's MCP tool settings, or use Rube to connect via API"
-3. Ask: "Is this your primary sending account?" (for drafting replies)
-4. If multiple accounts: "Which is primary? I'll draft replies from this account by default."
+1. If Gmail MCP: detect if the Gmail MCP tool is available — test by searching for a recent email. Confirm draft-only capability.
+2. If Gmail via Rube: guide through Rube connection setup. Test read and send capability.
+3. If Outlook/365: connect via Rube. Full read + write available.
+4. Ask: "Is this your primary sending account?" (for drafting replies)
+5. If multiple accounts: "Which is primary? I'll draft replies from this account by default."
+6. Note the send capability per account in config — used during triage to determine if direct send is available.
 
 Save to config:
 ```
 ## Connected Accounts
-| Tool | Connection | Account | Role |
-|------|-----------|---------|------|
-| Gmail | MCP | [email] | Primary |
-| Gmail | MCP | [email2] | Secondary |
-| iMessage | AppleScript | [phone/email] | Messaging |
+| Tool | Connection | Account | Role | Send Capability |
+|------|-----------|---------|------|----------------|
+| Gmail | MCP | [email] | Primary | Draft only |
+| Gmail | Rube | [email] | Primary | Full read + write |
+| Outlook | Rube | [email] | Secondary | Full read + write |
+| iMessage | AppleScript | [phone/email] | Messaging | Full read + write |
 ```
 
 ---
@@ -94,12 +106,17 @@ Save to config:
 ### Other Messaging Platforms
 
 > "Do you use any other messaging platforms you'd like to connect?"
-> - **Microsoft Teams** — via Rube
-> - **WhatsApp Business** — via Rube
-> - **SMS/Text** — via Rube (Twilio, etc.)
-> - **Discord** — via Rube
+>
+> **Via Rube** — Rube enables full read AND write access to platforms not available through Claude's built-in MCP tools:
+> - **Microsoft Teams** — read and send messages
+> - **WhatsApp Business** — read and send messages
+> - **SMS/Text** — read and send via Twilio or similar
+> - **Discord** — read and send
+> - **Outlook / Microsoft 365 email** — full read + write/send (see Step 1)
 > - **Other** — describe and we'll check if Rube can connect
 > - **None** — skip
+>
+> Note: Rube is a bridge tool that connects to apps and services not natively available in Claude. If you haven't set up Rube yet, you can add these connections later — it's available as a free MCP tool.
 
 For each connected platform, configure:
 - Priority contacts/channels
@@ -305,9 +322,20 @@ For each VIP, capture:
 
 Save to `inbox-command-center/vip-contacts.md`.
 
+### VIP Review Frequency
+
+> "How often should I prompt you to review your VIP contacts?"
+>
+> - **Monthly — every 30 days** (recommended) — Good default. Your VIP list stays current without being a distraction.
+> - **Bi-weekly — every 14 days** — Better for fast-moving businesses with frequent contact turnover.
+> - **Quarterly — every 90 days** — Lighter touch. Works well if your contact relationships are stable.
+> - **Never** — I'll manage VIPs manually. You can always say "review my VIPs" at any time.
+
+Save to config: `vip_review_frequency_days: [30 / 14 / 90 / never]`
+
 ### Monthly VIP Review
 
-Set a recurring monthly review prompt. On the first triage of each month, surface:
+Set a recurring prompt based on the configured frequency. On the first triage after the interval has passed, surface:
 
 ```
 📋 MONTHLY VIP REVIEW — It's been 30 days since your last review.
@@ -345,15 +373,34 @@ The monthly review ensures the VIP list stays current as relationships evolve �
 
 > "Where do you want to track tasks and reminders from your inbox?"
 >
-> - **Google Sheet** (recommended) — Persistent list + Calendar event reminders
-> - **ClickUp** — If you use it for project management
-> - **Calendar only** — Lighter weight, just reminders
-> - **Skip** — No task tracking
+> - **Apple Reminders** (recommended for Mac/iPhone users) — Built-in to every Apple device. No account, no signup, no setup beyond this conversation. Syncs automatically across Mac, iPhone, and iPad via iCloud. I'll create a list called "Inbox Tasks" and manage it directly.
+> - **Markdown task list** — A `tasks.md` file stored right alongside your Inbox Command Center config (in iCloud or locally). No apps or accounts needed. Simple, always accessible, readable in any text editor.
+> - **ClickUp** — If you already use ClickUp for project management. Free tier available. I can create and update tasks directly via Rube.
+> - **Google Sheets** — Most flexible for filtering, sorting, and reporting. Requires a Google account.
+> - **Calendar only** — No persistent task list — just creates calendar events as reminders. Lighter weight.
+> - **Skip** — No task tracking.
 
-If Google Sheet:
+For each option:
+
+**Apple Reminders:**
+1. Create a Reminders list called "Inbox Tasks" (or use an existing list the user names)
+2. Confirm access via macOS Reminders API or Rube
+3. Save to config: `task_tracker: apple-reminders | list: Inbox Tasks`
+
+**Markdown task list:**
+1. Create `tasks.md` in the user data directory (iCloud or local, matching the sync setting from Step 0)
+2. Initialize with header row: ID, Created, Due, Source, From, Description, Priority, Status
+3. Save to config: `task_tracker: markdown | path: [data-path]/tasks.md`
+
+**ClickUp:**
+1. Confirm Rube has ClickUp connected
+2. Ask which workspace and list to use, or create a new "Inbox Tasks" list
+3. Save to config: `task_tracker: clickup | list_id: [id]`
+
+**Google Sheets:**
 1. Search for existing "Inbox Task Tracker" sheet
-2. If not found, offer to create one with the standard columns
-3. Confirm and save link to `inbox-command-center/task-tracker-link.md`
+2. If not found, offer to create one with the standard columns (ID, Created, Due, Source, From, Subject, Summary, Priority, Status, Completed, Notes)
+3. Confirm and save link to config: `task_tracker: google-sheets | url: [url]`
 
 ### Scheduled Daily Briefing
 
@@ -401,6 +448,12 @@ If Google Sheet:
 > 4. **Quiet hours:** Hold non-urgent messages until morning? (default: 8 PM - 7 AM)
 > 5. **Thread bundling:** Summarize long threads as one item? (default: Yes, for threads > 5 messages)
 > 6. **Cross-platform dedup:** If someone emails AND Slacks about the same thing, show once? (default: Yes)
+> 7. **Unsubscribe handling:** When you mark something as UNSUBSCRIBE, how should I handle it?
+>    - **Auto-execute** (recommended) — Execute the unsubscribe immediately using the email's List-Unsubscribe header (one-click) when available; extract the unsubscribe link from the body if not. Confirm once per sender then move on.
+>    - **Batch at end of triage** — Queue all unsubscribes during triage, then execute them all together at the end so you're not interrupted mid-session.
+>    - **Show me each one** — Surface the unsubscribe link for each sender and let you handle it manually.
+>
+> Save to config: `unsubscribe_mode: auto | batch | manual`
 
 ---
 

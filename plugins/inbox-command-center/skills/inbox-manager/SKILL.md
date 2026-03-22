@@ -23,7 +23,7 @@ The Inbox Command Center has seven layers:
 3. **Triage Layer** — Categorizes remaining messages as RESPOND, FYI, JUNK, or UNSUBSCRIBE. Presents in prioritized batches with inline actions.
 4. **Voice Layer** — Maintains a living voice profile built from meeting transcripts, sent emails, and A/B calibration. Drafts replies that sound like the user.
 5. **Calendar Layer** — Detects conflicts, unresponded invites, marathon blocks, and meetings needing prep.
-6. **Task Layer** — Tracks reminders and follow-ups via Google Sheet + Calendar events. Delivers scheduled reminders via a dedicated Slack channel or iMessage.
+6. **Task Layer** — Tracks reminders and follow-ups via Apple Reminders, a markdown task list, ClickUp, or Google Sheets. Delivers scheduled reminders via a dedicated Slack channel or iMessage.
 7. **Briefing Layer** — Delivers scheduled daily summaries and reminders via Slack, iMessage, email, or calendar.
 
 ## Connection Methods
@@ -32,7 +32,7 @@ Tools can be connected two ways:
 
 ### Direct MCP Connection
 Claude's built-in MCP integrations for:
-- Gmail (read, search, draft, label)
+- Gmail (read, search, draft, label) — **draft only via MCP; cannot send directly. Connect Gmail via Rube for full read + write/send.**
 - Slack (read channels, DMs, send messages)
 - Google Calendar (read, create, respond to events)
 - Fireflies.ai (meeting transcripts)
@@ -46,13 +46,25 @@ iMessage is connected via macOS AppleScript/Shortcuts integration:
 - **Note:** iMessage integration runs locally on the user's Mac via AppleScript automation through Rube or direct shell access
 
 ### Rube Connection
-For tools not available via MCP, use Rube to connect:
-- Outlook / Microsoft 365
+For tools not available via MCP, or for full email read + write/send capability, use Rube:
+- **Gmail** — Full read + write/send (vs. MCP which is draft-only). Recommended if you want approved drafts sent automatically.
+- **Outlook / Microsoft 365** — Full read + write/send
 - Otter.ai, Gong, Fathom (meeting transcripts)
 - Zoom cloud recordings
 - SMS platforms (Twilio, etc.)
 - iMessage (via macOS AppleScript/Shortcuts as a fallback if direct connection isn't available)
 - Any tool with an API that Rube can reach
+
+**Gmail: MCP vs. Rube**
+| Capability | Gmail MCP | Gmail via Rube |
+|-----------|-----------|---------------|
+| Read emails | ✅ | ✅ |
+| Search | ✅ | ✅ |
+| Create drafts | ✅ | ✅ |
+| Label / archive | ✅ | ✅ |
+| Send directly | ❌ | ✅ |
+
+When Gmail is connected via MCP only, the triage send prompt reads "Save as draft" — the user sends manually from Gmail. When connected via Rube, the prompt reads "Send" — it sends immediately after approval.
 
 ### Connection Config
 
@@ -62,13 +74,15 @@ Stored in `inbox-command-center/config.md`:
 # Inbox Command Center — Configuration
 
 ## Connected Accounts
-| Tool | Connection | Account | Status |
-|------|-----------|---------|--------|
-| Gmail | MCP | [email] | Active |
-| Slack | MCP | [workspace] | Active |
-| iMessage | AppleScript | [phone/email] | Active |
-| Google Calendar | MCP | primary | Active |
-| Fireflies | MCP | [account] | Active |
+| Tool | Connection | Account | Status | Send Capability |
+|------|-----------|---------|--------|----------------|
+| Gmail | MCP | [email] | Active | Draft only |
+| Gmail | Rube | [email] | Active | Full read + write |
+| Outlook | Rube | [email] | Active | Full read + write |
+| Slack | MCP | [workspace] | Active | Full read + write |
+| iMessage | AppleScript | [phone/email] | Active | Full read + write |
+| Google Calendar | MCP | primary | Active | — |
+| Fireflies | MCP | [account] | Active | — |
 
 ## Primary Email
 [email] — used for drafting replies by default
@@ -88,6 +102,17 @@ Stored in `inbox-command-center/config.md`:
 - Channel: [Slack Channel / Slack DM / iMessage]
 - Slack Channel: [#inbox-reminders or custom name]
 - Default: [user's preference]
+
+## Task Tracker
+- Backend: [apple-reminders / markdown / clickup / google-sheets / calendar-only / none]
+- Location: [list name / file path / sheet URL / list ID]
+
+## Unsubscribe
+- Mode: [auto / batch / manual]
+
+## VIP Review
+- Last reviewed: [date]
+- Frequency days: [14 / 30 / 90 / never]
 ```
 
 ## Cross-Device Sync
@@ -105,7 +130,8 @@ All user data files are stored in a shared iCloud Drive folder instead of a loca
 ├── vip-contacts.md           # Priority contact list with relationship tags
 ├── rules.md                  # Active message rules
 ├── rule-suggestions.md       # Pending learned suggestions
-├── task-tracker-link.md      # Link to Google Sheet
+├── tasks.md                  # Task list (if markdown backend selected)
+├── task-tracker-link.md      # Link to Google Sheet or ClickUp (if external backend selected)
 └── CHANGELOG.md              # Version history and update notes
 ```
 
@@ -127,7 +153,9 @@ On first run, the setup wizard asks whether to enable cross-device sync. If enab
 | vip-contacts.md | Yes | VIP list stays current on both devices |
 | rules.md | Yes | Rules apply everywhere |
 | rule-suggestions.md | Yes | Learned suggestions accumulate across devices |
-| task-tracker-link.md | Yes | Points to the same Google Sheet |
+| tasks.md | Yes | Markdown task list syncs with all other data (if markdown backend selected) |
+| task-tracker-link.md | Yes | Points to the same external task tracker (if Google Sheets or ClickUp selected) |
+| Apple Reminders tasks | Already cloud | Reminders sync via iCloud independently — no action needed |
 | Google Sheet tasks | Already cloud | Google Sheets syncs independently — no action needed |
 | Google Calendar events | Already cloud | Calendar syncs independently |
 | Slack reminders | Already cloud | Slack messages sync independently |
@@ -436,6 +464,59 @@ Received: [Day, Date, Time]
 | `skip` | Leave in inbox |
 | `rule` | Create a rule based on this email |
 
+## Unsubscribe Workflow
+
+When the user assigns `unsub` to a message, execute the unsubscribe — don't just flag it.
+
+### Execution Methods (in priority order)
+
+**1. List-Unsubscribe header (one-click)**
+Check the raw email headers for a `List-Unsubscribe` field. This is included in most legitimate marketing and newsletter emails. It contains either a `mailto:` address or an `https://` URL.
+- `mailto:` unsubscribe: Send the specified unsubscribe email automatically
+- `https://` unsubscribe: Execute a GET/POST request to the URL to complete the unsubscribe
+
+This is the cleanest method — no link extraction, no browser required.
+
+**2. Unsubscribe link extraction**
+If no `List-Unsubscribe` header is present, scan the email body for unsubscribe links. Look for text containing "unsubscribe", "manage preferences", "opt out", "email preferences", or "manage your subscription".
+
+Extract the URL and present:
+> "Found unsubscribe link for [sender]: [url] — Open to complete? [Open / Skip]"
+
+If the email was connected via Rube (full write access), attempt to call the URL directly. Otherwise, open in the user's browser.
+
+**3. Auto-junk rule (no mechanism found)**
+If neither method finds an unsubscribe mechanism (automated alerts, scraper lists, transactional emails repurposed for spam):
+> "No unsubscribe link found in this email from [sender]. Want me to create a rule to auto-junk all future emails from them? [Yes / No]"
+
+### Batch vs. Immediate Mode
+
+Behavior is controlled by `unsubscribe_mode` in config:
+
+**`auto` (immediate):** Execute each unsubscribe as soon as it's assigned during triage. Report in the action confirmation batch:
+> "✓ Unsubscribed from: [sender1] (one-click), [sender2] (one-click). [sender3]: no link found — created auto-junk rule."
+
+**`batch` (end of triage):** Collect all `unsub` assignments during triage. At the end, execute together:
+
+```
+UNSUBSCRIBE QUEUE — 4 senders
+
+├── [sender1] — List-Unsubscribe header found ✓ (will execute)
+├── [sender2] — List-Unsubscribe header found ✓ (will execute)
+├── [sender3] — Unsubscribe link found: [url] — confirm? [Yes / Skip]
+└── [sender4] — No link found — create auto-junk rule? [Yes / Skip]
+
+[Execute all] [Review each]
+```
+
+**`manual`:** Present the unsubscribe link or header URL for each, let the user handle it themselves. Just surface the mechanism, don't execute.
+
+### Post-Unsubscribe
+
+After a successful unsubscribe:
+- Create a rule: auto-junk any future emails from the same sender (they may still arrive despite unsubscribing)
+- Log in triage complete summary under "🔕 Unsubscribed"
+
 ## Slack Triage
 
 ### Categorization
@@ -608,30 +689,54 @@ For recurring reminders:
 
 ## Task Tracker
 
-### Google Sheet Structure
+The task tracker backend is configured during setup. All backends use the same task data model and action commands — only the storage mechanism differs.
 
-Sheet name: **"Inbox Task Tracker"** (created during setup if doesn't exist)
+### Task Data Model
 
-| Column | Description |
-|--------|-------------|
+| Field | Description |
+|-------|-------------|
 | ID | T001, T002... |
 | Created | Date added |
 | Due | Target date/time |
 | Source | Email, Slack, iMessage, Calendar, Manual |
 | From | Sender name |
-| Subject | Brief description |
+| Description | Brief task name |
 | Summary | 1-2 sentence context |
 | Priority | HIGH / MEDIUM / LOW |
 | Status | ⬜ Open / 🔄 In Progress / ✅ Done / ⏭️ Deferred |
 | Completed | Date completed |
 | Notes | Follow-up notes |
 
+### Supported Backends
+
+**Apple Reminders** (`task_tracker: apple-reminders`)
+- Create: Add reminder to "Inbox Tasks" list with due date, priority, and notes
+- Read: List open reminders from the list for morning summary
+- Update: Mark complete, update due date, add notes
+- Best for: Mac/iPhone users who want zero friction and no extra accounts
+
+**Markdown task list** (`task_tracker: markdown`)
+- Stored at `[data-path]/tasks.md` — same iCloud folder as config, voice profile, and rules
+- Read/write as a structured markdown table
+- Update status in-place; append new rows
+- Best for: users who want everything in one simple folder
+
+**ClickUp** (`task_tracker: clickup`)
+- Create tasks in a configured ClickUp list via Rube
+- Read open tasks, update status, add comments
+- Best for: users who already use ClickUp for project management
+
+**Google Sheets** (`task_tracker: google-sheets`)
+- Sheet name: "Inbox Task Tracker" (created during setup if not found)
+- Add rows, update status, filter by due date and priority
+- Best for: users who want flexible filtering and reporting
+
 ### Calendar Reminder Integration
 
-When a task is created:
-1. Add row to Google Sheet
+Regardless of backend, when a task is created with a due time:
+1. Add task to the configured backend
 2. Create Google Calendar event: "📬 [Task ID]: [Description]"
-3. Event description includes task context + link to sheet
+3. Event description includes task context
 4. Schedule reminder delivery via the user's configured channel (Slack channel, Slack DM, or iMessage)
 
 ### Morning Integration
@@ -766,7 +871,8 @@ When cross-device sync is enabled:
 ├── vip-contacts.md           # Priority contact list with relationship tags
 ├── rules.md                  # Active message rules
 ├── rule-suggestions.md       # Pending learned suggestions
-└── task-tracker-link.md      # Link to Google Sheet
+├── tasks.md                  # Task list (markdown backend only)
+└── task-tracker-link.md      # Link to external tracker (Google Sheets / ClickUp)
 ```
 
 When local only:
