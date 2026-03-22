@@ -11,7 +11,9 @@ Analyze, organize, rename, and catalog a folder of unorganized brand photos and 
 1. Check if `brand-assets/` already exists with an `asset-manifest.xlsx`.
    - If it exists, say: "You already have an organized asset library. Would you like to re-organize from scratch, or use `/add-assets` to add new files?"
    - If re-organizing from scratch, back up the existing library by renaming to `brand-assets-backup-[date]/`.
-2. Check if `brand-knowledge-center/` exists for brand context.
+2. Load `brand-assets/asset-config.md` and read the **File Handling Mode** (`duplicate` or `move`). If the file doesn't exist (library predates this feature), default to `move` and note:
+   > "File handling mode not set — defaulting to **move and rename**. To change this, say 'set file handling mode' at any time."
+3. Check if `brand-knowledge-center/` exists for brand context.
 
 ---
 
@@ -161,8 +163,15 @@ After generating the file, tell the user:
 
 After the user reports decisions:
 
-**Approved assets — execute in order:**
+**Approved assets — execute in order based on file handling mode:**
+
+**If mode is `duplicate` (non-destructive):**
 1. Copy from source to the organized folder with the new descriptive name
+   — Original file stays in the source folder, untouched, with its original name
+
+**If mode is `move`:**
+1. Move from source to the organized folder with the new descriptive name
+   — Source folder is cleared of approved files
 2. Embed EXIF/IPTC metadata into the JPEG (skip for video, PNG, WEBP):
 
 ```python
@@ -242,6 +251,8 @@ Organization Complete!
   [Y] videos organized with thumbnail timestamps noted
   [Z] files moved to _delete/
   [D] duplicate groups flagged
+
+File handling: [Duplicate — originals preserved in source / Move — source cleared]
 
 Metadata embedded: [X] JPEGs (searchable in Finder, Spotlight, Adobe)
 

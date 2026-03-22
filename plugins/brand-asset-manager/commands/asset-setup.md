@@ -84,6 +84,39 @@ Apply all requested edits, show the revised structure, and confirm once more bef
 
 ---
 
+### Phase 2.5: File Handling Mode
+
+Before building the structure, establish how approved assets should be handled:
+
+> "When I organize and rename your assets, what should happen to the original files?"
+>
+> **Option A — Duplicate (non-destructive, recommended)**
+> - A renamed, organized copy goes into `brand-assets/[category]/` with the new descriptive name and embedded metadata
+> - The original file stays exactly where it is — in `_inbox/`, on your drive, or wherever it came from — with its original name, untouched
+> - Best for: users who want to preserve originals as a backup, or who pull from a camera card or external drive they'll reformat later
+>
+> **Option B — Move and rename**
+> - The file is moved directly from its source location into `brand-assets/[category]/` with the new descriptive name
+> - The source location no longer has the file after processing — `_inbox/` is cleared, source folders are emptied of approved files
+> - Best for: users who want a single clean organized copy with no duplicates taking up storage
+>
+> Note: Files marked **Skip** are always left in their source location regardless of this setting. Files marked **Delete** are always moved to `brand-assets/_delete/` — never permanently deleted.
+
+Save choice to `brand-assets/asset-config.md`:
+
+```markdown
+# Brand Asset Manager — Config
+
+## File Handling Mode
+- Mode: duplicate | move
+- Description: [Originals preserved in source location / Originals moved to organized library]
+- Set during: /asset-setup on [date]
+```
+
+This setting applies to all future `/add-assets` and `/organize-assets` sessions. It can be changed anytime by editing `brand-assets/asset-config.md` directly or saying "change my file handling mode."
+
+---
+
 ### Phase 3: Create Folder Structure
 
 **Only after explicit approval**, create the full folder structure in the user's working directory.
@@ -172,6 +205,7 @@ Ask how the user wants to load their existing unorganized assets:
 | `brand-assets/` + all subfolders | Phase 3 (after approval) |
 | `brand-assets/README.md` | Phase 3 |
 | `brand-assets/_inbox/` | Phase 3 (always) |
+| `brand-assets/asset-config.md` | Phase 3 (stores file handling mode preference) |
 | `brand-assets/asset-manifest.csv` | After first asset batch is processed |
 | `brand-assets/asset-manifest.md` | After first asset batch is processed |
 

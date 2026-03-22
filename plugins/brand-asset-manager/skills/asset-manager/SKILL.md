@@ -35,7 +35,10 @@ The permanent ongoing workflow. Drop new assets into `_inbox/` (or import from P
 
 1. **Analyze first, act second** — Never copy, rename, or move anything until assets are analyzed and the HTML review page is presented.
 2. **Human-in-the-loop approval** — Every asset goes through a visual review page. Nothing is renamed or moved until the user explicitly approves it by number.
-3. **Copy, never move** — Original source files are never modified, renamed, or deleted. Only the organized copies in `brand-assets/` are renamed.
+3. **File handling mode (user's choice)** — Set once during `/asset-setup` and stored in `brand-assets/asset-config.md`. Two modes:
+   - **Duplicate (non-destructive):** Organized copies go to `brand-assets/` with new names. Originals stay exactly where they are — untouched, original names preserved.
+   - **Move and rename:** Files are relocated from their source into `brand-assets/` with new names. Source location is cleared of approved files.
+   The setting applies consistently across all sessions. It is never changed implicitly — only when the user explicitly asks.
 4. **Photos library is read-only** — `/import-from-photos` only copies files out of Apple Photos into `_inbox/`. The Photos library itself is never written to, modified, or deleted from.
 5. **Metadata lives in the file** — Every approved JPEG gets EXIF + IPTC metadata embedded directly, making it searchable in Finder, Spotlight, Adobe Bridge, and any DAM tool — independent of the catalog files.
 6. **Inbox is permanent** — `_inbox/` is always created as part of setup and is the standard drop zone for all new assets going forward.
@@ -381,6 +384,7 @@ brand-assets/
 ├── asset-catalog.json          ← machine-readable catalog for automation
 ├── asset-manifest.md           ← human-readable index
 ├── README.md                   ← library guide
+├── asset-config.md             ← file handling mode + library settings
 ├── _inbox/                     ← drop new assets here for processing
 ├── _delete/                    ← files marked for deletion (never actually deleted)
 ├── _duplicates/                ← flagged duplicate files + review log

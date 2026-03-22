@@ -15,11 +15,14 @@ Add new photos and videos to an existing brand asset library. Scans `_inbox/` (o
 
 1. Check if `brand-assets/` exists with an `asset-manifest.xlsx`.
    - If it does NOT exist, say: "No asset library found. Run `/asset-setup` to build your folder structure first."
-2. Load the existing `asset-catalog.json` to know what's already in the library (for duplicate detection and session learning).
-3. Note the brand's colors from `brand-knowledge-center/brand-identity.md` if available (used to style review pages).
-4. Report the current library state:
+2. Load `brand-assets/asset-config.md` and read the **File Handling Mode** (`duplicate` or `move`). If the file doesn't exist (library created before this feature), default to `move` and note:
+   > "File handling mode not set — defaulting to **move and rename** (current behavior). To change this, say 'set file handling mode' at any time."
+3. Load the existing `asset-catalog.json` to know what's already in the library (for duplicate detection and session learning).
+4. Note the brand's colors from `brand-knowledge-center/brand-identity.md` if available (used to style review pages).
+5. Report the current library state and active file handling mode:
 
-> "Your asset library has **[X] photos** and **[Y] videos** across [Z] categories. Last updated: [date]. Ready to add new assets."
+> "Your asset library has **[X] photos** and **[Y] videos** across [Z] categories. Last updated: [date].
+> File handling: **[Duplicate — originals preserved / Move and rename — originals relocated]**. Ready to add new assets."
 
 ---
 
@@ -142,8 +145,13 @@ After generating, tell the user:
 
 After the user reports decisions for the batch:
 
-**Approved assets — execute in order:**
+**Approved assets — execute in order based on file handling mode:**
 
+**If mode is `duplicate` (non-destructive):**
+1. Copy from `_inbox/` (or source folder) to the organized folder with the new descriptive name
+2. Leave the original file in `_inbox/` (or source folder) — it is NOT removed. The inbox is not cleared for duplicate-mode sessions.
+
+**If mode is `move` (default):**
 1. Copy from `_inbox/` (or source folder) to the organized folder with the new descriptive name
 2. Embed EXIF/IPTC metadata into each approved JPEG:
 
@@ -178,7 +186,7 @@ def embed_asset_metadata(filepath, title, description, keywords):
 Skip embedding for: video files, PNG/WEBP files, files moved to `_delete/`, skipped files.
 
 3. Add entry to catalog data with `metadata_embedded: true/false`
-4. Remove processed file from `_inbox/` (approved files only)
+4. **If mode is `move`:** Remove processed file from `_inbox/` (approved files only). **If mode is `duplicate`:** Leave the original in `_inbox/` — only the organized copy was created.
 
 **Edited assets:** Ask what to change, apply correction, then process as approved.
 
@@ -235,7 +243,7 @@ Updated library totals:
 All catalogs updated:
   asset-manifest.xlsx · asset-catalog.json · asset-manifest.md
 
-Inbox cleared ✓
+File handling: [Duplicate — originals preserved in _inbox/ / Move — inbox cleared ✓]
 
 Next: Drop more assets in brand-assets/_inbox/ anytime and run /add-assets
 ```
@@ -257,6 +265,7 @@ brand-assets/[category]/ ← files land here: renamed, tagged, cataloged
 ```
 
 - Files in `_inbox/` are never modified until approved
-- Skipped files remain in `_inbox/` for the next session
-- Approved files are removed from `_inbox/` after processing
+- Skipped files always remain in `_inbox/` for the next session
+- **Move mode:** Approved files are removed from `_inbox/` after processing — inbox is cleared
+- **Duplicate mode:** Approved files remain in `_inbox/` after processing — originals are preserved alongside the organized copies
 - `_inbox/` itself is never deleted — it's the permanent drop zone
