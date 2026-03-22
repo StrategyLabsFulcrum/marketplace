@@ -23,6 +23,7 @@ Set up a structured brand asset library, organize existing photos and videos, an
 | `/asset-setup` | Starting from scratch — builds folder structure first, then guides asset loading |
 | `/organize-assets` | Have an existing messy folder of assets to organize for the first time |
 | `/add-assets` | Ongoing — add new photos/videos from `_inbox/` or a folder to an existing library |
+| `/import-from-photos` | Pull photos/videos directly from Apple Photos into `_inbox/` by album, date, keyword, person, or favorites |
 
 ---
 
@@ -46,14 +47,26 @@ Set up a structured brand asset library, organize existing photos and videos, an
 ### Adding new assets (ongoing)
 
 ```
-New photos/videos
+New photos/videos from a shoot
       ↓
-brand-assets/_inbox/    ← drop files here
+Option A: Drop files into brand-assets/_inbox/
+Option B: Run /import-from-photos to pull from Apple Photos
       ↓
 /add-assets             ← run this
       ↓
-Review proposal → approve → organized + tagged
+Choose batch size → HTML review page → approve → organized + tagged
 ```
+
+### Importing from Apple Photos
+
+```
+/import-from-photos album "Spring Campaign"   ← by album
+/import-from-photos recent 14                 ← last 14 days
+/import-from-photos favorites                 ← all favorited photos
+/import-from-photos keyword "product"         ← by keyword/tag
+```
+
+Requires `osxphotos`: `pip3 install osxphotos`
 
 ---
 

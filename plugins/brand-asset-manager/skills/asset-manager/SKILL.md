@@ -15,7 +15,10 @@ A three-phase system for building and maintaining a structured, searchable brand
 
 ---
 
-## Three-Phase System
+## Four-Phase System
+
+### Phase 0 — Apple Photos Import (`/import-from-photos`) *(optional)*
+Pull photos and videos directly from Apple Photos into `_inbox/` — by album, date range, keyword, person, or favorites. Uses the `osxphotos` Python library. Originals in Photos are never modified. After import, flows directly into Phase 3.
 
 ### Phase 1 — Setup (`/asset-setup`)
 Build the folder structure BEFORE assets exist. Interview the brand, propose a custom folder structure, get approval, then create it. Leaves the brand with a ready-to-fill library and a permanent `_inbox/` drop zone.
@@ -24,7 +27,7 @@ Build the folder structure BEFORE assets exist. Interview the brand, propose a c
 Analyze a folder of unorganized existing assets in batches. For each batch, generate an HTML visual review page with embedded thumbnails — user reviews, reports decisions back, then Claude executes. After approval, copies assets with descriptive names, embeds EXIF/IPTC metadata into each JPEG, and updates the catalog.
 
 ### Phase 3 — Ongoing Inbox Workflow (`/add-assets`)
-The permanent ongoing workflow. Drop new assets into `_inbox/` → run `/add-assets` → choose batch size → review HTML pages → approve → organized, tagged, and cataloged. Inbox cleared after processing.
+The permanent ongoing workflow. Drop new assets into `_inbox/` (or import from Photos with `/import-from-photos`) → run `/add-assets` → choose batch size → review HTML pages → approve → organized, tagged, and cataloged. Inbox cleared after processing.
 
 ---
 
@@ -33,10 +36,11 @@ The permanent ongoing workflow. Drop new assets into `_inbox/` → run `/add-ass
 1. **Analyze first, act second** — Never copy, rename, or move anything until assets are analyzed and the HTML review page is presented.
 2. **Human-in-the-loop approval** — Every asset goes through a visual review page. Nothing is renamed or moved until the user explicitly approves it by number.
 3. **Copy, never move** — Original source files are never modified, renamed, or deleted. Only the organized copies in `brand-assets/` are renamed.
-4. **Metadata lives in the file** — Every approved JPEG gets EXIF + IPTC metadata embedded directly, making it searchable in Finder, Spotlight, Adobe Bridge, and any DAM tool — independent of the catalog files.
-5. **Inbox is permanent** — `_inbox/` is always created as part of setup and is the standard drop zone for all new assets going forward.
-6. **Catalog always updated** — Every approve/organize action regenerates all catalog formats: `.xlsx`, `.json`, and `.md`.
-7. **Session learning** — As assets are approved during a session, build an internal reference so later suggestions are more confident and can reference previously approved assets.
+4. **Photos library is read-only** — `/import-from-photos` only copies files out of Apple Photos into `_inbox/`. The Photos library itself is never written to, modified, or deleted from.
+5. **Metadata lives in the file** — Every approved JPEG gets EXIF + IPTC metadata embedded directly, making it searchable in Finder, Spotlight, Adobe Bridge, and any DAM tool — independent of the catalog files.
+6. **Inbox is permanent** — `_inbox/` is always created as part of setup and is the standard drop zone for all new assets going forward.
+7. **Catalog always updated** — Every approve/organize action regenerates all catalog formats: `.xlsx`, `.json`, and `.md`.
+8. **Session learning** — As assets are approved during a session, build an internal reference so later suggestions are more confident and can reference previously approved assets.
 
 ---
 
