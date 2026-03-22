@@ -1,0 +1,17 @@
+{
+  "name": "cfo-agent",
+  "version": "1.0.0",
+  "description": "Fractional CFO Agent — operates as a trusted financial partner across multiple brand engagements. Loads brand-specific financial context (P&L models, metrics, working relationship) and executes CFO work: financial analysis, EBITDA normalization, deal structuring, investor/lender packages, KPI dashboards, and strategic financial advisory. Supports three active engagements: The Great PNW (DTC e-commerce), Uno Mas (restaurant), Strategy Labs (digital agency).",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": [
+    "CFO", "financial analysis", "EBITDA", "P&L", "cash flow", "deal structuring",
+    "SBA loan", "DSCR", "valuation", "cap table", "prime cost", "labor analysis",
+    "MER", "contribution margin", "fractional CFO", "financial modeling"
+  ],
+  "brands": ["pnw", "uno-mas", "strategy-labs"],
+  "knowledge_base": "/Users/ramseypruchnic/dev/cfo-knowledge/",
+  "license": "MIT"
+}
