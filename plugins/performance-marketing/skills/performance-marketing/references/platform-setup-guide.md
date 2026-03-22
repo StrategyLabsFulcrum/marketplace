@@ -16,16 +16,20 @@ Never mix multiple objectives in one campaign. Never build ad sets so narrow tha
 
 ### Campaign Objectives — When to Use Each
 
+Meta completed its ODAX (Outcome-Driven Ad Experiences) framework rollout. The 6 current objective names are:
+
 | Objective | Use When |
 |-----------|---------|
-| Sales (Conversions) | Driving purchases, sign-ups with defined value. Requires sufficient conversion data (50+/week per ad set). |
+| Sales | Driving purchases, sign-ups with defined value. Requires sufficient conversion data (50+/week per ad set). *(formerly "Sales/Conversions")* |
 | Leads | Collecting leads via Meta Lead Form or website form. Lower friction than offsite conversion. |
 | Traffic | Driving clicks to site when conversion tracking is not yet set up, or for content/blog traffic. |
-| Awareness (Reach) | Upper funnel — maximizing reach within a defined audience. Optimizes for impressions, not actions. |
+| Awareness | Upper funnel — maximizing reach within a defined audience. Optimizes for impressions, not actions. *(formerly "Awareness/Reach")* |
 | Engagement | Promoting posts, generating social proof (likes, comments, shares). Secondary use. |
-| App Installs | Driving app downloads via App Store / Play Store. Requires SDK integration. |
+| App Promotion | Driving app downloads via App Store / Play Store. Requires SDK integration. *(formerly "App Installs")* |
 
-**Default:** Use Sales/Conversions objective whenever the pixel has enough conversion data. Switch to Traffic only if pixel has fewer than 50 conversion events in the past 30 days — Meta cannot optimize for an event it has not seen enough of.
+**Default:** Use Sales objective whenever the pixel has enough conversion data. Switch to Traffic only if pixel has fewer than 50 conversion events in the past 30 days — Meta cannot optimize for an event it has not seen enough of.
+
+**Advantage+ (2025–2026):** Advantage+ is now Meta's default operating system for Sales, Leads, and App Promotion campaigns. Meta strongly defaults to automated placements, audiences, and budget distribution. Current best practice is **one consolidated campaign** rather than separate top/mid/bottom funnel campaigns — Meta's AI distributes delivery across the funnel. New placements added in 2025: **Threads** and **Facebook Notifications**.
 
 ### Bid Strategy Selection
 
@@ -125,7 +129,7 @@ Isolate one variable per test. Do not change audiences and creative simultaneous
 **Match type strategy:**
 - **Exact match:** Highest control, lowest volume. Use for proven, high-intent keywords.
 - **Phrase match:** Middle ground. Triggers for searches containing the phrase in order. Good default.
-- **Broad match:** Highest volume, least control. Only use with Smart Bidding (Target CPA or Target ROAS) — requires conversion data for Google to optimize broad queries effectively.
+- **Broad match:** Highest volume, most AI-optimized. **Google's current recommended default for established campaigns** — pair with Smart Bidding (Target CPA or Target ROAS) and RSA. Advertisers switching phrase keywords to broad match see ~25% more conversions on average per Google's data. Requires robust conversion tracking (enhanced conversions configured) and negative keyword lists to work effectively. **Exception:** Accounts spending under $2,000/month or with fewer than 15 conversions/month should stay on Manual CPC until volume supports Smart Bidding.
 
 **Negative keywords — always add at launch:**
 - Competitor brand names (unless you're running conquesting)
@@ -166,9 +170,13 @@ Performance Max (PMax) runs across all Google inventory with a single campaign. 
 - **Asset groups:** Organize by product/theme/audience. Include all asset types (headlines, descriptions, images, videos, logos, callouts)
 - **Audience signals:** Not targeting, but signals to help Google find your best customers faster. Include: customer match list, website visitors, in-market segments relevant to your product
 - **URL expansion:** Allow (Google selects landing pages) or restrict (you define landing pages per asset group)
-- **Brand exclusions:** Exclude your own brand terms from PMax if running a separate Brand Search campaign
+- **Brand exclusions:** Exclude your own brand terms from PMax if running a separate Brand Search campaign. Retail advertisers with product feeds can now apply brand exclusions to Search ads only while keeping branded Shopping traffic.
+- **Negative keywords (now available to all):** Campaign-level negative keywords are available to all PMax advertisers — up to 10,000 terms. Important: these block Search and Shopping inventory only — ads can still run on Display, YouTube, Gmail, and Discover against excluded queries.
+- **Channel performance reporting:** Full visibility into spend, clicks, and conversions by channel (YouTube, Display, Search, Discover, Gmail, Maps) is now available to all campaigns — use it to understand where PMax is actually spending.
+- **High-value new customer mode:** Available to all advertisers — specify high-value customer segments via Customer Match and Google AI will bid more aggressively for new users who resemble them.
+- **Demographic exclusions (beta):** Age-based exclusions and device targeting available in beta — contact Google Ads support to enroll.
 
-PMax requires patience — it needs 4–6 weeks and significant conversion volume to optimize. Do not judge early results.
+PMax requires patience — it needs 4–6 weeks and significant conversion volume to optimize. Do not judge early results. The platform has significantly more advertiser controls now than at launch — use them.
 
 ### Budget Minimums
 
@@ -204,13 +212,16 @@ PMax requires patience — it needs 4–6 weeks and significant conversion volum
 - Suppress unengaged contacts from promotional sends — protects deliverability
 - Never send to an unengaged list without a re-engagement campaign first
 
-**Deliverability checklist:**
-- [ ] Custom sending domain configured (not shared Klaviyo domain)
+**Deliverability checklist (MAGY requirements — enforced as of 2024–2025):**
+- [ ] Branded sending domain configured (required for 5,000+ profile lists — removes "sent via klaviyomail.com"; gives you sender reputation control)
 - [ ] SPF record set for sending domain
-- [ ] DKIM record set for sending domain
-- [ ] DMARC policy configured
+- [ ] DKIM record set for sending domain (minimum 1024-bit; 2048-bit recommended)
+- [ ] DMARC policy configured (minimum `p=none`; `p=quarantine` preferred)
+- [ ] "From" address is your own domain — not @gmail.com or @yahoo.com
+- [ ] One-click unsubscribe present (Klaviyo adds this automatically) AND honored within **2 days**
+- [ ] Spam rate below 0.10% — monitor via Google Postmaster Tools for Gmail recipients
+- [ ] Microsoft enforcement active May 2025 — same requirements apply to Outlook/Hotmail/Live
 - [ ] List imported from verified opt-in source only
-- [ ] Unsubscribe link present and functional
 - [ ] Physical mailing address in footer (CAN-SPAM requirement)
 - [ ] Preview renders correctly on mobile and desktop (test in Klaviyo or Litmus)
 
@@ -294,7 +305,7 @@ TikTok is a video-first platform. Static images can run but perform significantl
 **Video specs:**
 - 9:16 vertical — required
 - 1080×1920px
-- 15–60 seconds (15–30s performs best)
+- **Up to 10 minutes** (updated July 2025; previously 60 seconds). 15–30 seconds still performs best for most ads — higher completion rates and FYP distribution. Longer format only warranted for in-depth demos or storytelling. Spark Ads have no duration restriction.
 - Native-looking content outperforms polished ads — raw, UGC-style, direct-to-camera
 
 **Hook rules:**
@@ -311,8 +322,16 @@ TikTok is a video-first platform. Static images can run but perform significantl
 | Custom Audience | Website visitors, app users, engagement audiences |
 | Lookalike | From custom audience seed |
 | Broad (no targeting) | Let algorithm optimize; requires strong creative; can be most efficient at scale |
+| **Search Ads** (new 2025) | Intent-based ads appearing in TikTok search results — targets users actively searching within TikTok. Strong for bottom-of-funnel capture. |
 
 **TikTok's algorithm is particularly good at finding relevant audiences with minimal targeting.** Trust it more than on Meta. Overly narrow targeting often hurts delivery.
+
+### Ad Format Notes
+
+- **TopView:** Moved from Reservation buying to **CPM buying** — plan and budget accordingly (auction-based, not fixed-rate reservation).
+- **In-Feed:** Standard workhorse format. Blends into For You feed.
+- **Spark Ads:** Boosted organic posts — no duration restriction, inherit organic post length.
+- **Search Ads:** New in 2025 — captures intent-driven users searching on TikTok.
 
 ### Budget Minimums
 
@@ -320,6 +339,8 @@ TikTok is a video-first platform. Static images can run but perform significantl
 |-------|---------|
 | Campaign daily budget | $50/day |
 | Ad Group daily budget | $20/day |
+
+**CPM benchmarks (updated):** $2.60–$6.60 typical range; seasonal peaks (major shopping events) $8–10. Significantly lower than Meta ($9–15).
 
 ---
 

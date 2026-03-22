@@ -230,6 +230,18 @@ Every email must comply before it is sent:
 - [ ] Sender identification
 - [ ] Unsubscribe mechanism that works within 10 business days
 
+**MAGY Authentication Requirements — enforced, not optional (Gmail, Yahoo, Microsoft Outlook, Apple Mail = 90%+ of inboxes):**
+- [ ] SPF record configured for sending domain
+- [ ] DKIM record configured (minimum 1024-bit key; 2048-bit recommended)
+- [ ] DMARC policy configured (minimum `p=none`; `p=quarantine` or `p=reject` preferred)
+- [ ] "From" address uses your own domain — **never @gmail.com or @yahoo.com**
+- [ ] Branded sending domain configured (required for lists over 5,000 profiles — removes "sent via klaviyomail.com" and gives you control over sender reputation)
+- [ ] One-click unsubscribe present AND requests honored within **2 days** (Gmail/Yahoo requirement — stricter than CAN-SPAM's 10 business days)
+- [ ] Spam rate below **0.10%** — monitor via Google Postmaster Tools; hitting 0.30% can result in sending blocked entirely
+- [ ] Microsoft enforcement active as of May 2025 — same SPF/DKIM/DMARC requirements apply to Outlook/Hotmail/Live recipients
+
+*Enforcement timeline: Gmail/Yahoo Feb 2024 → Microsoft May 2025 → Gmail increased rejections Nov 2025*
+
 **General deliverability:**
 - [ ] Avoid spam trigger words in subject: "FREE", "GUARANTEED", "ACT NOW", "!!!", all caps
 - [ ] Plain text version matches HTML version (required for some ISPs)

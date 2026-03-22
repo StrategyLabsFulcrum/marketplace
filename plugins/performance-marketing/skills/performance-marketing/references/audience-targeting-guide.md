@@ -56,7 +56,10 @@ Platform-generated audiences that statistically resemble your best existing cust
 
 **Platform notes:**
 - **Meta:** 1% lookalike = approximately 2M in US market. Start with 1%. Move to 2–3% if 1% shows frequency > 2.5 or declining performance.
-- **Google:** Similar Audiences (now Optimized Targeting in PMax). Upload customer list to Google Ads; Google generates similar audiences automatically.
+- **Google:** Similar Audiences were **fully deprecated August 2023 and no longer exist**. Replacements:
+  - **Optimized Targeting** (Search/Display/PMax): Automatically enabled on all campaigns. Include first-party data segments (Customer Match lists, website visitors) as signals — Google AI finds new audiences based on them. No manual lookalike setup required.
+  - **Lookalike Segments** (Demand Gen campaigns only): Upload a seed audience (Customer Match, website visitors, YouTube engagers) — minimum 100 users. As of March 2026, these function as AI signals rather than hard targeting constraints — the reach level and seed list guide the algorithm but no longer restrict reach to a fixed similarity percentage.
+  - **First-party data quality is now the primary competitive advantage on Google.** The better your Customer Match lists, the better Google AI performs across all campaign types.
 - **LinkedIn:** Lookalike from company or contact list; minimum 300 matched members in seed.
 - **TikTok:** Lookalike from custom audience seed. TikTok lookalikes work particularly well.
 

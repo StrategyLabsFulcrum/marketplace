@@ -17,7 +17,7 @@ Technical requirements for all channels and media types. Art Director and design
 
 - Resolution: 72 PPI minimum (web), supply 2× at 144 PPI
 - Safe zone: Keep all text and key elements within 80% of frame (to avoid cropping across placements)
-- Text overlay: Under 20% of image area for best delivery
+- Text overlay: The 20% text rule was removed by Meta in 2021–2023 and the enforcement tool no longer exists. Ads are not rejected or reach-restricted based on image text percentage. Keep overlays minimal for **performance reasons, not policy reasons** — Meta's data shows less image text still outperforms.
 - Color space: sRGB
 
 #### Feed — Video
@@ -63,9 +63,9 @@ Technical requirements for all channels and media types. Art Director and design
 
 | Format | Dimensions | Aspect Ratio | Max Duration | File Type |
 |--------|-----------|-------------|-------------|-----------|
-| In-Feed | 1080×1920px | 9:16 | 60 sec | MP4, MOV |
+| In-Feed | 1080×1920px | 9:16 | **10 min** (updated July 2025; 15–30s optimal) | MP4, MOV |
 | TopView | 1080×1920px | 9:16 | 60 sec | MP4, MOV |
-| Spark Ads | Match original organic post | — | — | — |
+| Spark Ads | Match original organic post | — | No restriction | — |
 
 - Frame rate: 24–60 fps
 - Min bitrate: 516 kbps
