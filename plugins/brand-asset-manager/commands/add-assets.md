@@ -1,11 +1,11 @@
 # /add-assets
 
-Add new photos and videos to an existing brand asset library. The recommended workflow is to drop new assets into the `_inbox/` folder and run this command — Claude scans, analyzes, proposes organization, and **waits for your approval before copying or renaming anything**.
+Add new photos and videos to an existing brand asset library. Scans `_inbox/` (or a specified folder), analyzes assets in batches, generates a visual HTML review page for each batch, waits for approval, then copies, renames, embeds metadata, and updates all catalogs.
 
 ## Invoke Options
 
 ```
-/add-assets                  ← scan _inbox/ folder automatically
+/add-assets                  ← scan _inbox/ automatically
 /add-assets [folder path]    ← point to a specific folder of new assets
 ```
 
@@ -13,12 +13,13 @@ Add new photos and videos to an existing brand asset library. The recommended wo
 
 ## Before Starting
 
-1. Check if `brand-assets/` exists with an `asset-manifest.csv`.
+1. Check if `brand-assets/` exists with an `asset-manifest.xlsx`.
    - If it does NOT exist, say: "No asset library found. Run `/asset-setup` to build your folder structure first."
-2. Read `asset-manifest.csv` to load the current inventory.
-3. Report the current library state:
+2. Load the existing `asset-catalog.json` to know what's already in the library (for duplicate detection and session learning).
+3. Note the brand's colors from `brand-knowledge-center/brand-identity.md` if available (used to style review pages).
+4. Report the current library state:
 
-> "Your asset library currently has **[X] photos** and **[Y] videos** across [Z] categories. Last updated: [date]. Ready to add new assets."
+> "Your asset library has **[X] photos** and **[Y] videos** across [Z] categories. Last updated: [date]. Ready to add new assets."
 
 ---
 
@@ -26,140 +27,213 @@ Add new photos and videos to an existing brand asset library. The recommended wo
 
 ### Default: Check `_inbox/`
 
-If no folder path is provided, check `brand-assets/_inbox/` for files.
+If no path is provided, check `brand-assets/_inbox/`.
 
 If `_inbox/` is empty:
 > "The inbox is empty. Drop new photos or videos into `brand-assets/_inbox/` and run `/add-assets` again. Or provide a folder path: `/add-assets [path]`"
 
-If `_inbox/` has files, report:
-> "Found **[X] photos** and **[Y] videos** in your inbox. Analyzing before any changes are made..."
+If files are found, report:
+> "Found **[X] photos** and **[Y] videos** in your inbox."
 
 ### Custom folder path
 
-If a path is provided, scan that folder recursively for image and video files and report what was found.
+Scan the provided folder recursively and report what was found.
 
 ---
 
-## Step 2: Analyze All New Assets
+## Step 2: Batch Size
 
-**Analyze every new asset completely BEFORE proposing any organization.** Do not copy, move, or rename anything in this step.
+Ask the user their preferred batch size:
+
+> "How many assets would you like to review per batch?
+> - **5 at a time** — Small, focused batches
+> - **10 at a time** — Good balance of speed and control *(recommended)*
+> - **20 at a time** — Faster, for large inboxes
+> - **Custom** — I'll specify a number"
+
+Remember the answer for the entire session.
+
+---
+
+## Step 3: Analyze First Batch
+
+**Analyze the first batch completely BEFORE generating the review page.** Do not copy, move, or rename anything.
 
 For each photo:
-1. View/read the image
+1. View the image
 2. Identify: subject, products visible, shot type, setting, mood, lighting, composition quality, colors, people, seasonality
-3. Determine the best category/subfolder within the existing structure
-4. Generate a descriptive filename (check sequence numbers against existing files in the target folder)
-5. Write the full description and tags
+3. Determine the best category within the **existing** folder structure
+4. Generate descriptive filename — check existing files in the target folder to continue the sequence number correctly
+5. Write full description and tags
 6. Assess quality (High / Medium / Low)
+7. Check for duplicates against the loaded `asset-catalog.json`
+8. Flag anything uncertain with a specific ⚠️ question
 
 For each video:
-1. Read the video file
-2. Identify: duration, content summary, subjects, shot types, audio, mood, aspect ratio
-3. Determine category, generate filename, write description
-4. Identify 2-3 thumbnail candidate frames with timestamps
-5. Assess quality
+1. Identify: duration, content summary, subjects, shot types, audio, aspect ratio, mood
+2. Determine category, generate filename, write description
+3. Identify 2-3 thumbnail candidate timestamps
+4. Assess quality
+
+**Session learning:** Build an internal reference as you analyze each batch. If a subject type, category, or correction has already been established earlier in the session, apply it confidently to similar assets without re-flagging. Reference previously approved assets in descriptions where relevant.
+
+**New category detection:** If an asset clearly doesn't fit any existing folder, note it on the review card: "This doesn't fit an existing category — I suggest creating `[folder/subfolder/]`. Confirm or redirect."
 
 ---
 
-## Step 3: Duplicate Check
+## Step 4: Duplicate Check
 
-Compare every new asset against the existing manifest:
+Before generating the review page, compare each new asset against the existing catalog:
 
-**Exact duplicate:** Same file size AND same dimensions → flag immediately
+**Exact duplicate:** Same filename + file size match in the catalog → flag on the review card: "⚠️ Appears to be an exact duplicate of `[existing-file.jpg]` already in your library."
 
-**Near duplicate:** Analyze subject and composition, compare against existing manifest entries in the same category. Flag if a new asset appears to be a near-duplicate.
+**Near duplicate:** Same subject and similar composition to an existing cataloged asset → flag: "Similar to `[existing-file.jpg]` already in your library. Keep as an alternate version?"
+
+**New content:** No flag needed — process normally.
 
 ---
 
-## Step 4: Present Proposal — APPROVAL REQUIRED
+## Step 5: Generate HTML Review Page
 
-After analyzing all assets and checking for duplicates, present the full proposal **before doing anything**:
+After analyzing the batch, use Python to base64-encode each image and generate a self-contained HTML file saved to `brand-assets/review-batch-[NN].html`. Number sequentially from the last existing batch file.
 
-```
-New Asset Proposal
-─────────────────────────────────────────────
+```python
+import base64
 
-23 photos and 4 videos analyzed from _inbox/.
-
-Proposed organization:
-  product-photography/flat-lay/     →  8 assets
-  product-photography/on-model/     →  6 assets
-  lifestyle/outdoor/                →  7 assets
-  campaigns/spring-2026/            →  4 assets
-  video/social-clips/               →  4 assets (vertical, <60s)
-  _duplicates/                      →  2 assets flagged
-
-Naming examples:
-  IMG_7823.jpg  → product-flatlay-trail-runner-black-05.jpg
-  IMG_7831.jpg  → lifestyle-outdoor-morning-run-03.jpg
-  VID_0042.mp4  → video-social-clips-spring-launch-01.mp4
-
-Duplicates found: 2 files
-  IMG_7800.jpg → near-duplicate of product-flatlay-trail-runner-black-02.jpg
-  IMG_7801.jpg → exact duplicate of lifestyle-outdoor-morning-run-01.jpg
-
-Quality:
-  High: 21  |  Medium: 4  |  Low: 2 (will be organized but flagged)
-
-─────────────────────────────────────────────
-Ready to organize. This will:
-  ✓ COPY assets from _inbox/ to their organized folders with new names
-  ✓ Move duplicate files to _duplicates/
-  ✓ Update asset-manifest.csv and asset-manifest.md
-  ✓ Clear processed files from _inbox/
-
-Type 'approve' to proceed, or ask questions/request changes first.
+def encode_image_for_html(filepath):
+    ext = filepath.rsplit(".", 1)[-1].lower()
+    mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png", "webp": "webp", "gif": "gif"}.get(ext, "jpeg")
+    with open(filepath, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode()
+    return f"data:image/{mime};base64,{b64}"
 ```
 
-If the user requests changes (different category, different name, exclude a file), apply changes and re-present.
+### Review Page Requirements
+
+**Page header:**
+- Legend: "Review each asset below. When done, come back to chat and reply: **Approve all**, or list asset numbers with **Edit / Skip / Delete** and any corrections."
+- Batch summary: "Batch [N] · [X] photos · [Y] videos · [Z] duplicates flagged"
+
+**Each card must show:**
+- Asset number and original filename
+- Thumbnail (base64-embedded for photos; video placeholder icon for videos)
+- **Suggested Name** — proposed descriptive filename
+- **Category** — proposed folder path (note if it's a new folder being proposed)
+- **Description** — full searchable description
+- **Tags** — comma-separated keywords
+- **Suggested Use** — recommended channels/placements
+- **Quality** — High / Medium / Low with a brief reason
+- **⚠️ Uncertainty flag** — if anything is ambiguous, a specific question
+- **Duplicate flag** — similar-to note with existing filename if applicable
+
+**Styling:**
+- Use brand primary color from `brand-identity.md` for accents (or `#4f8ef7` if unavailable)
+- Dark background (#1a1a2e), dark card surface (#0f172a), light text (#e2e8f0)
+- Thumbnail left, metadata right — stacks on mobile
+- Fully self-contained — no external CSS or JS
+
+After generating, tell the user:
+
+> "Review page ready: `brand-assets/review-batch-[NN].html` — open it in your browser to see all [N] assets. Come back here with your decisions."
 
 ---
 
-## Step 5: Execute
+## Step 6: Process Decisions
 
-Only after approval:
+After the user reports decisions for the batch:
 
-1. **Process each approved asset:**
-   - Copy from `_inbox/` (or source folder) to the appropriate subfolder with the new name
-   - Check existing sequence numbers in the target folder before numbering
-   - Copy flagged duplicates to `_duplicates/` with original names
-   - Add entry to manifest data
+**Approved assets — execute in order:**
 
-2. **New category detection:** If an asset doesn't fit any existing category, propose creating a new subfolder before proceeding.
+1. Copy from `_inbox/` (or source folder) to the organized folder with the new descriptive name
+2. Embed EXIF/IPTC metadata into each approved JPEG:
 
-3. **Clear inbox:** After successful processing, remove the original files from `_inbox/` (or leave them if the source was a custom folder — never modify files outside `brand-assets/`).
+```python
+import piexif
+from iptcinfo3 import IPTCInfo
+import os
 
-4. Report progress every 15 files.
+def embed_asset_metadata(filepath, title, description, keywords):
+    try:
+        exif_dict = piexif.load(filepath)
+    except Exception:
+        exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}}
+
+    exif_dict["0th"][piexif.ImageIFD.ImageDescription] = description.encode("utf-8")
+    exif_dict["0th"][piexif.ImageIFD.XPTitle]          = (title + "\x00").encode("utf-16-le")
+    exif_dict["0th"][piexif.ImageIFD.XPKeywords]       = (";".join(keywords) + "\x00").encode("utf-16-le")
+    exif_dict["0th"][piexif.ImageIFD.XPComment]        = (description + "\x00").encode("utf-16-le")
+    piexif.insert(piexif.dump(exif_dict), filepath)
+
+    info = IPTCInfo(filepath, force=True)
+    info["keywords"]         = [k.encode("utf-8") for k in keywords]
+    info["caption/abstract"] = description.encode("utf-8")
+    info["object name"]      = title.encode("utf-8")
+    info.save_as(filepath)
+
+    junk = filepath + "~"
+    if os.path.exists(junk):
+        os.remove(junk)
+```
+
+Skip embedding for: video files, PNG/WEBP files, files moved to `_delete/`, skipped files.
+
+3. Add entry to catalog data with `metadata_embedded: true/false`
+4. Remove processed file from `_inbox/` (approved files only)
+
+**Edited assets:** Ask what to change, apply correction, then process as approved.
+
+**Skipped assets:** Leave in `_inbox/`, do not log.
+
+**Delete:** Move to `brand-assets/_delete/` with original name. Never delete the actual file.
 
 ---
 
-## Step 6: Update Manifest
+## Step 7: Update All Catalogs
 
-After all assets are processed:
-1. **Append** new entries to `asset-manifest.csv`
-2. **Regenerate** `asset-manifest.md` with updated counts and new entries added to their category sections
-3. **Update summary counts** at the top of `asset-manifest.md`
-4. **Update** `_duplicates/flagged-duplicates.md` if new duplicates were flagged
+After each batch's decisions are fully processed:
+
+**`asset-manifest.xlsx`** — append new rows, update summary counts
+
+**`asset-catalog.json`** — append new entries to the JSON array
+
+**`asset-manifest.md`** — regenerate with updated counts and new entries added to their category sections
+
+Do not wait until all batches are done — update after each batch so the catalog always reflects what's been approved so far.
 
 ---
 
-## Step 7: Completion
+## Step 8: Next Batch
+
+After catalogs are updated, announce progress and move to the next batch:
+
+> "Batch [N] complete — [X] approved, [Y] skipped, [Z] deleted. [Remaining] assets left. Analyzing batch [N+1]..."
+
+Analyze the next batch and generate its review page. Continue until all assets from `_inbox/` (or source folder) are processed.
+
+---
+
+## Step 9: Completion
 
 ```
 New Assets Added!
 
-Added: 21 photos, 4 videos
-Skipped: 2 duplicates (moved to _duplicates/)
+Added: [X] photos, [Y] videos
+Skipped: [N] (left in _inbox/)
+Deleted: [N] (moved to _delete/)
+Duplicates flagged: [N]
 
-Added to:
-  Product Photography: 14
-  Lifestyle:            7
-  Video/Social Clips:   4
+Metadata embedded: [X] JPEGs
+
+New assets by category:
+  [category]: [count]
+  ...
 
 Updated library totals:
-  Photos: [previous] → [new]
-  Videos: [previous] → [new]
-  Last updated: [date]
+  Photos: [prev] → [new]
+  Videos: [prev] → [new]
+
+All catalogs updated:
+  asset-manifest.xlsx · asset-catalog.json · asset-manifest.md
 
 Inbox cleared ✓
 
@@ -170,8 +244,6 @@ Next: Drop more assets in brand-assets/_inbox/ anytime and run /add-assets
 
 ## Inbox Folder Convention
 
-The `_inbox/` folder is the permanent drop zone for the ongoing workflow:
-
 ```
 New shoot / new content
         ↓
@@ -179,9 +251,12 @@ brand-assets/_inbox/     ← drop files here
         ↓
 /add-assets              ← run this command
         ↓
-Analyze → Propose → Approve → Organize
+Choose batch size → Analyze → HTML review page → Approve → Organize + embed metadata
         ↓
-brand-assets/[category]/ ← files land here, named + tagged
+brand-assets/[category]/ ← files land here: renamed, tagged, cataloged
 ```
 
-Assets in `_inbox/` are never modified until approved. If you cancel before approving, all files remain in `_inbox/` unchanged.
+- Files in `_inbox/` are never modified until approved
+- Skipped files remain in `_inbox/` for the next session
+- Approved files are removed from `_inbox/` after processing
+- `_inbox/` itself is never deleted — it's the permanent drop zone

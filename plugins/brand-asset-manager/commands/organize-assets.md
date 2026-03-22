@@ -1,15 +1,17 @@
 # /organize-assets
 
-Analyze, organize, rename, and catalog a folder of unorganized brand photos and videos. Builds the folder structure if one doesn't exist, analyzes every asset, then **stops for your approval before copying or renaming anything**.
+Analyze, organize, rename, and catalog a folder of unorganized brand photos and videos. Analyzes assets in batches, generates a visual HTML review page for each batch with embedded thumbnails, waits for your approval, then copies, renames, embeds metadata, and catalogs everything.
 
-> **Starting fresh?** Use `/asset-setup` first — it builds the folder structure before you load assets, which gives you a cleaner starting point.
+> **Starting fresh with no library yet?** Use `/asset-setup` first — it builds the folder structure before you load assets.
+
+---
 
 ## Before Starting
 
-1. Check if a `brand-assets/` directory already exists with an `asset-manifest.csv`.
-   - If it exists, say: "You already have an organized asset library. Would you like to re-organize from scratch, or use `/add-assets` to add new files to the existing structure?"
-   - If re-organizing from scratch over an existing library, back it up by renaming to `brand-assets-backup-[date]/`.
-2. Check if a `brand-knowledge-center/` directory exists for brand context.
+1. Check if `brand-assets/` already exists with an `asset-manifest.xlsx`.
+   - If it exists, say: "You already have an organized asset library. Would you like to re-organize from scratch, or use `/add-assets` to add new files?"
+   - If re-organizing from scratch, back up the existing library by renaming to `brand-assets-backup-[date]/`.
+2. Check if `brand-knowledge-center/` exists for brand context.
 
 ---
 
@@ -17,19 +19,20 @@ Analyze, organize, rename, and catalog a folder of unorganized brand photos and 
 
 ### If `brand-knowledge-center/` exists:
 
-Read these files:
-- `brand-identity.md` — Brand pillars, visual identity, product lines, colors
-- `audience-messaging.md` — Audience segments, content pillars, channels
-- `digital-ecosystem.md` — Active platforms and tools
-- `business-overview.md` — Industry, product types
+Read:
+- `brand-identity.md` — brand pillars, visual identity, product lines, colors
+- `audience-messaging.md` — audience segments, content pillars, channels
+- `digital-ecosystem.md` — active platforms and tools
+- `business-overview.md` — industry, product types
+
+Note the brand's primary and secondary hex colors — these will style the HTML review pages.
 
 Confirm what was found:
 
 > "I found your Brand Knowledge Center. Here's what I'll use to organize your assets:
-> - **Brand:** [name]
+> - **Brand:** [name] · **Colors:** [hex values]
 > - **Products:** [product types]
 > - **Active channels:** [list]
-> - **Content pillars:** [list]
 >
 > Does this look right?"
 
@@ -40,18 +43,18 @@ Ask:
 2. "What channels do you publish on?"
 3. "What types of content do you shoot?"
 4. "Any specific product lines or collections?"
-5. "What are your brand colors?"
+5. "What are your brand colors?" (hex codes — used to style review pages)
 
 ---
 
 ## Step 2: Propose Folder Structure
 
-Based on brand context, propose a tailored folder structure as a visual tree. Always include `_inbox/` and `_duplicates/`.
+Based on brand context, propose a tailored folder structure as a visual tree. Always include `_inbox/`, `_delete/`, and `_duplicates/`.
 
 Ask:
-1. "Does this folder structure work? Any categories to add, remove, or rename?"
-2. "Do you have specific product lines that should get their own subfolders?"
-3. "Any campaign names or seasons to add as subfolders?"
+1. "Does this folder structure work? Anything to add, remove, or rename?"
+2. "Any product lines that should get their own subfolders?"
+3. "Any campaign names or seasons to add?"
 
 Apply edits and confirm the final structure.
 
@@ -64,154 +67,194 @@ Ask where the unorganized assets are:
 > "Where are the photos and videos you'd like to organize? Provide a folder path, or upload them directly."
 
 Once the source is identified:
-1. Recursively scan for all image files (.jpg, .jpeg, .png, .webp, .heic, .tiff, .gif) and video files (.mp4, .mov, .avi, .mkv, .webm)
-2. Report what was found:
-   > "Found **87 photos** and **12 videos** in [source folder]."
+1. Recursively scan for all image and video files
+2. Report what was found: "Found **87 photos** and **12 videos** in [source folder]."
 
 ---
 
-## Step 4: Analyze All Assets
+## Step 4: Batch Size
 
-**Analyze every asset BEFORE proposing any organization.** Do not copy, move, or rename anything in this step.
+Ask the user their preferred batch size:
 
-For each photo, determine:
-- Subject, products visible, shot type, setting, mood, lighting, composition quality, colors, people, seasonality
-- Proposed category and subfolder
-- Proposed descriptive filename
-- Channel suggestions
-- Quality rating (High / Medium / Low)
-- Duplicate flags
+> "How many assets would you like to review per batch?
+> - **5 at a time** — Small, focused batches
+> - **10 at a time** — Good balance of speed and control *(recommended)*
+> - **20 at a time** — Faster, for large inboxes
+> - **Custom** — I'll specify a number"
 
-For each video, determine:
-- Duration, content summary, subjects, shot types, audio, aspect ratio, mood
-- Proposed category and subfolder
-- Proposed descriptive filename
-- Thumbnail candidate timestamps
-- Quality rating
-- Duplicate flags
-
-Process in batches of 25-50 and report progress:
-> "Analyzing assets... 40/87 complete."
+Remember the answer for the entire session.
 
 ---
 
-## Step 5: Present Organization Proposal — APPROVAL REQUIRED
+## Step 5: Analyze First Batch
 
-After all assets are analyzed, present a complete summary **before doing anything**:
+**Analyze the first batch completely BEFORE generating the review page.** Do not copy, move, or rename anything.
 
-```
-Organization Proposal
-─────────────────────────────────────────────
+For each photo:
+1. View the image
+2. Identify: subject, products visible, shot type, setting, mood, lighting, composition quality, colors, people, seasonality
+3. Determine best category and subfolder
+4. Generate descriptive filename (check sequence numbers against existing files)
+5. Write full description and tags
+6. Assess quality (High / Medium / Low)
+7. Check for duplicates against any already-organized assets
+8. Flag anything uncertain with a specific ⚠️ question
 
-87 photos and 12 videos analyzed.
+For each video:
+1. Identify: duration, content summary, subjects, shot types, audio, aspect ratio, mood
+2. Determine category, generate filename, write description
+3. Identify 2-3 thumbnail candidate timestamps
+4. Assess quality
 
-Proposed folder assignments:
-  product-photography/flat-lay/       → 18 assets
-  product-photography/on-model/       → 12 assets
-  product-photography/detail-shots/   →  6 assets
-  lifestyle/outdoor/                  → 22 assets
-  lifestyle/seasonal/                 →  8 assets
-  team-behind-the-scenes/             →  7 assets
-  ugc-community/                      →  5 assets
-  campaigns/fall-2025/                →  4 assets
-  logos-brand-marks/primary/          →  3 assets
-  video/lifestyle/                    →  8 assets
-  video/social-clips/                 →  4 assets
-  _duplicates/                        →  9 assets flagged
+**Session learning:** As you process each batch, build an internal reference of what you've seen — subjects confirmed, corrections made, categories established. Use this to improve confidence and reduce uncertainty flags in later batches.
 
-Quality breakdown:
-  High:    72 assets (will be organized)
-  Medium:  18 assets (will be organized, flagged for editing)
-  Low:      9 assets (will be organized, flagged for review)
+---
 
-Naming examples:
-  IMG_4392.jpg    → product-flatlay-workman-flannel-rust-01.jpg
-  DSC_0012.jpg    → lifestyle-outdoor-trail-flannel-fall-01.jpg
-  MVI_8834.mp4    → video-lifestyle-fall-lookbook-01.mp4
+## Step 6: Generate HTML Review Page
 
-Duplicate groups found: 3 groups, 9 total files
-  Group 1: 4 similar flat-lay variants → keeping best, flagging 3
-  Group 2: 3 duplicate lifestyle shots → keeping best, flagging 2
-  Group 3: Exact duplicate logo files → keeping 1, flagging 1
+After analyzing the batch, use Python to base64-encode each image and generate a self-contained HTML review page saved to `brand-assets/review-batch-01.html`.
 
-─────────────────────────────────────────────
-Ready to organize. This will:
-  ✓ Create the folder structure in brand-assets/
-  ✓ COPY (not move) all assets to organized folders with new names
-  ✓ Move duplicate files to _duplicates/
-  ✓ Generate asset-manifest.csv and asset-manifest.md
-  ✗ Original files will NOT be modified or deleted
+```python
+import base64
+import os
 
-Type 'approve' to proceed, or ask questions/request changes first.
+def encode_image_for_html(filepath):
+    ext = filepath.rsplit(".", 1)[-1].lower()
+    mime = {"jpg": "jpeg", "jpeg": "jpeg", "png": "png", "webp": "webp", "gif": "gif"}.get(ext, "jpeg")
+    with open(filepath, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode()
+    return f"data:image/{mime};base64,{b64}"
 ```
 
-**Do not proceed until the user types 'approve' or an equivalent confirmation.** If they request changes (different categories, different naming, exclude certain files), apply the changes and re-present the proposal.
+### Review Page Requirements
+
+**Page header:**
+- Legend: "Review each asset below. When done, come back to chat and reply: **Approve all**, or list asset numbers with **Edit / Skip / Delete** and any corrections."
+- Batch summary: "Batch 1 of [N] · [X] photos · [Y] videos · Proposed categories: [list]"
+
+**Each card must show:**
+- Asset number (#1 of 10) and original filename
+- Thumbnail (base64-embedded for photos; video placeholder icon for videos)
+- **Suggested Name** — proposed descriptive filename
+- **Category** — proposed folder path
+- **Description** — full searchable description
+- **Tags** — comma-separated keywords
+- **Suggested Use** — recommended channels/placements
+- **Quality** — High / Medium / Low with a brief reason
+- **⚠️ Uncertainty flag** — if anything is ambiguous, a specific question for the user
+- **Duplicate flag** — if similar to an existing asset, note it with the existing filename
+
+**Styling:**
+- Use brand primary color for accents (from `brand-identity.md`, or `#4f8ef7` if unknown)
+- Dark background (#1a1a2e), light card surface (#0f172a), light text (#e2e8f0)
+- Clean card layout: thumbnail left, metadata right (stacks on mobile)
+- Clear visual separation between cards
+- Fully self-contained — no external CSS or JS dependencies
+
+After generating the file, tell the user:
+
+> "Review page ready: `brand-assets/review-batch-01.html` — open it in your browser to see all [N] assets with suggested names and tags. Come back here when you've made your decisions."
 
 ---
 
-## Step 6: Execute Organization
+## Step 7: Process Decisions
 
-Only after approval:
+After the user reports decisions:
 
-For each asset:
-1. Copy to the appropriate subfolder with the new descriptive name
-2. Copy flagged duplicates to `_duplicates/` with original names
-3. Add entry to manifest data
+**Approved assets — execute in order:**
+1. Copy from source to the organized folder with the new descriptive name
+2. Embed EXIF/IPTC metadata into the JPEG (skip for video, PNG, WEBP):
 
-Report progress every 20 assets:
-> "Organized 40/87 photos. So far: 22 product shots, 12 lifestyle, 4 team/BTS. 3 duplicates moved."
+```python
+import piexif
+from iptcinfo3 import IPTCInfo
+
+def embed_asset_metadata(filepath, title, description, keywords):
+    try:
+        exif_dict = piexif.load(filepath)
+    except Exception:
+        exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}}
+
+    exif_dict["0th"][piexif.ImageIFD.ImageDescription] = description.encode("utf-8")
+    exif_dict["0th"][piexif.ImageIFD.XPTitle]          = (title + "\x00").encode("utf-16-le")
+    exif_dict["0th"][piexif.ImageIFD.XPKeywords]       = (";".join(keywords) + "\x00").encode("utf-16-le")
+    exif_dict["0th"][piexif.ImageIFD.XPComment]        = (description + "\x00").encode("utf-16-le")
+    piexif.insert(piexif.dump(exif_dict), filepath)
+
+    info = IPTCInfo(filepath, force=True)
+    info["keywords"]         = [k.encode("utf-8") for k in keywords]
+    info["caption/abstract"] = description.encode("utf-8")
+    info["object name"]      = title.encode("utf-8")
+    info.save_as(filepath)
+
+    junk = filepath + "~"
+    if os.path.exists(junk):
+        os.remove(junk)
+```
+
+3. Add entry to catalog data with `metadata_embedded: true` (or `false` for non-JPEG)
+
+**Edited assets:** Ask what to change, apply correction, then process as approved.
+
+**Skipped assets:** Leave in source folder, do not log.
+
+**Delete:** Move to `brand-assets/_delete/` with original name. Do not delete any file.
+
+After all decisions are processed, update all three catalog files (see Step 8), then move to the next batch.
 
 ---
 
-## Step 7: Generate Manifest
+## Step 8: Repeat for All Batches
 
-After all assets are copied, generate:
+After processing decisions for each batch:
+1. Update catalogs immediately (don't wait until all batches are done)
+2. Announce progress: "Batch 1 complete — 8 approved, 1 skipped, 1 deleted. Moving to batch 2 of [N]."
+3. Analyze next batch and generate the next review page
+4. Continue until all assets are processed
 
-**`asset-manifest.csv`** — with columns:
-`file_name, original_name, category, type, description, shot_type, mood, seasonality, tags, suggested_use, quality, duration, aspect_ratio, thumbnail, duplicate, duplicate_of, date_added, notes`
+---
 
-**`asset-manifest.md`** — human-readable index with:
-1. Summary section (total counts, category breakdown, duplicate count, date)
-2. Quick Search Guide (what keywords to search for)
+## Step 9: Generate / Update Catalogs
+
+After each batch is processed, regenerate all three catalog formats:
+
+### `asset-manifest.xlsx`
+Columns: `file_name, original_name, category, type, description, shot_type, mood, seasonality, tags, suggested_use, quality, duration, aspect_ratio, thumbnail, metadata_embedded, duplicate, duplicate_of, date_added, notes`
+
+### `asset-catalog.json`
+One JSON object per asset. Full schema matches the XLSX columns.
+
+### `asset-manifest.md`
+Human-readable index with:
+1. Summary section — total counts, category breakdown, metadata embedded count, date
+2. Quick Search Guide — what keywords to search for
 3. Assets by category with full descriptions
 
 ---
 
-## Step 8: Duplicate Report
-
-If any duplicates were flagged, generate `_duplicates/flagged-duplicates.md`:
-
-```markdown
-## Duplicate Group 1: Workman Flannel Flat Lay
-**Kept:** product-flatlay-workman-flannel-rust-01.jpg (sharpest focus, best composition)
-**Flagged:**
-- IMG_4393.jpg → Similar angle, slightly overexposed
-- IMG_4394.jpg → Same setup, product slightly off-center
-
-**Action needed:** Review and confirm. Delete flagged or move back if preferred.
-```
-
----
-
-## Step 9: Completion
+## Step 10: Completion
 
 ```
-Asset Library Complete!
+Organization Complete!
 
 📁 brand-assets/
-  72 photos organized across 6 categories
-  12 videos organized with thumbnail timestamps noted
-  9 duplicate files moved to _duplicates/ (3 groups)
-  asset-manifest.csv — searchable spreadsheet
-  asset-manifest.md  — human-readable index
+  [X] photos organized across [N] categories
+  [Y] videos organized with thumbnail timestamps noted
+  [Z] files moved to _delete/
+  [D] duplicate groups flagged
 
-Quality breakdown:
-  High:   61 | Medium: 18 | Low: 5 (flagged for review)
+Metadata embedded: [X] JPEGs (searchable in Finder, Spotlight, Adobe)
+
+Catalog files updated:
+  asset-manifest.xlsx  — shareable spreadsheet
+  asset-catalog.json   — automation-ready
+  asset-manifest.md    — searchable index
+
+Review pages saved: brand-assets/review-batch-01.html through review-batch-[N].html
 
 Next steps:
-  → Review flagged duplicates: brand-assets/_duplicates/flagged-duplicates.md
-  → Review low-quality assets in the manifest
+  → Review anything in _delete/ and permanently remove if confirmed
   → Drop future assets in brand-assets/_inbox/ and run /add-assets
 ```
 
-Create `brand-assets/_inbox/` if it doesn't already exist, with a `.keep` file and a brief README explaining the inbox workflow.
+Create `brand-assets/_inbox/` if it doesn't exist, with a `.keep` file and a brief README explaining the inbox workflow.
