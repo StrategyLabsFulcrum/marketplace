@@ -285,6 +285,15 @@
       "author": { "name": "Strategy Labs" },
       "keywords": ["email management", "inbox triage", "Gmail", "Slack", "iMessage", "communications", "voice profile", "draft replies", "calendar", "task tracker", "daily briefing"],
       "license": "MIT"
+    },
+    {
+      "name": "cfo-agent",
+      "source": "./plugins/cfo-agent",
+      "description": "Fractional CFO Agent — operates as a trusted financial partner across multiple brand engagements. Loads brand-specific financial context and executes CFO work: P&L analysis, EBITDA normalization, deal structuring, SBA underwriting, investor/lender packages, KPI dashboards, and strategic financial advisory. Supports three active engagements: The Great PNW (DTC e-commerce), Uno Mas (restaurant), Strategy Labs (digital agency).",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["CFO", "financial analysis", "EBITDA", "P&L", "cash flow", "deal structuring", "SBA loan", "DSCR", "valuation", "cap table", "prime cost", "labor analysis", "MER", "contribution margin", "fractional CFO", "financial modeling"],
+      "license": "MIT"
     }
   ]
 }
