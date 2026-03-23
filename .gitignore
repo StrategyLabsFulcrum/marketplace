@@ -11,6 +11,9 @@ Thumbs.db
 # Node
 node_modules/
 
+# Private / personal plugins (local only — never pushed)
+/private/
+
 # Client brand data (should never be committed)
 # Matches top-level brand-os/ directories but not skills/brand-os/ inside the plugin
 /brand-os/
