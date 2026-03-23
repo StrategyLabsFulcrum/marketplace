@@ -297,7 +297,7 @@
     },
     {
       "name": "mail-agent",
-      "source": "./plugins/mail-agent",
+      "source": "./private/plugins/mail-agent",
       "description": "Physical Mail Agent — reads scanned or photographed mail dropped into a folder, classifies each piece, extracts key details (amounts, deadlines, reference numbers), assesses urgency, determines routing, and tells you exactly what to do with every letter. Supports Slack and email routing to designated contacts.",
       "version": "1.0.0",
       "author": { "name": "Strategy Labs" },
