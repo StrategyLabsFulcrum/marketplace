@@ -294,6 +294,15 @@
       "author": { "name": "Strategy Labs" },
       "keywords": ["CFO", "financial analysis", "EBITDA", "P&L", "cash flow", "deal structuring", "SBA loan", "DSCR", "valuation", "cap table", "prime cost", "labor analysis", "MER", "contribution margin", "fractional CFO", "financial modeling"],
       "license": "MIT"
+    },
+    {
+      "name": "gemini-creative",
+      "source": "./plugins/gemini-creative",
+      "description": "Gemini Creative — generate production-quality images and videos using Google's Gemini API. Supports Gemini Flash Image, Imagen 4 for batch image generation, and Veo 3.1 for video generation with native audio.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["image generation", "video generation", "Gemini", "Imagen", "Veo", "AI images", "AI video", "brand assets", "creative assets", "visual content"],
+      "license": "MIT"
     }
   ]
 }
