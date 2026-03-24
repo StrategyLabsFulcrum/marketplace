@@ -280,10 +280,10 @@
     {
       "name": "inbox-command-center",
       "source": "./plugins/inbox-command-center",
-      "description": "Inbox Command Center — AI communications manager that triages Gmail, Slack, iMessage, and messaging platforms. Auto-categorizes messages, drafts replies in your authentic voice, manages calendar conflicts, and delivers scheduled daily briefings.",
-      "version": "1.2.0",
+      "description": "Inbox Command Center — AI communications manager that triages Gmail, Slack, iMessage, and messaging platforms. Auto-categorizes messages, drafts replies in your authentic voice (learned from transcripts, phone calls, sent emails, Slack messages, and A/B calibration), creates smart rules with delete/prioritization/folder-based options, delivers VIP alerts with pre-written drafts, generates monthly inbox reports with full analytics, and delivers scheduled daily briefings.",
+      "version": "1.3.0",
       "author": { "name": "Strategy Labs" },
-      "keywords": ["email management", "inbox triage", "Gmail", "Slack", "iMessage", "communications", "voice profile", "draft replies", "calendar", "task tracker", "daily briefing"],
+      "keywords": ["email management", "inbox triage", "Gmail", "Slack", "iMessage", "communications", "voice profile", "draft replies", "calendar", "task tracker", "daily briefing", "VIP contacts", "inbox report", "folder rules", "delete rules", "voice review"],
       "license": "MIT"
     },
     {
