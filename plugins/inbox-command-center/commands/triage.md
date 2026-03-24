@@ -34,23 +34,35 @@ Ask: **"When did you last check email?"** or accept a stated timeframe.
 
 ## Step 2: Pull Messages
 
-### Email
+### Email — ALWAYS Query Both Gmail MCP AND Rube
 
-Run TWO searches in parallel:
+**IMPORTANT:** Every email pull must query ALL connected email sources in parallel — both Gmail MCP and any Rube-connected email accounts (Gmail via Rube, Outlook, etc.). Never rely on a single source. Merge and deduplicate results before presenting.
 
-**Starred emails:**
+**Via Gmail MCP — run TWO searches:**
+
+Starred emails:
 ```
 q: "is:starred is:unread"
 maxResults: 20
 ```
 
-**Unread inbox:**
+Unread inbox:
 ```
 q: "in:inbox is:unread after:YYYY/MM/DD"
 maxResults: 50
 ```
 
-Deduplicate (starred may appear in both). If multiple inboxes connected, search all and label which account each came from.
+**Via Rube — run matching searches in parallel:**
+
+Query all Rube-connected email accounts with equivalent search criteria (starred + unread, unread inbox for time range). This ensures emails from Outlook, secondary Gmail accounts, or any Rube-connected mail provider are included.
+
+**Merge & Deduplicate:**
+
+After both sources return results:
+1. Combine all results into a single list
+2. Deduplicate by Message-ID or sender + subject + timestamp
+3. Label which account/connection each email came from (e.g., "[Gmail MCP]", "[Outlook via Rube]")
+4. If the same email appears from both MCP and Rube, keep one and note the source
 
 ### Slack (if connected)
 

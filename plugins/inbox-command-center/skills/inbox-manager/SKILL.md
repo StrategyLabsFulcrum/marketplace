@@ -663,9 +663,13 @@ Every email goes into exactly ONE category:
 - Senders appearing in JUNK repeatedly
 - Mailing lists user never engages with
 
+### Dual-Source Email Scanning
+
+**IMPORTANT:** Every email operation — triage, quick check, search, report, or any email-related request — MUST query both Gmail MCP and all Rube-connected email accounts in parallel. Never rely on a single source. Merge and deduplicate results before processing.
+
 ### Batch Processing
 
-1. Pull all unread + starred emails for the time range
+1. Pull all unread + starred emails for the time range from ALL connected email sources (Gmail MCP + Rube)
 2. Apply rules first — auto-processed emails are reported as a summary, not individually
 3. **VIP check** — If any emails are from VIP senders, surface them immediately (see VIP Immediate Alert below)
 4. Route emails to folders based on folder rules (Low Priority, Newsletters, etc.)
