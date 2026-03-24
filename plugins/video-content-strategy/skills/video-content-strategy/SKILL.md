@@ -311,3 +311,96 @@ Organize all outputs in `campaigns/[slug]/video-strategy/` or `brand-assets/vide
 - Performance Marketing Agent: Video ad deployment brief (platform, audience, budget)
 - PR & Influencer Agent: If scripts are being delivered to creators, pass the UGC brief
 - Content Library: Store completed scripts and top-performing video frameworks for future reuse
+- Gemini Creative Engine: Video generation prompts for Veo 2 (if connected)
+
+---
+
+## Gemini Creative Engine Integration — Video Generation
+
+When the user has Gemini connected (`brand-intelligence-center/integrations/gemini-config.md` exists), this agent gains the ability to produce video generation prompts for Veo 2 alongside traditional scripts and storyboards.
+
+### Model Selection for Video
+
+After producing any video script or storyboard, present the video generation option:
+
+```
+## Video Generation Options
+
+Your script is complete. Would you also like AI-generated video assets?
+
+1. **Gemini Veo 2** — Generate video directly from your script/storyboard (5-15s clips)
+2. **Script only** — Traditional handoff to production team
+3. **Both** — Script for production + Veo 2 clips for concept visualization / rough cuts / social testing
+
+Your choice: ___
+```
+
+### Veo 2 Video Prompt Architecture
+
+When Veo 2 is selected, translate each script into a structured video generation prompt:
+
+```markdown
+## Video Generation Brief — Veo 2
+
+**Concept:** [One-sentence video description]
+**Duration:** [5s / 10s / 15s per clip — stitch for longer]
+**Opening Frame:** [Detailed description of first frame — this anchors generation]
+
+**Scene Progression:**
+- Beat 1 (0–Xs): [Visual description — action, camera, lighting, mood]
+- Beat 2 (X–Ys): [Visual description]
+- Beat 3 (Y–Zs): [Visual description]
+- Final Frame: [CTA moment or closing visual]
+
+**Camera Movement:** [Static / pan / dolly / drone / handheld / tracking]
+**Pacing:** [Slow cinematic / quick-cut energy / steady confident]
+**Color Grade:** [Reference brand palette — warm/cool/desaturated/vibrant]
+**Style Reference:** [e.g., "like an Apple product video", "like a Nike training ad"]
+**Aspect Ratio:** [9:16 vertical / 16:9 horizontal / 1:1 square]
+
+**Brand Guardrails:**
+- MUST: [brand visual requirements]
+- NEVER: [brand NEVER rules]
+```
+
+### Multi-Model Video Comparison
+
+If the user wants to compare approaches, offer:
+
+```
+## Multi-Model Video Options
+
+1. **Veo 2 (cinematic)** — Cinematic, high-production-value interpretation
+2. **Veo 2 (social-native)** — Raw, authentic, platform-native aesthetic
+3. **Both styles** — Compare polished vs. authentic and pick what works
+
+For each, I'll produce optimized prompts tuned to the target aesthetic.
+```
+
+### Video Generation per Platform
+
+Translate platform-specific scripts into Veo 2 prompts:
+
+| Platform | Veo 2 Approach |
+|----------|---------------|
+| TikTok | 9:16, quick cuts, first 2 seconds prioritized, trending aesthetic |
+| Instagram Reels | 9:16, slightly more polished, text overlay space reserved |
+| YouTube pre-roll | 16:9, hook in first 5 seconds, product focus by second 8 |
+| Meta feed video | 1:1 or 4:5, thumb-stopping opening frame, captions space |
+| YouTube long-form (B-roll) | 16:9, cinematic B-roll clips to supplement talking head |
+
+### Output Location
+
+Save Veo 2 video generation prompts alongside scripts:
+
+```
+campaigns/[slug]/video-strategy/
+├── scripts/
+│   ├── [video-slug]-script.md          ← traditional script
+│   └── [video-slug]-veo2-prompt.md     ← Veo 2 generation prompt
+├── gemini-video/
+│   ├── [video-slug]-veo2-v1.md         ← primary generation brief
+│   └── [video-slug]-veo2-alt.md        ← alternative approach
+└── model-comparison/
+    └── [video-slug]-comparison.md      ← if multi-model selected
+```

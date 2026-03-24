@@ -109,7 +109,47 @@ Format per asset:
 
 When photography or illustration is needed and cannot be sourced from existing assets:
 
-**Prompt structure:**
+#### Model Selection (Gemini Creative Engine Integration)
+
+Before writing prompts, check if the user has Gemini connected:
+1. Read `brand-intelligence-center/integrations/gemini-config.md` — if it exists, Gemini is available
+2. If Gemini is connected, present the model selection prompt:
+
+```
+## Which AI model should generate these images?
+
+1. **Gemini Imagen 3** — Best for: photorealistic product shots, text-in-image, brand-accurate colors
+2. **DALL-E 3** — Best for: illustrations, conceptual art, creative interpretations
+3. **Midjourney** — Best for: hero images, editorial photography, cinematic visuals
+4. **Multi-model comparison** — Run 2-3 models in parallel, pick the best result
+5. **Use my default** — [reads default from gemini-config.md]
+
+Your choice (or I'll recommend based on the brief): ___
+```
+
+If the user selects multi-model, produce optimized prompts for each selected model (prompt syntax differs per model — see below). Present all prompts in a comparison block so the user can generate with each and choose.
+
+#### Prompt Architecture by Model
+
+**Gemini Imagen 3 prompt structure:**
+```
+## Image Generation Brief — Imagen 3
+
+**Subject:** [Precise description — specific, visual, concrete]
+**Scene/Environment:** [Setting, background, context]
+**Composition:** [Framing — tight/medium/wide, rule of thirds, angle, orientation]
+**Lighting:** [Quality, direction, color temperature, mood]
+**Color Palette:**
+  - Primary: [brand color name + hex description]
+  - Supporting: [color name]
+  - Accent: [color name]
+**Style:** [Photorealistic / editorial / lifestyle / product / flat lay]
+**Text in Image:** [Any text that should appear — Imagen 3 handles text well]
+**Aspect Ratio:** [1:1 / 4:5 / 9:16 / 16:9]
+**Negative Prompt:** [What to exclude]
+```
+
+**Generic AI prompt structure (DALL-E, Midjourney, Firefly):**
 ```
 [Subject description — specific, visual, concrete]
 [Composition and crop — tight/medium/wide, angle, orientation]
@@ -119,11 +159,17 @@ When photography or illustration is needed and cannot be sourced from existing a
 [Negative prompt — what to exclude]
 ```
 
-**Example prompt (Meta feed — lifestyle product shot):**
+**Example prompt (Meta feed — lifestyle product shot, Imagen 3 format):**
 ```
-Prompt: A mid-30s woman at a clean wooden desk, hands wrapped around a white ceramic mug, looking slightly off-camera with a calm, confident expression. Natural window light from the left, soft shadows. Warm but not orange color grade. Contemporary home office environment, blurred background. Editorial feel, not stock photography. 4:5 aspect ratio.
-
-Negative prompt: stock photo poses, smiling directly at camera, artificial lighting, cluttered background, phone in hand
+Subject: A mid-30s woman at a clean wooden desk, hands wrapped around a white ceramic mug, looking slightly off-camera with a calm, confident expression.
+Scene/Environment: Contemporary home office, blurred background with warm natural tones.
+Composition: Medium shot, rule of thirds — subject positioned left, product (mug) in center frame.
+Lighting: Natural window light from the left, soft shadows, warm color temperature.
+Color Palette: Primary: warm cream background, Supporting: deep navy accents, Accent: gold detail on mug.
+Style: Editorial lifestyle photography, not stock. Filmic color grade — warm but not orange.
+Text in Image: None
+Aspect Ratio: 4:5
+Negative Prompt: stock photo poses, smiling directly at camera, artificial lighting, cluttered background, phone in hand
 ```
 
 **Prompt guidelines:**
@@ -132,8 +178,34 @@ Negative prompt: stock photo poses, smiling directly at camera, artificial light
 - Lighting is the most important technical variable — describe it first
 - Reference the visual direction system's photography style direction
 - Always include aspect ratio and negative prompts
+- For Imagen 3: include brand colors as descriptive names alongside hex values
+- For Imagen 3: include any text that should appear in the image (text rendering is a key strength)
 
-Write one primary prompt per image need, plus one alternative prompt with a different compositional approach.
+Write one primary prompt per image need, plus two alternatives — one with a different composition and one with a different mood/style treatment.
+
+#### Multi-Model Comparison Output
+
+When the user selects multi-model mode, present prompts in this format:
+
+```markdown
+## Multi-Model Image Generation — [Asset Name]
+
+### Gemini Imagen 3
+[Optimized prompt in Imagen 3 format above]
+**Why this model:** [what Imagen 3 will do well for this specific asset]
+
+### DALL-E 3
+[Same concept, optimized for DALL-E's conversational prompt style]
+**Why this model:** [what DALL-E will do well here]
+
+### Midjourney
+[Same concept, optimized for Midjourney's comma-separated descriptors + parameters]
+**Why this model:** [what Midjourney will do well here]
+
+### Recommendation
+**Best single model:** [model] — because [reason]
+**Best for comparison:** [two models] — because [reason]
+```
 
 ### Design Specification Document
 

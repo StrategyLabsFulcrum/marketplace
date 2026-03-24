@@ -114,3 +114,4 @@ Verdicts: **Pass** / **Pass with notes** / **Revise** / **Escalate** (brand-leve
 - **creative-director** (required in campaign mode) — provides the creative concept and visual direction words the Art Director expands
 - **campaign-strategist** (recommended) — provides campaign brief with channel list, audience, and strategic context
 - **competitive-landscape** (recommended) — competitive visual analysis informs visual differentiation strategy
+- **gemini-creative** (optional) — when connected, the Art Director offers model selection before spawning specialists. Users choose which AI models generate assets (Gemini Imagen 3, Veo 2, DALL-E, Midjourney, or multi-model comparison). The selection is passed to every specialist brief for consistent model usage across the campaign.

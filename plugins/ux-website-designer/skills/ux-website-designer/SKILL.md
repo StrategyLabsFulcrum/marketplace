@@ -280,3 +280,97 @@ Deliver with:
 - CRO hypotheses (prioritized)
 - Accessibility notes for dev team
 - Page flow diagram if this is part of a multi-step funnel (text-based flow: Page A → [action] → Page B → [action] → Page C)
+
+---
+
+## Gemini Creative Engine Integration — Mockup & Web Visual Generation
+
+When the user has Gemini connected (`brand-intelligence-center/integrations/gemini-config.md` exists), this agent gains the ability to produce AI-generated visual mockups, hero images, and dashboard designs alongside wireframe specifications.
+
+### When to Offer Gemini Generation
+
+After completing the wireframe document, present the visual generation option:
+
+```
+## Visual Generation Options
+
+Your wireframe is complete. Would you like AI-generated visuals to accompany it?
+
+1. **Hero image generation (Imagen 3)** — Generate the hero section imagery using brand-aware prompts
+2. **Full-page mockup (Gemini 2.5 Pro)** — Use Gemini to review and refine the wireframe into a visual mockup description
+3. **Dashboard visualization (Imagen 3)** — Generate data visualization mockups in your brand colors
+4. **Multi-model comparison** — Get visuals from multiple models to compare aesthetic approaches
+5. **Wireframe only** — Traditional handoff to design team
+
+Your choice: ___
+```
+
+### Model Selection for Web/Dashboard Visuals
+
+| Web Asset Type | Recommended Model | Why |
+|---------------|-------------------|-----|
+| Hero image / key visual | Imagen 3 + Midjourney (compare) | Hero images need aesthetic impact — compare approaches |
+| Dashboard / data viz mockup | Imagen 3 | Precise brand color application, text rendering in charts |
+| Website section mockup | Claude (wireframe) + Imagen 3 (visual) | Structure from Claude, visual polish from Gemini |
+| Icon set / UI illustrations | DALL-E 3 | Best at consistent illustrated styles |
+| Design review / critique | Gemini 2.5 Pro | Multimodal analysis of existing mockups |
+
+### Hero Image Generation Prompt (Imagen 3)
+
+For hero sections, produce an Imagen 3-optimized prompt:
+
+```markdown
+## Hero Image Brief — Imagen 3
+
+**Subject:** [What appears in the hero — product, lifestyle scene, abstract brand imagery]
+**Environment:** [Setting that reinforces the page's message]
+**Composition:** [Wide / split-frame / centered — must leave space for headline overlay]
+**Text Safe Zone:** [Where headline + CTA will be placed — keep this area clear or low-contrast]
+**Lighting:** [Quality and direction — must support text legibility]
+**Color Palette:** [Brand colors — hero must harmonize with page color scheme]
+**Mood:** [The emotional quality that supports the conversion goal]
+**Aspect Ratio:** [16:9 for full-width / 3:2 for contained / custom]
+**Responsive Consideration:** [Describe how the image should crop at mobile — center subject for safe mobile crop]
+
+**Brand Guardrails:**
+- MUST: [brand visual requirements]
+- NEVER: [brand NEVER rules]
+
+**Negative Prompt:** [Stock photo feel, elements that contradict brand]
+```
+
+### Dashboard Mockup Generation
+
+For dashboard or data visualization pages:
+
+```markdown
+## Dashboard Visual Brief — Imagen 3
+
+**Dashboard Type:** [Analytics / performance / overview / reporting]
+**Data Elements:** [Charts, KPIs, tables to visualize — describe the data story]
+**Layout:** [Grid layout from wireframe — reference specific viewport sections]
+**Color System:**
+  - Chart primary: [brand primary hex]
+  - Chart secondary: [brand secondary hex]
+  - Chart accent: [brand accent hex]
+  - Background: [light/dark mode preference]
+**Typography:** [Brand fonts for headers, data labels, values]
+**Style:** [Clean/minimal, data-dense, executive-friendly, modern SaaS]
+**Key Metrics to Highlight:** [Which numbers should draw the eye first]
+
+**Brand Guardrails:**
+- MUST: [brand requirements for data presentation]
+- NEVER: [visual approaches to avoid]
+```
+
+### Output Location
+
+Save generated visual prompts alongside wireframes:
+
+```
+campaigns/{{slug}}/creative/design/outputs/
+├── ux-wireframes.md                    ← wireframe specifications
+├── ux-hero-imagen3-prompt.md           ← hero image generation brief
+├── ux-dashboard-visual-prompt.md       ← dashboard mockup generation brief
+└── ux-model-comparison.md              ← multi-model comparison (if selected)
+```

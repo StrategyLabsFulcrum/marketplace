@@ -1,12 +1,12 @@
 {
   "name": "gemini-creative",
-  "version": "1.0.0",
-  "description": "Gemini Creative — generate production-quality images and videos using Google's Gemini API. Supports Gemini Flash Image, Imagen 4 for batch image generation, and Veo 3.1 for video generation with native audio.",
+  "version": "1.1.0",
+  "description": "Gemini Creative Engine — generate production-quality images and videos using Google's Gemini API (Imagen 4, Gemini Flash Image, Veo 3.1). Supports model selection (Gemini, Claude, or both in parallel), multi-model comparison runs, and direct image/video generation. Uplevels all visual outputs across design, video, dashboard, and web plugins.",
   "author": {
     "name": "Strategy Labs",
     "email": "scott@strategylabs.us"
   },
   "homepage": "https://github.com/StrategyLabsFulcrum/marketplace",
-  "keywords": ["image generation", "video generation", "Gemini", "Imagen", "Veo", "AI images", "AI video", "brand assets", "creative assets", "visual content"],
+  "keywords": ["Gemini", "image generation", "video generation", "Imagen", "Veo", "AI creative", "multi-model", "model selection", "visual design", "creative engine", "AI images", "AI video"],
   "license": "MIT"
 }

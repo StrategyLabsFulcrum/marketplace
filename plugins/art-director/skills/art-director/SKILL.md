@@ -306,17 +306,67 @@ Save each brief to `campaigns/{{slug}}/creative/briefs/{{specialist}}-design-bri
 
 ---
 
-## Step 5: Spawn Design Specialists in Parallel
+## Step 4b: Gemini Creative Engine — Model Selection & AI Generation
 
-With user approval, spawn all design specialists simultaneously. Pass each their brief as context.
+**Before spawning specialists**, check if the user has Gemini connected.
+
+Read `brand-intelligence-center/integrations/gemini-config.md`. If it exists, present the model selection prompt:
 
 ```
-[PARALLEL SPAWN — all receive approved visual direction system]
-├── Graphic Design Agent         → digital ads, email, social
+## AI Creative Model Selection
+
+You have the Gemini Creative Engine connected. For this campaign's visual assets, how would you like to use AI generation?
+
+### Generation Strategy
+1. **Gemini-enhanced** — All design specialists use Gemini (Imagen 3 for images, Veo 2 for video) as the primary AI generation tool, plus Claude for specs
+2. **Multi-model exploration** — Key hero assets get prompts for multiple models (Gemini + Midjourney + DALL-E) so you can compare and choose the best aesthetic
+3. **Claude + Gemini pipeline** — Claude writes the design specs, Gemini generates the visuals. Best of both.
+4. **Traditional** — Design specialists produce specs and generic AI prompts (no Gemini-specific optimization)
+
+### Model Defaults for This Campaign
+- **Product/lifestyle photography:** [Imagen 3 / Midjourney / compare both]
+- **Video assets:** [Veo 2 / script-only for production team]
+- **Dashboard/web mockups:** [Imagen 3 / Claude specs only]
+- **Illustrations/conceptual:** [DALL-E 3 / Midjourney]
+
+Your choice (or just approve the defaults): ___
+```
+
+**Pass the model selection to every specialist brief.** Each specialist's brief should include:
+
+```markdown
+## AI Generation Model
+**Selected model(s):** [from user's choice above]
+**Multi-model comparison:** [yes/no — if yes, produce prompts for each model]
+**Gemini config location:** brand-intelligence-center/integrations/gemini-config.md
+```
+
+This ensures every specialist produces model-optimized prompts aligned with the user's preferences.
+
+### Multi-Model Comparison at the Art Director Level
+
+When multi-model is selected, the Art Director coordinates the comparison:
+1. Each design specialist produces prompts optimized for each selected model
+2. Art Director collects all prompts and organizes a side-by-side comparison document
+3. User reviews and selects the winning model per asset type
+4. Art Director records model selections in the campaign visual direction system for consistency
+
+Save model comparison to `campaigns/{{slug}}/creative/design/model-comparison.md`.
+
+---
+
+## Step 5: Spawn Design Specialists in Parallel
+
+With user approval, spawn all design specialists simultaneously. Pass each their brief as context, **including the AI model selection from Step 4b**.
+
+```
+[PARALLEL SPAWN — all receive approved visual direction system + model selection]
+├── Graphic Design Agent         → digital ads, email, social (+ Imagen 3 / multi-model prompts)
 ├── Print Design Agent           → print ads, direct mail
 ├── OOH Design Agent             → outdoor, transit, signage
 ├── Packaging/Brand Design Agent → packaging, trade show, corporate
-└── UX/Website Designer          → web, landing pages
+├── UX/Website Designer          → web, landing pages (+ Imagen 3 hero images / dashboard mockups)
+└── Gemini Creative Engine       → video generation via Veo 2 (if video is in scope)
 ```
 
 Track which specialists have returned outputs. Collect all before proceeding to review.
@@ -500,3 +550,4 @@ If a new campaign's visual direction would conflict with established design syst
 - `references/visual-direction-schema.md` — full template for the visual direction system document
 - `references/design-brief-templates.md` — complete brief formats for all design specialist types
 - `references/production-specs.md` — production specifications for every channel and medium
+- `gemini-creative/skills/gemini-creative/references/model-registry.md` — AI model capabilities, prompt formats, and selection criteria (when Gemini is connected)

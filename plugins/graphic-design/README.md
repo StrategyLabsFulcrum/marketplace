@@ -32,3 +32,4 @@ Complete Canva direction or AI prompts for every asset, with file naming and exp
 
 - **brand-intelligence-center** (required) — brand colors, fonts, logo rules
 - **art-director** (directs this agent) — visual direction system, design brief
+- **gemini-creative** (optional) — when connected, enables model selection (Gemini Imagen 3, DALL-E, Midjourney) and multi-model comparison runs for AI image generation. Users choose which model generates their assets, or run multiple in parallel for more options.

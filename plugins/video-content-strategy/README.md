@@ -69,10 +69,19 @@ Content Library → Stores top-performing scripts for future reuse
 ```
 campaigns/[slug]/video-strategy/
 ├── scripts/
-│   └── [video-slug]-script.md
+│   ├── [video-slug]-script.md
+│   └── [video-slug]-veo2-prompt.md     ← Veo 2 generation prompt (if Gemini connected)
+├── gemini-video/
+│   ├── [video-slug]-veo2-v1.md         ← primary video generation brief
+│   └── [video-slug]-veo2-alt.md        ← alternative approach
 ├── content-calendar-[month].md
 └── ugc-video-brief.md
 
 brand-assets/video-strategy/
 └── channel-strategy-[platform].md
 ```
+
+## Dependencies
+
+- **brand-intelligence-center** (required) — brand voice, audience, positioning
+- **gemini-creative** (optional) — when connected, enables Veo 2 video generation from scripts. Users can generate AI video clips for concept visualization, rough cuts, or social testing alongside traditional production scripts.
