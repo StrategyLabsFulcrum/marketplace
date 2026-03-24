@@ -14,7 +14,10 @@ Triggers on: "check my email", "triage", "what did I miss", "any new emails", "i
 5. If Brand Knowledge Center exists, load `brand-identity.md` for brand-voice drafting.
 6. **Version check:** Compare `Plugin Version` in config against current plugin version. If updated, show the update briefing (see SKILL.md → Plugin Update Notifications) before starting triage. Walk through new feature setup if the user chooses.
 7. **Pending update check:** If `pending_update_setup` is set in config, show a brief reminder: "You have new features from [version] that need setup. Say 'set up updates' to configure." (stops after 3 reminders)
-8. **VIP review check:** Read `last_vip_review` and `vip_review_frequency_days` from config. If the configured interval has passed (default: 30 days), trigger the VIP Review prompt (from setup-wizard.md) before starting triage. Update `last_vip_review` after review or skip. If `vip_review_frequency_days` is "never", skip this check entirely.
+8. **VIP review check:** Read `last_vip_review` and VIP review cadence from config. If the review is due per the user's configured cadence (monthly / bi-weekly / weekly / quarterly / on demand), trigger the VIP Review prompt (from setup-wizard.md) before starting triage. Update the date after review or skip. If cadence is "on demand", skip this check entirely.
+9. **Voice profile review check:** Read `voice_profile_last_reviewed` from config. If review is due per the user's configured voice review cadence (monthly minimum), trigger the Mandatory Monthly Voice Review prompt (see SKILL.md) before starting triage.
+10. **Inbox report check:** Read `inbox_report_last_generated` from config. If a report is due per the user's configured cadence, note it and generate after triage completes (or remind: "Your monthly inbox report is due. I'll generate it after triage.")
+11. Load folder rules from `[data-path]/folder-rules.md`.
 
 ---
 
@@ -70,31 +73,85 @@ Pull unread messages from each connected platform.
 
 ---
 
-## Step 3: Apply Rules
+## Step 3: Apply Rules & Route to Folders
 
-Before presenting anything, run all active rules against every message:
+Before presenting anything, run all active rules and folder rules against every message:
 
 1. Process rules in order (first match wins per message)
-2. Track which rules were applied
-3. Auto-processed messages are NOT shown individually — summarized at the top
+2. Route emails to folders based on folder rules (Low Priority, Newsletters, Finance, etc.)
+3. Track which rules were applied and which folders received emails
+4. Auto-processed messages are NOT shown individually — summarized at the top
+5. **VIP check** — Any emails from VIP senders are flagged for immediate alert (see Step 4)
 
-**Rules Summary:**
+**Rules & Folder Summary:**
 
 ```
 ⚡ RULES AUTO-PROCESSED: 12 messages
 ├── 🗑️ Auto-junked: 7 (LinkedIn ×3, Instagram ×2, marketing ×2)
+├── 🗑️ Auto-deleted: 2 (blocked sender ×1, pattern match ×1)
 ├── 📂 Auto-archived: 3 (Amazon order, shipping ×2)
 ├── 🏷️ Auto-labeled: 2 (payment confirmation → "Finance")
 └── 0 forwarded, 0 reminders created
 
-[Show details] or continue to triage?
+📂 ROUTED TO FOLDERS: 8 messages
+├── Low Priority: 4 (CC'd threads ×2, vendor updates ×2)
+├── Newsletters: 2 (Morning Brew, TechCrunch)
+├── Finance: 1 (bank alert)
+├── Automated/Bot: 1 (GitHub notification)
+└── Review cadence: Low Priority (weekly), Newsletters (weekly), Finance (daily)
+
+[Show details] [Review folder items now] or continue to triage?
 ```
 
 ---
 
-## Step 4: Categorize Remaining Messages
+## Step 4: VIP Immediate Alerts
 
-For each message not handled by rules, categorize:
+Before normal categorization and batching, check if any unprocessed emails are from VIP senders. If so, present them immediately with full details and a pre-written draft reply.
+
+For each VIP email:
+
+```
+🚨 VIP EMAIL — [Sender Name] ([Relationship])
+
+From: [Full Name] <[email]>
+Subject: [Subject line]
+Received: [Day, Date, Time]
+Thread: [New / Reply in thread of X messages]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FULL EMAIL:
+[Complete email body — not a summary]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 PRE-WRITTEN DRAFT REPLY:
+[Draft reply in user's voice, tone matched to VIP relationship tag
+and any priority notes. Uses brand voice if client-facing and BKC connected.
+Considers full thread context if this is a reply.]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+→ [Send Draft] [Edit Draft] [Rewrite Draft] [Remind Me] [Deep Dive (full thread)] [Skip for now]
+```
+
+**Draft generation logic:**
+1. Read the full email/thread
+2. Check VIP contact settings for voice override and priority notes
+3. Determine voice: personal (default) or brand (if client + BKC connected)
+4. Generate draft considering email content, thread context, and relationship
+5. Include any CC instructions from VIP priority notes
+
+If multiple VIP emails exist, present each one sequentially. After all VIP alerts are processed:
+
+> "All VIP emails addressed. Continuing to regular triage..."
+
+---
+
+## Step 5: Categorize Remaining Messages
+
+For each message not handled by rules or VIP alerts, categorize:
 
 - Check sender against VIP list → 🔴 RESPOND
 - Check for urgency keywords → escalate
@@ -103,7 +160,7 @@ For each message not handled by rules, categorize:
 
 ---
 
-## Step 5: Present Batch
+## Step 6: Present Batch
 
 Sort all categorized messages:
 1. ⭐ Starred first
@@ -213,7 +270,7 @@ Give me your calls — e.g. "1: draft, 2: remind tomorrow 9am, 3: read, 4-7: del
 
 ---
 
-## Step 6: Process Actions
+## Step 7: Process Actions
 
 After the user gives their calls:
 
@@ -336,29 +393,34 @@ For each `rule`:
 
 ---
 
-## Step 7: Next Batch
+## Step 8: Next Batch
 
 After all actions processed:
 
 > "Batch 1 complete. [X] messages remaining. Ready for the next batch?"
 
-Repeat Steps 5-7 until all messages are triaged.
+Repeat Steps 6-8 until all messages are triaged.
 
 ---
 
-## Step 8: Triage Complete
+## Step 9: Triage Complete
 
 ```
 ✅ TRIAGE COMPLETE
 
 Processed: [X] messages
+├── 🚨 VIP emails addressed: [X] (drafts sent/pending)
 ├── 🔴 Responded/drafted: [X]
 ├── 🟡 Marked read: [X]
-├── 🗑️ Deleted: [X]
+├── 🗑️ Deleted: [X] (manual: [X], rule-based: [X])
 ├── 🔕 Unsubscribed: [X]
 ├── ⏰ Reminders set: [X]
 ├── 📤 Delegated: [X]
 ├── ⚡ Auto-processed by rules: [X]
+├── 📂 Routed to folders: [X]
+│   ├── Low Priority: [X]
+│   ├── Newsletters: [X]
+│   └── [Other folders]: [X]
 ├── 📅 Calendar actions: [X]
 ├── 💬 iMessage processed: [X]
 
@@ -367,7 +429,7 @@ Processed: [X] messages
 Next triage: Say "any new emails?" anytime for a quick check.
 ```
 
-Save triage timestamp to config for next session's time range.
+Save triage timestamp to config for next session's time range. Track deletion counts (manual vs. rule-based) for inbox report.
 
 ---
 
@@ -383,13 +445,37 @@ When the user says "any new emails?" or "quick check" (not a full triage):
 
 ---
 
+## Step 10: Post-Triage Actions
+
+After triage is complete, check for pending automated actions:
+
+1. **Inbox report due?** If a report is due per the user's configured cadence, generate and deliver it now:
+   > "Your [monthly/bi-weekly/weekly] inbox report is ready. Generating now..."
+   > [Run `/inbox-report` flow]
+
+2. **Folder digest due?** If any folder digests are due (e.g., weekly Low Priority digest), present them:
+   > "Your weekly Low Priority digest is ready — [X] emails this week. Want to review?"
+
+3. **Rule suggestions due?** Based on the user's configured review cadence, present learned suggestions.
+
+---
+
 ## Learned Rule Suggestions
 
-After every 3rd triage, check for patterns and suggest rules:
+Based on the user's configured review cadence (every triage / every 3rd triage / weekly / monthly / on demand), check for patterns and suggest rules:
 
 > "I've noticed some patterns from your recent triages:"
-> - "You've deleted emails from [sender] 4 times. Auto-junk future emails from them?"
-> - "You always mark read emails from [type]. Auto-archive them?"
-> - "You respond to [sender] within an hour every time. Add them as VIP?"
 >
-> "[Enable suggested rules / Dismiss / Review each]"
+> **DELETE RULES:**
+> - "You've deleted emails from [sender] 5 times. Auto-delete future emails from them?" [Enable / Dismiss]
+> - "You never open emails from [sender]. Auto-delete + unsubscribe?" [Enable / Dismiss]
+>
+> **PRIORITIZATION RULES:**
+> - "You respond to [sender] within an hour every time. Add them as VIP?" [Enable / Dismiss]
+> - "You always star emails from [sender]. Auto-escalate to 🔴 HIGH?" [Enable / Dismiss]
+>
+> **ORGANIZATION RULES:**
+> - "You always mark read emails from [type]. Auto-archive them?" [Enable / Dismiss]
+> - "You always label [type] emails the same way. Auto-label?" [Enable / Dismiss]
+>
+> "[Enable all / Review each / Dismiss all / Change review cadence]"

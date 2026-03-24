@@ -1,15 +1,72 @@
 # Voice Calibration
 
-Refine your voice profile through A/B message comparison. Run during initial setup or anytime to improve how drafts sound.
+Refine your voice profile through multi-source analysis and A/B message comparison. Run during initial setup, anytime to improve how drafts sound, or as part of the mandatory monthly/bi-weekly/weekly voice review.
 
-Triggers on: "calibrate my voice", "refine my voice", "voice calibration", "drafts don't sound like me", "fix my voice profile"
+Triggers on: "calibrate my voice", "refine my voice", "voice calibration", "drafts don't sound like me", "fix my voice profile", "voice review", "update my voice"
 
 ## Before Starting
 
-1. Load existing voice profile from `inbox-command-center/voice-profile.md`.
+0. **Resolve data path:** Check for iCloud sync first: `~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/config.md`. If found, use the iCloud path. Otherwise, fall back to `inbox-command-center/` locally.
+1. Load existing voice profile from `[data-path]/voice-profile.md`.
    - If it exists: "Your current voice profile was last updated [date]. Let's refine it."
    - If not: "No voice profile found. Run `/setup-wizard` first, or I can build one from scratch here."
-2. Load VIP contacts from `inbox-command-center/vip-contacts.md` for audience-specific scenarios.
+2. Load VIP contacts from `[data-path]/vip-contacts.md` for audience-specific scenarios.
+3. Check if this is a **scheduled review** (triggered by the mandatory monthly/bi-weekly/weekly cadence) or a **manual run**.
+   - If scheduled: Start with multi-source re-analysis (Step 0b) before A/B calibration.
+   - If manual: Skip re-analysis unless the user requests it, go straight to A/B calibration.
+
+---
+
+## Step 0b: Multi-Source Re-Analysis (scheduled reviews)
+
+When triggered by the mandatory review cadence, re-analyze all connected sources before A/B calibration:
+
+> "Time for your [monthly / bi-weekly / weekly] voice profile review. Let me re-analyze your recent communications first."
+
+### Source Analysis
+
+1. **Phone calls / Meeting transcripts** — Pull new transcripts since last review from Fireflies, Otter, Gong, Fathom, or Zoom.
+   > "Found [X] new transcripts since your last review. Analyzing for speech patterns, tone, and new phrases..."
+
+2. **Sent emails** — Analyze emails sent since last review.
+   > "Analyzed [X] sent emails. Detected [changes / no significant changes] in tone and phrasing."
+
+3. **Slack messages** — Analyze sent Slack messages since last review.
+   > "Analyzed [X] Slack messages across [X] channels. Your Slack tone has [shifted / stayed consistent]."
+
+4. **iMessage / SMS** — If connected, analyze sent messages since last review.
+   > "Analyzed [X] iMessages. Your casual communication style has [shifted / stayed consistent]."
+
+5. **Draft edits** — Compile all edits the user made to plugin-generated drafts since last review.
+   > "You edited [X] drafts since last review. Key corrections: [list top changes]."
+
+### Analysis Summary
+
+```
+🎙️ VOICE RE-ANALYSIS COMPLETE
+
+SOURCES ANALYZED:
+├── 🎙️ Transcripts: [X] new (calls, meetings)
+├── 📧 Sent emails: [X] new
+├── 💬 Slack messages: [X] new
+├── 📱 iMessages: [X] new
+├── ✏️ Draft edits: [X] corrections captured
+
+DETECTED CHANGES:
+├── [Change 1 — e.g., "Your email tone has shifted slightly more casual"]
+├── [Change 2 — e.g., "New phrase: 'let's circle back on this' — used 8 times"]
+├── [Change 3 — e.g., "Sign-off shift: 'Cheers' replacing 'Thanks' in casual emails"]
+└── [Change 4 — or "No significant changes detected"]
+
+PROFILE UPDATES:
+├── ✅ Updated: [list of profile sections updated automatically]
+├── ❓ Needs calibration: [areas where A/B testing would help]
+└── ⚠️ Conflict: [any contradictory signals — e.g., more formal in email but more casual in Slack]
+
+[Continue to A/B calibration] [Accept updates, skip calibration] [Show full analysis]
+```
+
+After re-analysis, proceed to A/B calibration focused on areas that need refinement.
 
 ---
 
@@ -253,10 +310,16 @@ This keeps calibration lightweight and targeted rather than requiring a full re-
 
 ## Save Voice Profile
 
-After every calibration session, update `inbox-command-center/voice-profile.md`:
+After every calibration session, update `[data-path]/voice-profile.md`:
 
 1. Update the `A/B Calibration Results` section with new preferences
 2. Adjust any core style descriptions that changed
 3. Update channel-specific differences if new data
 4. Update the `Last updated` timestamp
-5. Confirm: "Voice profile updated."
+5. Add entry to the `Review History` table with sources analyzed, key changes, and A/B pairs tested
+6. Update config: set `voice_profile_last_reviewed` to today, calculate next review due date
+7. Confirm:
+   > "Voice profile updated. Next review due: [date].
+   > Sources analyzed: [X] transcripts, [X] emails, [X] Slack messages, [X] iMessages, [X] draft edits.
+   > Key changes: [brief summary].
+   > I'll remind you when your next review is due."

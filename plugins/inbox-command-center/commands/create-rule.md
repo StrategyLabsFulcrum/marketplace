@@ -59,15 +59,29 @@ If from triage context, pre-fill:
 
 > "When this rule triggers, what should I do? Pick one or chain multiple actions:"
 
-### Categorization
+### Delete Rules
+> - **Delete:** Move to trash
+> - **Permanently delete:** Skip trash, delete immediately (use with caution)
+> - **Delete after [X] days:** Keep for a period, then auto-delete
+> - **Delete + unsubscribe:** Delete and attempt to unsubscribe from the sender
+> - **Block sender:** Auto-delete all future emails from this sender without even hitting trash
+
+### Prioritization Rules
 > - **Categorize as:** 🔴 RESPOND / 🟡 FYI / 🗑️ JUNK / 🔕 UNSUBSCRIBE
-> - **Escalate to HIGH:** Always treat as urgent
+> - **Escalate to HIGH:** Always treat as urgent, surface at top of triage
+> - **Add to VIP list:** Automatically add sender to VIP contacts (prompts for relationship tag)
+> - **Priority bump:** Move ahead of other emails in the same category
+> - **Always show first:** This sender's emails appear before all others in triage batches
 
 ### Organization
 > - **Label as:** [label name] (create new or use existing)
 > - **Mark as:** Read / Starred / Important
 > - **Archive:** Move out of inbox, keep in All Mail
-> - **Delete:** Move to trash
+
+### Folder Routing
+> - **Route to folder:** [Low Priority / Newsletters / Receipts & Orders / Finance / Automated/Bot / Pending Review / Delegated / Custom]
+> - **Create new folder:** Define a new folder with review cadence and auto-actions
+> - Folder routing respects the folder's review cadence — emails won't appear in main triage unless the folder review is due
 
 ### Routing
 > - **Forward to:** [email address] — with or without a note
@@ -85,7 +99,7 @@ If from triage context, pre-fill:
 > - **Skip triage:** Process silently, never show in batches
 
 ### Chain Actions
-> "Want to chain multiple actions? For example: 'Label as Finance AND forward to bookkeeper AND mark read'"
+> "Want to chain multiple actions? For example: 'Label as Finance AND route to Finance folder AND mark read' or 'Delete + unsubscribe from sender'"
 >
 > Current action(s):
 > 1. [action 1]

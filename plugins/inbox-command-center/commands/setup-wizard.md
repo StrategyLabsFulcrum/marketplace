@@ -289,7 +289,7 @@ Present a summary:
 
 ## Step 6: Set Up VIP Contacts
 
-> "Who are your most important contacts? I'll always flag their messages as priority."
+> "Who are your most important contacts? I'll always flag their messages as priority. When a VIP emails you, I'll show the full email immediately with a pre-written draft reply ready for your review."
 
 ### Auto-Detection
 
@@ -322,48 +322,71 @@ For each VIP, capture:
 
 Save to `inbox-command-center/vip-contacts.md`.
 
-### VIP Review Frequency
+### VIP Review Cadence
 
-> "How often should I prompt you to review your VIP contacts?"
+> "How often do you want to review your VIP list? I'll check for new frequent contacts, inactive VIPs, and suggest changes."
 >
-> - **Monthly — every 30 days** (recommended) — Good default. Your VIP list stays current without being a distraction.
-> - **Bi-weekly — every 14 days** — Better for fast-moving businesses with frequent contact turnover.
-> - **Quarterly — every 90 days** — Lighter touch. Works well if your contact relationships are stable.
-> - **Never** — I'll manage VIPs manually. You can always say "review my VIPs" at any time.
+> - **Monthly** (default) — Review on the first triage of each month
+> - **Bi-weekly** — Every two weeks
+> - **Weekly** — Every week
+> - **Quarterly** — Every 3 months
+> - **On demand only** — Only when you ask ("review my VIP list")
 
-Save to config: `vip_review_frequency_days: [30 / 14 / 90 / never]`
+Save to config:
+```markdown
+## VIP Settings
+- Review cadence: [monthly / bi-weekly / weekly / quarterly / on demand]
+- Last reviewed: [date]
+- Next review due: [date]
+- Daily VIP summary: [Yes / No]
+- VIP summary delivery: [Slack DM / iMessage / Email / All]
+- VIP summary time: [HH:MM AM/PM]
+```
 
-### Monthly VIP Review
+### Daily VIP Summary
 
-Set a recurring prompt based on the configured frequency. On the first triage after the interval has passed, surface:
+> "Want a daily summary of all VIP communications? This is a dedicated digest — separate from the morning briefing — that shows every VIP email received, sent, and pending for the day."
+>
+> - **Yes** (recommended) — Daily VIP summary delivered at your chosen time
+> - **No** — VIP emails are still prioritized during triage, but no separate daily summary
+
+If yes:
+> "Where should I deliver it?"
+> - Slack DM / iMessage / Email / All
+>
+> "What time?" (default: same as morning briefing)
+
+### VIP Review Prompt
+
+On the cadence the user selected, surface the VIP review:
 
 ```
-📋 MONTHLY VIP REVIEW — It's been 30 days since your last review.
+📋 VIP REVIEW — Due for your [monthly / bi-weekly / weekly / quarterly] check-in
 
 CURRENT VIPs: [count] contacts
 
 ACTIVITY SINCE LAST REVIEW:
 ├── Most active: [Name] — [X] emails exchanged
-├── Least active: [Name] — 0 emails in 30 days
+├── Least active: [Name] — 0 emails in [period]
 ├── New frequent contacts not on VIP list:
 │   ├── [Name] — [X] emails, avg response time [X] hours
 │   └── [Name] — [X] emails
 │
-├── Inactive VIPs (0 emails in 30 days):
+├── Inactive VIPs (0 emails in [period]):
 │   ├── [Name] — still a VIP? [Keep / Remove]
 │   └── [Name] — still a VIP? [Keep / Remove]
 
 SUGGESTED ADDITIONS:
-├── [Name] — [X] emails this month, you respond within [X] hours
+├── [Name] — [X] emails this period, you respond within [X] hours
 │   Add as VIP? [Yes — relationship: ___] [No]
 
 SUGGESTED CHANGES:
 ├── [Name] — priority notes still accurate? [Yes / Edit]
 
-[Update list / Skip until next month]
+[Update list / Skip until next review / Change review cadence]
 ```
 
-The monthly review ensures the VIP list stays current as relationships evolve — new clients, departing team members, seasonal vendors, etc. Save the last review date in `inbox-command-center/config.md` to track cadence.
+The review ensures the VIP list stays current as relationships evolve — new clients, departing team members, seasonal vendors, etc. Save the last review date in `inbox-command-center/config.md` to track cadence.
 
 ---
 
@@ -457,6 +480,135 @@ For each option:
 
 ---
 
+## Step 8b: Configure Folder Rules
+
+> "I can automatically route certain emails into folders with their own review schedules — so noise stays out of your main triage but nothing gets lost."
+
+**Present standard folders:**
+
+```
+RECOMMENDED FOLDERS:
+
+📂 LOW PRIORITY — Non-urgent emails that don't need immediate attention
+   Auto-routes: CC'd emails, vendor updates, internal FYI
+   Review: Weekly digest summary
+   Auto-cleanup: Archive after 30 days, delete after 90 days
+   → [Enable / Skip / Customize]
+
+📂 NEWSLETTERS — Newsletters you actually read
+   Auto-routes: Known newsletter senders
+   Review: Weekly digest
+   Auto-cleanup: Delete after 14 days unread
+   → [Enable / Skip / Customize]
+
+📂 RECEIPTS & ORDERS — Purchase confirmations, shipping
+   Auto-routes: Amazon, UPS, FedEx, Stripe, PayPal receipts
+   Review: Never (searchable archive)
+   Auto-cleanup: Keep indefinitely
+   → [Enable / Skip / Customize]
+
+📂 FINANCE — Bank alerts, invoices, payments
+   Auto-routes: Bank domains, "invoice", "payment", "statement"
+   Review: Daily digest summary
+   Auto-cleanup: Keep indefinitely
+   → [Enable / Skip / Customize]
+
+📂 AUTOMATED/BOT — CI/CD, system alerts, app notifications
+   Auto-routes: GitHub, Jira, no-reply addresses
+   Review: Daily count only
+   Auto-cleanup: Delete after 7 days
+   → [Enable / Skip / Customize]
+
+📂 PENDING REVIEW — Emails you want to come back to
+   Auto-routes: Manual only (you route emails here during triage)
+   Review: Every triage
+   Auto-cleanup: Remind after 3 days
+   → [Enable / Skip / Customize]
+
+📂 DELEGATED — Forwarded emails awaiting someone else's response
+   Auto-routes: Auto-created when you delegate during triage
+   Review: Daily check
+   Auto-cleanup: Remind after 5 days if no response
+   → [Enable / Skip / Customize]
+
+[Enable all recommended / Select specific ones / Create custom folder / Skip]
+```
+
+For each enabled folder, if the user chooses "Customize":
+> - "What should be auto-routed here?" (senders, domains, keywords)
+> - "How often should you review it?" (every triage / daily / weekly / monthly / never)
+> - "How should it be reviewed?" (individual items / summary / count only)
+> - "Auto-cleanup?" (archive after X days / delete after X days / keep / remind)
+
+Save to `inbox-command-center/folder-rules.md`.
+
+---
+
+## Step 8c: Configure Rule Suggestion Review
+
+> "As you use triage, I'll learn patterns and suggest new rules (like auto-deleting senders you always delete, or prioritizing senders you always respond to quickly). How often should I present these suggestions?"
+>
+> - **Every triage** — Show suggestions after each session
+> - **Every 3rd triage** (default) — Show after every 3rd session
+> - **Weekly** — Once per week at the start of the first triage
+> - **Monthly** — Bundle into your monthly inbox report
+> - **On demand only** — Only when you ask ("show rule suggestions")
+
+Save to config under `Rule Suggestions`.
+
+---
+
+## Step 8d: Configure Inbox Report
+
+> "I can generate a comprehensive inbox report on a regular schedule. It includes everything: emails sent, received, and deleted (broken down by manual vs. rule-based), response rates, VIP communication summaries, rule performance, folder activity, and trends."
+
+> "How often do you want a report?"
+> - **Monthly** (default) — First of each month
+> - **Bi-weekly** — Every two weeks
+> - **Weekly** — Every week
+>
+> "When should it be delivered?"
+> - **Day:** [1st of month / last business day / specific day]
+> - **Time:** [HH:MM AM/PM] (default: same as briefing)
+>
+> "How should it be delivered?"
+> - **Email** (recommended) — Full report sent to your inbox
+> - **Slack DM** — Condensed highlights with key numbers
+> - **iMessage** — Brief summary with top stats
+> - **All**
+
+Save to config:
+```markdown
+## Inbox Report
+- Cadence: [monthly / bi-weekly / weekly]
+- Delivery: [Email / Slack DM / iMessage / All]
+- Day: [1st of month / last business day / custom]
+- Time: [HH:MM AM/PM]
+- Last generated: none
+```
+
+---
+
+## Step 8e: Configure Voice Profile Review
+
+> "Your voice profile should be revisited regularly to stay accurate as your communication style naturally evolves. I'll re-analyze your recent emails, calls, Slack messages, and any edits you've made to drafts."
+>
+> "How often should we review your voice profile?"
+> - **Monthly** (default, minimum) — Once per month
+> - **Bi-weekly** — Every two weeks
+> - **Weekly** — Every week
+
+Save to config:
+```markdown
+## Voice Profile Review
+- Review cadence: [monthly / bi-weekly / weekly]
+- Last reviewed: [date]
+- Next review due: [date]
+- Review sources: [transcripts, email, slack, imessage]
+```
+
+---
+
 ## Step 9: Standard Rules & Suggestions
 
 Scan the user's inbox and suggest standard rules based on what's found:
@@ -527,20 +679,31 @@ CONNECTED:
 ├── [Other messaging platforms]
 
 VOICE PROFILE:
-├── Built from: [X] sent emails + [X] transcripts + [X] A/B pairs
+├── Built from: [X] sent emails + [X] transcripts + [X] Slack msgs + [X] A/B pairs
 ├── Style: [summary]
 ├── Saved to: voice-profile.md
+├── Auto-review: [monthly / bi-weekly / weekly]
 ├── Run /voice-calibration anytime to refine
 
 VIP CONTACTS: [X] contacts across [X] categories
-TASK TRACKER: [type + location]
-RULES: [X] active rules
-BRIEFING: [delivery method] at [time] on [days]
+├── Review cadence: [monthly / bi-weekly / weekly / quarterly]
+├── Daily VIP summary: [Yes — via [channel] at [time] / No]
+├── VIP emails get immediate alert with pre-written draft
 
+FOLDERS: [X] active folders
+├── [List enabled folders with review cadence]
+
+RULES: [X] active rules
+├── Rule suggestion review: [every triage / every 3rd / weekly / monthly / on demand]
+
+TASK TRACKER: [type + location]
+BRIEFING: [delivery method] at [time] on [days]
 REMINDER CHANNEL: [#inbox-reminders / Slack DM / iMessage]
 
+INBOX REPORT: [monthly / bi-weekly / weekly] via [channel]
+
 DAILY COMMANDS:
-├── "Check my email" or "triage" — Full triage
+├── "Check my email" or "triage" — Full triage (VIP emails shown first with drafts)
 ├── "Any new emails?" — Quick scan since last check
 ├── "Draft a reply to [person]" — Compose in your voice
 ├── "Check Slack" — Slack triage
@@ -549,6 +712,13 @@ DAILY COMMANDS:
 ├── "Remind me to [task] at [time]" — Create a standalone reminder
 ├── /create-rule — Build a new message rule
 ├── /voice-calibration — Refine your voice profile
+├── /inbox-report — Generate inbox activity report
+
+SCHEDULED AUTOMATIONS:
+├── 📊 Inbox report: [cadence] — next: [date]
+├── 🎙️ Voice profile review: [cadence] — next: [date]
+├── ⭐ VIP list review: [cadence] — next: [date]
+├── ⭐ Daily VIP summary: [time] via [channel]
 
 Ready to run your first triage? Say "triage" to start.
 ```

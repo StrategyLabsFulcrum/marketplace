@@ -7,6 +7,8 @@ description: >
   "comms manager", "check Slack", "check iMessage", "check my texts", "any important emails",
   "what do I need to respond to", "create a rule", "message rules", "voice profile",
   "daily briefing", "morning update", "check my messages", "send me a reminder",
+  "inbox report", "email report", "email stats", "VIP contacts", "VIP summary",
+  "voice review", "calibrate my voice", "folder rules", "low priority emails",
   or anything related to email, messaging, or communications management.
 ---
 
@@ -129,9 +131,12 @@ All user data files are stored in a shared iCloud Drive folder instead of a loca
 ├── voice-profile.md          # Living voice profile
 ├── vip-contacts.md           # Priority contact list with relationship tags
 ├── rules.md                  # Active message rules
+├── folder-rules.md           # Folder-based rules and settings
 ├── rule-suggestions.md       # Pending learned suggestions
 ├── tasks.md                  # Task list (if markdown backend selected)
 ├── task-tracker-link.md      # Link to Google Sheet or ClickUp (if external backend selected)
+├── reports/                  # Monthly inbox reports
+│   └── [YYYY-MM].md
 └── CHANGELOG.md              # Version history and update notes
 ```
 
@@ -152,7 +157,9 @@ On first run, the setup wizard asks whether to enable cross-device sync. If enab
 | voice-profile.md | Yes | Full voice profile — consistent drafting voice across devices |
 | vip-contacts.md | Yes | VIP list stays current on both devices |
 | rules.md | Yes | Rules apply everywhere |
+| folder-rules.md | Yes | Folder rules consistent across devices |
 | rule-suggestions.md | Yes | Learned suggestions accumulate across devices |
+| reports/ | Yes | Monthly reports available on all devices |
 | tasks.md | Yes | Markdown task list syncs with all other data (if markdown backend selected) |
 | task-tracker-link.md | Yes | Points to the same external task tracker (if Google Sheets or ClickUp selected) |
 | Apple Reminders tasks | Already cloud | Reminders sync via iCloud independently — no action needed |
@@ -251,36 +258,175 @@ These are offered during setup based on inbox scan:
 
 ### Learned Rule Suggestions
 
-The plugin tracks patterns and suggests rules:
+The plugin tracks patterns and suggests rules across three categories:
 
+#### Delete Rules
 | Pattern Detected | Suggestion |
 |-----------------|-----------|
-| Same sender junked 3+ times | "Auto-junk all from [sender]?" |
-| Same email type always marked read | "Auto-archive [type]?" |
-| User always forwards invoices to same person | "Auto-forward invoices to [person]?" |
+| Same sender junked 3+ times | "Auto-delete all from [sender]?" |
+| User never opens emails from sender | "Auto-delete + unsubscribe from [sender]?" |
+| User deletes all emails matching a pattern | "Auto-delete emails with [subject pattern]?" |
+| Emails from a domain always deleted | "Auto-delete all from @[domain]?" |
+| User deletes without reading from sender 5+ times | "Permanently block [sender]? (auto-delete, skip trash)" |
+
+#### Prioritization Rules
+| Pattern Detected | Suggestion |
+|-----------------|-----------|
 | User responds to same sender within 1 hour | "Mark [sender] as VIP?" |
-| User never opens emails from sender | "Unsubscribe from [sender]?" |
+| User always forwards invoices to same person | "Auto-forward invoices to [person]?" |
+| User stars emails from a sender every time | "Escalate [sender] to 🔴 HIGH automatically?" |
+| User always reads a sender's emails immediately | "Prioritize [sender] above other 🟡 FYI?" |
+| User repeatedly creates tasks from a sender's emails | "Auto-create task for emails from [sender]?" |
+| Emails from a domain always triaged first | "Move @[domain] to top of batch?" |
+| User always replies to emails with specific keywords | "Escalate emails containing [keywords] to 🔴?" |
+
+#### Organization Rules
+| Pattern Detected | Suggestion |
+|-----------------|-----------|
+| Same email type always marked read | "Auto-archive [type]?" |
 | User creates similar reminders for same email type | "Create recurring reminder for [type]?" |
 | User drafts similar replies to same type | "Create a template for [type]?" |
+| User always labels a sender's emails the same way | "Auto-label [sender] as [label]?" |
+| Emails from a sender always routed to a folder | "Auto-route [sender] to [folder]?" |
 
-Present suggestions after every 3rd triage session:
-> "I've noticed some patterns. Here are rule suggestions based on your behavior this week:"
+#### Rule Suggestion Review Cadence
+
+Users choose how often they review rule suggestions during onboarding. Options:
+
+| Cadence | When Suggestions Are Presented |
+|---------|-------------------------------|
+| **Every triage** | After each triage session, show any new suggestions |
+| **Every 3rd triage** (default) | After every 3rd triage session |
+| **Weekly** | Once per week, at the start of the first triage of the week |
+| **Monthly** | Bundled into the monthly inbox report |
+| **On demand only** | Never auto-present — user must say "show rule suggestions" |
+
+Stored in config:
+```markdown
+## Rule Suggestions
+- Review cadence: [every triage / every 3rd triage / weekly / monthly / on demand]
+- Last reviewed: [date]
+- Pending suggestions: [count]
+```
+
+When presenting suggestions:
+> "I've noticed some patterns. Here are rule suggestions based on your behavior:"
+>
+> **DELETE RULES:**
+> - "You've deleted emails from [sender] 5 times. Auto-delete future emails from them?" [Enable / Dismiss]
+>
+> **PRIORITIZATION RULES:**
+> - "You respond to [sender] within an hour every time. Add them as VIP?" [Enable / Dismiss]
+>
+> **ORGANIZATION RULES:**
+> - "You always label invoices as 'Finance'. Auto-label them?" [Enable / Dismiss]
+>
+> "[Enable all / Review each / Dismiss all / Change review cadence]"
+
+### Folder-Based Rules
+
+The plugin supports folder-based organization with custom review settings for each folder. Folders act as holding zones with their own triage behavior.
+
+#### Folder Structure
+
+```markdown
+### Folder: [Name]
+- **Purpose:** [description]
+- **Priority level:** HIGH / MEDIUM / LOW / ARCHIVE
+- **Auto-route rules:** [which emails go here]
+- **Review cadence:** [every triage / daily digest / weekly digest / monthly digest / never]
+- **Review style:** [individual items / summary only / count only]
+- **Auto-actions:**
+  - After [X] days unread: [archive / delete / escalate / remind]
+  - After [X] days in folder: [archive / delete / keep]
+- **Created:** [date]
+- **Email count:** [current count]
+```
+
+#### Standard Folders (suggested during onboarding)
+
+| Folder | Purpose | Default Review | Default Auto-Action |
+|--------|---------|---------------|-------------------|
+| **Low Priority** | Emails that aren't urgent but shouldn't be deleted | Weekly digest summary | Archive after 30 days unread |
+| **Newsletters** | Newsletters user actually reads | Weekly digest | Delete after 14 days unread |
+| **Receipts & Orders** | Purchase confirmations, shipping updates | Never (searchable archive) | Keep indefinitely |
+| **Finance** | Bank alerts, invoices, payment confirmations | Daily digest | Keep indefinitely |
+| **Automated/Bot** | CI/CD notifications, system alerts, app notifications | Daily summary (count only) | Delete after 7 days |
+| **Pending Review** | Emails user wants to come back to | Every triage | Remind after 3 days |
+| **Delegated** | Emails forwarded to someone else, awaiting their response | Daily check | Remind after 5 days if no response |
+
+#### Low Priority Folder — Special Behavior
+
+The Low Priority folder has enhanced settings for managing email noise without losing potentially useful messages:
+
+```markdown
+### Folder: Low Priority
+- **Purpose:** Non-urgent emails that don't need immediate attention
+- **What goes here:**
+  - Emails from senders not on VIP list and not flagged 🔴
+  - Newsletters user sometimes reads
+  - CC'd emails where user isn't primary recipient
+  - Internal FYI announcements
+  - Vendor/partner updates that aren't time-sensitive
+- **Review cadence:** Weekly digest (default) — configurable
+- **Review style:** Summary with counts by sender/type
+- **Digest format:**
+  > 📂 LOW PRIORITY DIGEST — [X] emails this week
+  > ├── [X] from newsletters ([list top 3 senders])
+  > ├── [X] CC'd threads ([list top 3])
+  > ├── [X] vendor updates ([list top 3])
+  > ├── [X] internal FYI ([list top 3])
+  > └── Oldest unread: [X] days
+  >
+  > [Review all] [Delete all read] [Archive all > 30 days] [Skip]
+- **Auto-actions:**
+  - After 30 days unread: Archive (move to All Mail, remove from folder)
+  - After 90 days unread: Delete
+  - If sender escalates (sends follow-up or marks urgent): Move to inbox for next triage
+```
+
+#### Folder Review Settings
+
+Users configure how each folder is reviewed:
+
+| Setting | Options |
+|---------|---------|
+| **Review cadence** | Every triage / Daily / Weekly / Monthly / Never / On demand |
+| **Review style** | Individual items (full triage) / Summary with drill-down / Count only / Skip |
+| **Presentation order** | Before main triage / After main triage / Separate session |
+| **Notification** | Include in briefing / Include in inbox report only / Silent |
+
+#### Folder Rules in Config
+
+```markdown
+## Folder Rules
+| Folder | Review Cadence | Review Style | Auto-Action | Notification |
+|--------|---------------|-------------|-------------|-------------|
+| Low Priority | Weekly digest | Summary | Archive 30d, Delete 90d | Briefing |
+| Newsletters | Weekly | Summary | Delete 14d unread | Report only |
+| Receipts & Orders | Never | — | Keep | Silent |
+| Finance | Daily | Summary | Keep | Briefing |
+| Automated/Bot | Daily | Count only | Delete 7d | Report only |
+| Pending Review | Every triage | Individual | Remind 3d | Briefing |
+| Delegated | Daily | Individual | Remind 5d | Briefing |
+```
 
 ### Rules Storage
 
-All rules stored in `inbox-command-center/rules.md`. Learned suggestions stored in `inbox-command-center/rule-suggestions.md` until approved or dismissed.
+All rules stored in `inbox-command-center/rules.md`. Folder rules stored in `inbox-command-center/folder-rules.md`. Learned suggestions stored in `inbox-command-center/rule-suggestions.md` until approved or dismissed.
 
 ## Voice Profile System
 
 ### Building the Voice Profile
 
-The voice profile is built from three sources during setup:
+The voice profile is built from five sources during setup and refined continuously:
 
-**Source A: Meeting Transcripts**
+**Source A: Meeting Transcripts & Phone Calls**
 If Fireflies, Otter, Gong, Fathom, or other transcript tools are connected:
-- Analyze last 30 days of transcripts
+- Analyze last 30 days of transcripts (meetings, phone calls, video calls)
 - Extract: greetings, closings, common phrases, tone shifts by audience, vocabulary, humor style, sentence structure
 - Weight recent transcripts higher than older ones
+- Phone call transcripts are especially valuable for capturing the user's natural, unscripted voice
 
 **Source B: Sent Email Analysis**
 Scan the connected email's sent folder (last 30-60 days):
@@ -291,8 +437,24 @@ Scan the connected email's sent folder (last 30-60 days):
 - Common phrases and structures
 - How they handle requests, follow-ups, difficult conversations
 
-**Source C: A/B Voice Calibration**
-After analyzing transcripts and sent emails, generate A/B comparison messages for the user to choose between. This refines the profile through direct preference testing.
+**Source C: Slack Message Analysis**
+If Slack is connected, analyze the user's sent messages (last 30 days):
+- Tone and formality by channel (public vs. DM vs. thread)
+- Emoji and reaction usage patterns
+- Message length by context
+- How they give feedback, ask questions, and acknowledge work
+- Differences between team-facing and client-facing channels
+- Common Slack-specific phrases and shorthand
+
+**Source D: iMessage / SMS Analysis**
+If iMessage is connected, analyze sent messages (last 30 days):
+- Casual tone patterns
+- Abbreviation and emoji usage
+- How style differs between personal and professional contacts
+- Response patterns (length, tone, speed)
+
+**Source E: A/B Voice Calibration**
+After analyzing all available sources, generate A/B comparison messages for the user to choose between. This refines the profile through direct preference testing.
 
 ### A/B Calibration Process
 
@@ -394,9 +556,80 @@ If Brand Knowledge Center is connected:
 |---------|-------------|
 | User edits a draft before approving | Note changes as voice corrections, update profile |
 | New meeting transcripts available | Periodic re-analysis for tone evolution |
+| New phone call transcripts available | Re-analyze for natural speech patterns |
 | User gives explicit feedback | Immediate update to voice profile |
-| Monthly prompt | "Want me to re-analyze recent emails/calls to refresh your voice profile?" |
 | User runs `/voice-calibration` | New A/B pairs for scenarios that need refinement |
+
+### Mandatory Monthly Voice Review
+
+The voice profile **must** be revisited at least once per month. Users can optionally increase this frequency.
+
+#### Review Cadence Config
+
+```markdown
+## Voice Profile Review
+- Review cadence: [monthly / bi-weekly / weekly]
+- Last reviewed: [date]
+- Next review due: [date]
+- Review sources: [transcripts, email, slack, imessage] (which sources to re-analyze)
+```
+
+#### How the Monthly Review Works
+
+On the first triage after the review is due, the plugin triggers:
+
+```
+🎙️ VOICE PROFILE REVIEW — Due for your [monthly / bi-weekly / weekly] check-in
+
+Your voice profile was last updated [X] days ago.
+
+WHAT'S CHANGED SINCE LAST REVIEW:
+├── 📧 [X] new sent emails analyzed
+├── 🎙️ [X] new call/meeting transcripts available
+├── 💬 [X] new Slack messages analyzed
+├── 📱 [X] new iMessages analyzed
+├── ✏️ [X] draft edits you made (voice corrections captured)
+
+DETECTED SHIFTS:
+├── Your email tone has shifted slightly more [casual/formal] this month
+├── New phrase detected: "[phrase]" — used [X] times
+├── Sign-off change: You've been using "[new sign-off]" more than "[old sign-off]"
+├── [Any other detected changes]
+
+RECOMMENDATIONS:
+├── Re-analyze [X] new transcripts to capture current speech patterns
+├── Run a quick 5-pair A/B calibration focused on [area]
+├── Update your NEVER list — you used "[phrase]" twice this month (still avoid it?)
+
+[Full review (re-analyze all sources + A/B calibration)]
+[Quick review (update from new data, skip A/B)]
+[Snooze 1 week]
+[Change review cadence]
+```
+
+#### Multi-Source Re-Analysis
+
+During a monthly review, the plugin re-analyzes all connected sources:
+
+1. **Phone calls / Meeting transcripts** — Pull any new transcripts since last review. These are the highest-signal source for authentic voice because they capture unscripted, real-time communication.
+2. **Sent emails** — Analyze emails sent since last review for tone drift, new patterns, or changes in greeting/sign-off usage.
+3. **Slack messages** — Analyze sent Slack messages for changes in casual tone, emoji usage, and how the user communicates with different teams.
+4. **iMessage / SMS** — If connected, analyze for shifts in personal communication style.
+5. **Draft edits** — Compile all edits the user made to drafts since last review. These are direct voice corrections and the most explicit signal.
+
+After re-analysis, present a summary of changes and offer A/B calibration for any areas where the profile seems outdated.
+
+#### Voice Profile Version History
+
+Each monthly review creates a snapshot. The voice profile tracks:
+
+```markdown
+## Review History
+| Date | Sources Analyzed | Key Changes | A/B Pairs Tested |
+|------|-----------------|-------------|-----------------|
+| [date] | 45 emails, 12 transcripts, 200 Slack msgs | Tone shifted casual, new sign-off | 5 pairs |
+| [date] | 30 emails, 8 transcripts | Added 3 phrases to NEVER list | 0 pairs |
+```
 
 ## Email Triage
 
@@ -434,9 +667,60 @@ Every email goes into exactly ONE category:
 
 1. Pull all unread + starred emails for the time range
 2. Apply rules first — auto-processed emails are reported as a summary, not individually
-3. Sort remaining by: starred first → 🔴 by urgency → 🟡 → 🗑️
-4. Present in batches of [configured size, default 10]
-5. After each batch: "Ready for the next batch, or take action on these first?"
+3. **VIP check** — If any emails are from VIP senders, surface them immediately (see VIP Immediate Alert below)
+4. Route emails to folders based on folder rules (Low Priority, Newsletters, etc.)
+5. Sort remaining by: starred first → 🔴 by urgency → 🟡 → 🗑️
+6. Present in batches of [configured size, default 10]
+7. After each batch: "Ready for the next batch, or take action on these first?"
+
+### VIP Immediate Alert
+
+When an email is received from a VIP sender, it is **always surfaced immediately** — before normal batch processing. The alert includes full email details and a pre-written draft reply.
+
+```
+🚨 VIP EMAIL — [Sender Name] ([Relationship])
+
+From: [Full Name] <[email]>
+Subject: [Subject line]
+Received: [Day, Date, Time]
+Thread: [New / Reply in thread of X messages]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FULL EMAIL:
+[Complete email body displayed — not just a summary]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 PRE-WRITTEN DRAFT REPLY:
+[Draft reply written in the user's voice, appropriate to the sender's
+relationship tag and the email content. Uses personal voice for
+internal/casual contacts, brand voice for client-facing if BKC connected.]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+→ [Send Draft] [Edit Draft] [Rewrite Draft] [Remind Me] [Deep Dive (full thread)] [Skip for now]
+```
+
+#### VIP Alert Behavior
+
+| Scenario | What Happens |
+|----------|-------------|
+| **During triage** | VIP emails are pulled to the top of the first batch with full alert format |
+| **Quick check ("any new emails?")** | VIP emails are always shown, even if everything else is clear |
+| **Between triages** | If daily briefing or VIP digest is configured, VIP emails appear there |
+| **Multiple VIP emails** | Each gets its own alert block, presented in order of receipt |
+
+#### Pre-Written Draft Logic
+
+The draft is generated automatically based on:
+1. **Email content** — What's being asked/discussed
+2. **Sender relationship** — Tone and formality adjusted per VIP contact settings
+3. **Thread context** — If a reply in an existing thread, draft considers the full conversation
+4. **Voice profile** — Uses the user's authentic voice (personal or brand as appropriate)
+5. **Priority notes** — Any VIP-specific instructions (e.g., "Always CC [person] on replies", "More formal with this person")
+
+The user should never have to write from scratch for a VIP email — the draft is ready for review and send.
 
 ### Presentation Format
 
@@ -790,8 +1074,223 @@ During morning triage, after email/Slack batch 1:
 - **Delivery:** Slack DM / iMessage / Email / Calendar / All
 - **Time:** 7:30 AM
 - **Days:** Monday through Friday
-- **Include:** Email summary, Slack summary, iMessage summary, Calendar flags, Task reminders, Rules summary
+- **Include:** Email summary, Slack summary, iMessage summary, Calendar flags, Task reminders, Rules summary, VIP summary
 ```
+
+## Daily VIP Summary
+
+A dedicated daily summary of all VIP communications is generated and sent to the user. This is separate from (and in addition to) the morning briefing.
+
+### VIP Summary Config
+
+```markdown
+## VIP Summary
+- Enabled: Yes
+- Delivery: [Slack DM / iMessage / Email / All]
+- Time: [HH:MM AM/PM] (default: same as morning briefing)
+- Include: [emails received, emails sent, threads active, pending drafts]
+```
+
+### VIP Summary Format
+
+```
+⭐ DAILY VIP SUMMARY — [Date]
+
+[X] VIP communications today
+
+━━━ EMAILS RECEIVED FROM VIPs ━━━
+
+📧 [Sender Name] ([Relationship]) — [Time]
+   Subject: [Subject line]
+   Summary: [1-2 sentence summary]
+   Status: [Replied ✅ / Draft pending ✏️ / Unread 🔴 / Read, no reply needed 🟡]
+
+📧 [Sender Name] ([Relationship]) — [Time]
+   Subject: [Subject line]
+   Summary: [1-2 sentence summary]
+   Status: [Replied ✅ / Draft pending ✏️ / Unread 🔴]
+
+━━━ EMAILS SENT TO VIPs ━━━
+
+📤 To: [Name] — [Subject] — [Time]
+📤 To: [Name] — [Subject] — [Time]
+
+━━━ ACTIVE VIP THREADS ━━━
+
+🔄 [Name] — [Subject] — [X] messages, last activity [time]
+   [Brief context of where the thread stands]
+
+━━━ PENDING ━━━
+
+⏳ [X] VIP emails awaiting your response
+├── [Name] — [Subject] — received [time ago]
+├── [Name] — [Subject] — received [time ago]
+
+→ Say "triage" to take action on pending VIP items
+```
+
+### VIP Summary Delivery
+
+The VIP summary is delivered daily at the configured time via the user's chosen channel. It provides a complete picture of all VIP communications for the day — what came in, what went out, what's pending, and what threads are active.
+
+## Monthly Inbox Report
+
+A comprehensive monthly report on inbox activity, trends, and communications. Generated automatically and sent to the user on the cadence they choose.
+
+### Report Cadence Config
+
+```markdown
+## Inbox Report
+- Cadence: [monthly / bi-weekly / weekly]
+- Delivery: [Email / Slack DM / iMessage / All]
+- Day: [1st of month / last business day / custom]
+- Time: [HH:MM AM/PM]
+- Last generated: [date]
+```
+
+### Report Content
+
+```
+📊 INBOX REPORT — [Month Year]
+Generated: [Date]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📧 EMAIL VOLUME
+├── Total received: [X]
+├── Total sent: [X]
+├── Average per day: [X] received / [X] sent
+├── Busiest day: [Day, Date] ([X] emails)
+├── Quietest day: [Day, Date] ([X] emails)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🗑️ DELETION BREAKDOWN
+├── Total emails deleted: [X]
+│   ├── Manually deleted (during triage): [X]
+│   ├── Rule-based auto-deleted: [X]
+│   │   ├── By rule: [Rule Name] — [X] deleted
+│   │   ├── By rule: [Rule Name] — [X] deleted
+│   │   └── By rule: [Rule Name] — [X] deleted
+│   ├── Folder auto-cleanup (expired): [X]
+│   └── Unsubscribe + delete: [X]
+├── Deletion rate: [X]% of all received emails
+├── Manual vs. automated: [X]% manual / [X]% automated
+└── Trend: [↑ X% more / ↓ X% fewer / → same] as last month
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 READ BUT NOT RESPONDED
+├── Total read without reply: [X]
+├── By category:
+│   ├── 🟡 FYI (expected — no reply needed): [X]
+│   ├── 🔴 RESPOND (flagged but not replied): [X] ⚠️
+│   │   ├── [Sender] — [Subject] — [X] days ago
+│   │   ├── [Sender] — [Subject] — [X] days ago
+│   │   └── [Sender] — [Subject] — [X] days ago
+│   └── Skipped during triage: [X]
+├── Average time to respond (when you do): [X] hours
+└── Response rate: [X]% of 🔴 items replied to
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⭐ VIP COMMUNICATIONS SUMMARY
+├── Total VIP emails received: [X]
+├── Total VIP emails sent: [X]
+├── VIP response rate: [X]%
+├── Average VIP response time: [X] hours
+│
+├── BY VIP CONTACT:
+│   ├── [Name] ([Relationship])
+│   │   ├── Received: [X] | Sent: [X] | Avg response: [X]h
+│   │   └── Key threads: [brief list]
+│   ├── [Name] ([Relationship])
+│   │   ├── Received: [X] | Sent: [X] | Avg response: [X]h
+│   │   └── Key threads: [brief list]
+│   └── [Name] ([Relationship])
+│       ├── Received: [X] | Sent: [X] | Avg response: [X]h
+│       └── Key threads: [brief list]
+│
+├── VIP threads still open/pending: [X]
+│   ├── [Name] — [Subject] — awaiting [your reply / their reply]
+│   └── [Name] — [Subject] — awaiting [your reply / their reply]
+│
+└── Notable: [Any VIP who went silent, new VIP candidates, etc.]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ RULES PERFORMANCE
+├── Total messages auto-processed: [X]
+├── By action:
+│   ├── Auto-junked: [X]
+│   ├── Auto-archived: [X]
+│   ├── Auto-labeled: [X]
+│   ├── Auto-forwarded: [X]
+│   ├── Auto-deleted: [X]
+│   └── Auto-routed to folder: [X]
+├── Top rules by volume:
+│   ├── [Rule Name] — triggered [X] times
+│   ├── [Rule Name] — triggered [X] times
+│   └── [Rule Name] — triggered [X] times
+├── Rules with 0 triggers this month: [list — candidates for cleanup]
+└── New rule suggestions pending: [X]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📂 FOLDER ACTIVITY
+├── Low Priority: [X] received, [X] auto-archived, [X] auto-deleted
+├── Newsletters: [X] received, [X] read, [X] auto-deleted
+├── Finance: [X] received
+├── Automated/Bot: [X] received, [X] auto-deleted
+├── [Other folders]: [stats]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 TRENDS & INSIGHTS
+├── Email volume trend: [↑/↓/→] vs. last month
+├── Response time trend: [↑/↓/→] vs. last month
+├── Top 5 senders (by volume): [list with counts]
+├── Top 5 senders you reply to most: [list]
+├── New senders this month: [X] ([X] became repeat)
+├── Busiest time of day: [hour range]
+├── Triage efficiency: [X]% of inbox handled by rules (vs. [X]% last month)
+├── Average triage session: [X] minutes, [X] messages
+└── Inbox zero days: [X] out of [X] business days
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💬 SLACK & iMESSAGE (if connected)
+├── Slack: [X] messages triaged, [X] replied, [X] skipped
+├── iMessage: [X] messages triaged, [X] replied, [X] skipped
+├── Cross-platform dedup: [X] items merged
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 ACTIONS DUE
+├── Pending rule suggestions: [X] — [Review now]
+├── VIP list review: [due / not due]
+├── Voice profile review: [due / not due]
+├── Stale follow-ups: [X] emails sent with no reply > 7 days
+└── [Any other action items]
+```
+
+### Report Delivery
+
+The report is delivered via the user's configured channel. If delivered via email, it is formatted as a clean, readable email. If via Slack or iMessage, it is sent as a structured message with the key highlights and a link to the full report (stored in the user data directory as `inbox-command-center/reports/[YYYY-MM].md`).
+
+### Report Storage
+
+Monthly reports are saved to the user data directory:
+
+```
+inbox-command-center/
+├── reports/
+│   ├── 2026-01.md
+│   ├── 2026-02.md
+│   └── 2026-03.md
+```
+
+Users can view past reports anytime: "Show my inbox report for January" or "Compare this month to last month".
 
 ## Plugin Update Notifications
 
@@ -857,7 +1356,7 @@ plugins/inbox-command-center/
 ├── .claude-plugin/plugin.json   # Plugin metadata and version
 ├── CHANGELOG.md                 # Version history and update notes
 ├── README.md                    # Plugin overview
-├── commands/                    # Command files (setup-wizard, triage, create-rule, voice-calibration)
+├── commands/                    # Command files (setup-wizard, triage, create-rule, voice-calibration, inbox-report)
 └── skills/inbox-manager/SKILL.md  # This file — full skill documentation
 ```
 
@@ -870,9 +1369,12 @@ When cross-device sync is enabled:
 ├── voice-profile.md          # Living voice profile
 ├── vip-contacts.md           # Priority contact list with relationship tags
 ├── rules.md                  # Active message rules
+├── folder-rules.md           # Folder-based rules and review settings
 ├── rule-suggestions.md       # Pending learned suggestions
 ├── tasks.md                  # Task list (markdown backend only)
-└── task-tracker-link.md      # Link to external tracker (Google Sheets / ClickUp)
+├── task-tracker-link.md      # Link to external tracker (Google Sheets / ClickUp)
+└── reports/                  # Monthly inbox reports
+    └── [YYYY-MM].md
 ```
 
 When local only:
@@ -882,6 +1384,9 @@ inbox-command-center/
 ├── voice-profile.md
 ├── vip-contacts.md
 ├── rules.md
+├── folder-rules.md
 ├── rule-suggestions.md
-└── task-tracker-link.md
+├── task-tracker-link.md
+└── reports/
+    └── [YYYY-MM].md
 ```

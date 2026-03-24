@@ -1,7 +1,7 @@
 {
   "name": "inbox-command-center",
-  "version": "1.2.0",
-  "description": "Inbox Command Center — AI communications manager that triages Gmail, Slack, iMessage, and messaging platforms. Auto-categorizes messages, drafts replies in your authentic voice (learned from transcripts, sent emails, and A/B calibration), manages calendar conflicts, tracks tasks, creates smart rules, delivers scheduled daily briefings, and sends reminders via dedicated Slack channel, Slack DM, or iMessage. Integrates with Brand Knowledge Center for brand-voice drafting.",
+  "version": "1.3.0",
+  "description": "Inbox Command Center — AI communications manager that triages Gmail, Slack, iMessage, and messaging platforms. Auto-categorizes messages, drafts replies in your authentic voice (learned from transcripts, phone calls, sent emails, Slack messages, and A/B calibration), manages calendar conflicts, tracks tasks, creates smart rules with delete/prioritization/folder-based options, delivers scheduled daily briefings and VIP summaries with pre-written drafts, generates monthly inbox reports with full analytics, and sends reminders via dedicated Slack channel, Slack DM, or iMessage. Integrates with Brand Knowledge Center for brand-voice drafting.",
   "author": {
     "name": "Strategy Labs",
     "email": "scott@strategylabs.us"
@@ -18,9 +18,17 @@
     "calendar",
     "task tracker",
     "inbox rules",
+    "delete rules",
+    "prioritization rules",
+    "folder rules",
+    "VIP contacts",
+    "VIP summary",
+    "inbox report",
+    "email analytics",
     "daily briefing",
     "reminders",
-    "scheduled reminders"
+    "scheduled reminders",
+    "voice review"
   ],
   "license": "MIT",
   "homepage": "https://strategylabs.us"
