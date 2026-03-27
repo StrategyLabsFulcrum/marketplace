@@ -70,15 +70,22 @@ jobs:
                       pj = json.load(f)
                   entries.append({
                       "name": pj["name"],
-                      "version": pj.get("version", "1.0.0"),
+                      "source": f"./plugins/{plugin_name}",
                       "description": pj.get("description", ""),
-                      "path": f"./plugins/{plugin_name}"
+                      "version": pj.get("version", "1.0.0"),
+                      "author": {"name": "Strategy Labs"},
+                      "keywords": pj.get("keywords", []),
+                      "license": "MIT"
                   })
 
           marketplace = {
-              "name": "JTC Plugins",
+              "name": "jtc-plugins",
               "description": "Curated plugin marketplace for JTC Enterprises — built by Strategy Labs",
-              "version": "1.0.0",
+              "owner": {
+                  "name": "Strategy Labs",
+                  "email": "scott@strategylabs.us",
+                  "url": "https://strategylabs.us"
+              },
               "plugins": entries
           }
 
