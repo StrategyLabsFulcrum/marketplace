@@ -1,0 +1,107 @@
+name: Sync plugins to JTC marketplace
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'plugins/ad-copy/**'
+      - 'plugins/brand-asset-manager/**'
+      - 'plugins/brand-intelligence-center/**'
+      - 'plugins/brand-knowledge-center/**'
+      - 'plugins/competitive-landscape/**'
+      - 'plugins/content-library/**'
+      - 'plugins/customer-driven-optimizations/**'
+      - 'plugins/inbox-command-center/**'
+      - 'plugins/lead-list-builder/**'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main marketplace
+        uses: actions/checkout@v4
+
+      - name: Checkout JTC repo
+        uses: actions/checkout@v4
+        with:
+          repository: Ramsey-SL/jtc-plugins
+          token: ${{ secrets.JTC_SYNC_TOKEN }}
+          path: jtc-target
+
+      - name: Sync changed plugins
+        run: |
+          PLUGINS=(
+            "ad-copy"
+            "brand-asset-manager"
+            "brand-intelligence-center"
+            "brand-knowledge-center"
+            "competitive-landscape"
+            "content-library"
+            "customer-driven-optimizations"
+            "inbox-command-center"
+            "lead-list-builder"
+          )
+
+          for plugin in "${PLUGINS[@]}"; do
+            SRC="plugins/${plugin}"
+            DEST="jtc-target/plugins/${plugin}"
+            if [ -d "$SRC" ]; then
+              rm -rf "$DEST"
+              cp -r "$SRC" "$DEST"
+              echo "Synced: ${plugin}"
+            else
+              echo "SKIP (not found): ${plugin}"
+            fi
+          done
+
+      - name: Rebuild JTC marketplace.json
+        run: |
+          cd jtc-target
+          python3 << 'PYEOF'
+          import json, os
+
+          plugins_dir = "plugins"
+          entries = []
+
+          for plugin_name in sorted(os.listdir(plugins_dir)):
+              pj_path = os.path.join(plugins_dir, plugin_name, ".claude-plugin", "plugin.json")
+              if os.path.exists(pj_path):
+                  with open(pj_path) as f:
+                      pj = json.load(f)
+                  entries.append({
+                      "name": pj["name"],
+                      "version": pj.get("version", "1.0.0"),
+                      "description": pj.get("description", ""),
+                      "path": f"./plugins/{plugin_name}"
+                  })
+
+          marketplace = {
+              "name": "JTC Plugins",
+              "description": "Curated plugin marketplace for JTC Enterprises — built by Strategy Labs",
+              "version": "1.0.0",
+              "plugins": entries
+          }
+
+          os.makedirs(".claude-plugin", exist_ok=True)
+          with open(".claude-plugin/marketplace.json", "w") as f:
+              json.dump(marketplace, f, indent=2)
+
+          print(f"Updated marketplace.json with {len(entries)} plugins")
+          for e in entries:
+              print(f"  {e['name']} v{e['version']}")
+          PYEOF
+
+      - name: Commit and push to JTC repo
+        run: |
+          cd jtc-target
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            CHANGED=$(git diff --staged --name-only | grep "^plugins/" | sed 's|plugins/||;s|/.*||' | sort -u | tr '\n' ', ' | sed 's/,$//')
+            git commit -m "Auto-sync from Strategy Labs marketplace: ${CHANGED}"
+            git push
+            echo "Pushed updates for: ${CHANGED}"
+          fi
