@@ -43,12 +43,16 @@ CONFIG = load_config()
 ACCOUNTS: dict[str, dict] = CONFIG.get("accounts", {})
 API_KEY: str = CONFIG.get("api_key", "")
 ACCOUNT_NAMES = list(ACCOUNTS.keys())
+_config_lock = threading.Lock()
 
 
 def save_config() -> None:
-    """Persist current config to disk."""
-    os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
-    with open(CONFIG_PATH, "w") as f:
+    """Persist current config to disk with restrictive permissions."""
+    config_dir = os.path.dirname(CONFIG_PATH)
+    os.makedirs(config_dir, exist_ok=True)
+    os.chmod(config_dir, 0o700)
+    fd = os.open(CONFIG_PATH, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
         json.dump({"api_key": API_KEY, "accounts": ACCOUNTS}, f, indent=2)
 
 
@@ -71,7 +75,10 @@ def get_toolset(account: str) -> ComposioToolSet:
 
 
 def execute(account: str, action: str, params: dict) -> dict:
-    ts = get_toolset(account)
+    try:
+        ts = get_toolset(account)
+    except ValueError as e:
+        return {"error": str(e)}
     result = ts.execute_action(action=action, params=params)
     if isinstance(result, dict):
         return result
@@ -107,12 +114,30 @@ def setup_api_key(api_key: str) -> str:
     Args:
         api_key: Your Composio API key (starts with "ak_")
     """
+    if not api_key.startswith("ak_"):
+        return json.dumps({
+            "error": "Invalid API key format. Composio keys start with 'ak_'.",
+            "get_key": "Get your key from https://app.composio.dev → Settings → API Keys.",
+        }, indent=2)
+
+    # Validate the key with a lightweight API call
+    try:
+        test_ts = ComposioToolSet(api_key=api_key)
+        test_ts.client.get_entity("validation-check")
+    except Exception as e:
+        return json.dumps({
+            "error": f"API key validation failed: {e}",
+            "get_key": "Verify your key at https://app.composio.dev → Settings → API Keys.",
+        }, indent=2)
+
     global API_KEY
-    API_KEY = api_key
-    save_config()
+    with _config_lock:
+        API_KEY = api_key
+        get_toolset.cache_clear()
+        save_config()
     return json.dumps({
         "status": "saved",
-        "message": "API key saved. You can now use connect_account to add Gmail accounts.",
+        "message": "API key validated and saved. You can now use connect_account to add Gmail accounts.",
     }, indent=2)
 
 
@@ -180,6 +205,37 @@ def connect_account(name: str, label: str = "") -> str:
     try:
         ts = ComposioToolSet(api_key=API_KEY)
         entity = ts.client.get_entity(entity_id)
+
+        # Check if entity already has an active Gmail connection (e.g. from a previous timed-out attempt)
+        try:
+            connections = entity.get_connections(app_name="gmail")
+            active = [c for c in connections if getattr(c, "status", None) == "ACTIVE"]
+            if active:
+                # Already authenticated — skip OAuth, go straight to saving
+                profile_ts = ComposioToolSet(api_key=API_KEY, entity_id=entity_id)
+                profile_result = profile_ts.execute_action(action="GMAIL_GET_PROFILE", params={})
+                if isinstance(profile_result, list) and profile_result:
+                    profile_data = profile_result[0].get("response", {}).get("data", {})
+                elif isinstance(profile_result, dict):
+                    profile_data = profile_result.get("data", profile_result)
+                else:
+                    profile_data = {}
+                email = profile_data.get("emailAddress", "unknown")
+                label_with_email = f"{label} ({email})" if email != "unknown" else label
+                with _config_lock:
+                    ACCOUNTS[name] = {"entity_id": entity_id, "label": label_with_email}
+                    refresh_account_names()
+                    get_toolset.cache_clear()
+                    save_config()
+                return json.dumps({
+                    "status": "connected",
+                    "email": email,
+                    "label": label_with_email,
+                    "message": f"Found existing connection. Saved {email} as '{name}'.",
+                }, indent=2)
+        except Exception:
+            pass  # No existing connections — proceed with OAuth
+
         conn_request = entity.initiate_connection(app_name="gmail", use_composio_auth=True)
 
         auth_url = conn_request.redirectUrl
@@ -211,7 +267,6 @@ def connect_account(name: str, label: str = "") -> str:
             return json.dumps(result, indent=2)
 
         # Connection is active — get the email address
-        new_entity = ts.client.get_entity(entity_id)
         profile_ts = ComposioToolSet(api_key=API_KEY, entity_id=entity_id)
         profile_result = profile_ts.execute_action(action="GMAIL_GET_PROFILE", params={})
         if isinstance(profile_result, list) and profile_result:
@@ -225,10 +280,11 @@ def connect_account(name: str, label: str = "") -> str:
         label_with_email = f"{label} ({email})" if email != "unknown" else label
 
         # Save to config
-        ACCOUNTS[name] = {"entity_id": entity_id, "label": label_with_email}
-        refresh_account_names()
-        get_toolset.cache_clear()
-        save_config()
+        with _config_lock:
+            ACCOUNTS[name] = {"entity_id": entity_id, "label": label_with_email}
+            refresh_account_names()
+            get_toolset.cache_clear()
+            save_config()
 
         result["status"] = "connected"
         result["email"] = email
