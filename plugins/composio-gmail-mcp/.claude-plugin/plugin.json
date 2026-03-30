@@ -1,0 +1,11 @@
+{
+  "name": "composio-gmail-mcp",
+  "version": "1.0.0",
+  "description": "Multi-account Gmail MCP server via Composio. Connect unlimited Gmail accounts with Google OAuth, then fetch, search, send, draft, label, and archive across all of them. Other plugins (like Inbox Command Center) can use these tools for multi-account email access.",
+  "author": {
+    "name": "Strategy Labs",
+    "email": "scott@strategylabs.us"
+  },
+  "keywords": ["gmail", "multi-account", "composio", "MCP server", "email", "OAuth", "inbox"],
+  "license": "MIT"
+}

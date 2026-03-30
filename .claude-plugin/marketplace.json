@@ -278,6 +278,15 @@
       "license": "MIT"
     },
     {
+      "name": "composio-gmail-mcp",
+      "source": "./plugins/composio-gmail-mcp",
+      "description": "Multi-account Gmail MCP server via Composio. Connect unlimited Gmail accounts with Google OAuth, then fetch, search, send, draft, label, and archive across all of them. Other plugins (like Inbox Command Center) can use these tools for multi-account email access.",
+      "version": "1.0.0",
+      "author": { "name": "Strategy Labs" },
+      "keywords": ["gmail", "multi-account", "composio", "MCP server", "email", "OAuth", "inbox"],
+      "license": "MIT"
+    },
+    {
       "name": "inbox-command-center",
       "source": "./plugins/inbox-command-center",
       "description": "Inbox Command Center — AI communications manager that triages Gmail, Slack, iMessage, and messaging platforms. Auto-categorizes messages, drafts replies in your authentic voice (learned from transcripts, phone calls, sent emails, Slack messages, and A/B calibration), creates smart rules with delete/prioritization/folder-based options, delivers VIP alerts with pre-written drafts, generates monthly inbox reports with full analytics, and delivers scheduled daily briefings.",
