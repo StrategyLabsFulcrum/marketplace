@@ -7,7 +7,6 @@ description: >
   "brand voice", "differentiation", "proof points", "set up my brand", "update brand",
   "brand context", or wants to set up their brand before using other Strategy Labs or marketing skills.
   Also triggers when any plugin references a brand-intelligence-center/ folder that doesn't exist yet.
-version: 1.0.0
 ---
 
 # Brand Intelligence Center
@@ -154,7 +153,7 @@ From the homepage and about page: business name, location(s), concept descriptio
 | Business type | Yes | Choice (see below) |
 | Format | Yes | Choice (see below) |
 | Year founded | Optional | Scraped or ask |
-| Owner / key team | Yes | Ask for names and roles |
+| Owner / key team | Yes | Suggest key roles, ask for names (see below) |
 | One-liner | Yes | Scraped draft — edit |
 | Tagline | Recommended | Scraped or generate options |
 | Mission / elevator pitch | Recommended | Scraped or ask |
@@ -190,6 +189,61 @@ For retail/eCommerce:
 > - `[ ]` Both (omnichannel)
 > - `[ ]` Wholesale / B2B
 > - `[ ]` Subscription
+
+### Key Team Roles (Suggest — Ask Who Fills Each)
+
+Present a role checklist adapted by business type. Pre-check roles that are likely relevant based on the business size and type.
+
+> Let's map out your key team. I'll suggest common roles — tell me who fills each, skip any that don't apply, and add any I missed.
+>
+> **Leadership:**
+> - `[ ]` Founder / Owner — ___
+> - `[ ]` CEO / President — ___
+> - `[ ]` Co-Founder / Partner — ___
+>
+> **Operations:**
+> - `[ ]` COO / General Manager — ___
+> - `[ ]` Operations Manager — ___
+> - `[ ]` Location Manager(s) — ___
+>
+> **Finance:**
+> - `[ ]` CFO / Finance Lead — ___
+> - `[ ]` Controller / Bookkeeper — ___
+>
+> **Marketing & Brand:**
+> - `[ ]` CMO / Marketing Director — ___
+> - `[ ]` VP Marketing — ___
+> - `[ ]` Social Media Manager — ___
+> - `[ ]` Brand Manager — ___
+>
+> **Sales & Revenue:**
+> - `[ ]` VP Sales / Revenue — ___
+> - `[ ]` Catering / Events Manager — ___
+>
+> **Product / Culinary** (for restaurants):
+> - `[ ]` Executive Chef — ___
+> - `[ ]` Bar Manager / Beverage Director — ___
+> - `[ ]` Head of R&D / Menu Development — ___
+>
+> **Product / Creative** (for eComm/DTC):
+> - `[ ]` VP Product — ___
+> - `[ ]` Creative Director — ___
+> - `[ ]` Head of eCommerce — ___
+>
+> **Other:**
+> - `[ ]` HR / People Lead — ___
+> - `[ ]` IT / Tech Lead — ___
+> - `[ ]` Other: ___
+>
+> → Don't have someone in every role? That's fine — just fill in who's involved. We can note roles you're hiring for too.
+
+For small businesses (solo or small team), collapse to essentials:
+> Looks like a lean team — here are the roles that matter most:
+> - `[ ]` Owner — ___
+> - `[ ]` Operations (who runs day-to-day?) — ___
+> - `[ ]` Marketing (who handles marketing, even if it's you?) — ___
+> - `[ ]` Finance (who manages the books?) — ___
+> - `[ ]` Other key people: ___
 
 ### File Template
 
@@ -230,11 +284,44 @@ From testimonials, reviews (Google, Yelp, etc.), about page, and any "who we ser
 
 | Field | Required | Input Method |
 |-------|----------|--------------|
-| Primary customer | Yes | Scraped draft — confirm |
-| Secondary audiences | Recommended | Suggest from context |
+| Primary customer | Yes | Scraped draft — confirm, or refine with data (see below) |
+| Secondary audiences | Recommended | Suggest from context, or refine with data (see below) |
 | Occasions / scenarios | Yes | Choice list (see below) |
 | Decision-maker | Yes | Choice (see below) |
 | Jobs to be done (JTBD) | Yes | Suggest 3 — confirm |
+
+### Refining Audiences with Data
+
+After presenting the scraped draft for primary and secondary audiences, offer data-driven refinement:
+
+> I've drafted your audience profiles from what I found online. Want to sharpen them with real data? Here's what helps most:
+>
+> **Upload any of these** (I'll extract audience insights automatically):
+> - `[ ]` **Customer email/SMS list** (CSV) — I'll analyze demographics, location clusters, and purchase patterns
+> - `[ ]` **POS / transaction data** (CSV export) — I'll identify your highest-value customer segments, peak times, and average spend
+> - `[ ]` **Google Analytics audience report** (PDF or screenshot) — demographics, interests, geo
+> - `[ ]` **Social media insights** (screenshots from Instagram, Facebook, TikTok) — follower demographics, top-performing content
+> - `[ ]` **Survey or feedback data** — NPS scores, customer feedback forms, post-purchase surveys
+> - `[ ]` **Review exports** (Google, Yelp, TripAdvisor) — I'll mine for audience language, occasions, and sentiment patterns
+> - `[ ]` **Loyalty / rewards program data** — visit frequency, redemption patterns, tier distribution
+> - `[ ]` **Reservation data** (OpenTable, Resy export) — party sizes, booking times, special occasions noted
+>
+> **Or tell me about these** (no upload needed):
+> - What percentage of your business is repeat vs. new customers?
+> - What's your average ticket / order value?
+> - What time of day / day of week is busiest?
+> - Do you notice different crowds at different times (e.g., lunch vs. dinner vs. late night)?
+> - Any customer segments you want MORE of? Any you want to move away from?
+>
+> → Skip this step if the scraped draft is close enough. We can always refine later with `/brand-update`.
+
+**When data is uploaded:**
+1. Parse the file and identify relevant audience signals
+2. Cross-reference with the scraped draft
+3. Present updated audience profiles as before/after:
+   - "Based on your [data source], here's what I'd refine..."
+   - Show what changed and why
+4. Confirm before applying
 
 ### Occasions (Present as Choices — Adapt by Business Type)
 
@@ -252,6 +339,20 @@ For restaurants:
 > - `[ ]` Catering / private event
 > - `[ ]` Neighborhood regular / habit
 
+For eCommerce / DTC:
+> When do people typically buy from you? Select all that apply:
+> - `[ ]` Treating themselves / self-purchase
+> - `[ ]` Gift for someone else
+> - `[ ]` Restocking / replenishment (consumable product)
+> - `[ ]` Seasonal / holiday shopping
+> - `[ ]` Impulse purchase (saw it on social, had to have it)
+> - `[ ]` Solving a specific problem (searched for a solution)
+> - `[ ]` Upgrading from a current product
+> - `[ ]` Trying your brand for the first time (discovery)
+> - `[ ]` Subscription renewal / recurring order
+> - `[ ]` Bundling / stocking up during a sale
+> - `[ ]` Recommendation from a friend or influencer
+
 ### Decision-Maker (Present as Choices)
 
 > Who typically decides to come here? Select all that apply:
@@ -263,7 +364,9 @@ For restaurants:
 
 ### Jobs to Be Done (JTBD)
 
-Present 3–5 suggested JTBD statements based on the business type and scrape, then ask the user to confirm, edit, or replace. Format:
+Present 3–5 suggested JTBD statements based on the business type and scrape, then ask the user to confirm, edit, or replace. Adapt examples by business type.
+
+**For restaurants:**
 
 > When a customer comes to you, what are they really "hiring" you to do?
 > Here are my best guesses based on what I found — edit anything that doesn't fit:
@@ -271,6 +374,19 @@ Present 3–5 suggested JTBD statements based on the business type and scrape, t
 > 1. "Help me have a good time without having to think too hard about where to go"
 > 2. "Give me a reliable spot I can bring people to and look good"
 > 3. "Feed me something that actually tastes like it was made with care"
+>
+> → Add any I missed. Remove any that don't apply.
+
+**For eCommerce / DTC:**
+
+> When a customer buys from you, what are they really "hiring" your product to do?
+> Here are my best guesses based on what I found — edit anything that doesn't fit:
+>
+> 1. "Help me feel like I'm making a smart choice without spending hours researching"
+> 2. "Give me something that actually works so I can stop wasting money on stuff that doesn't"
+> 3. "Let me express who I am (or who I want to be) through what I buy"
+> 4. "Make my routine easier / more enjoyable without me having to think about it"
+> 5. "Give me something I'm proud to recommend to friends"
 >
 > → Add any I missed. Remove any that don't apply.
 
@@ -285,7 +401,9 @@ Capture the psychological forces that bring customers to you and keep them (or d
 | **Habit** | What keeps people stuck with their current default (e.g., always ordering the same delivery spot) |
 | **Anxiety** | What might make them hesitant to try you or come back |
 
-Present as guided prompts, not blank fields:
+Present as guided prompts, not blank fields. Adapt examples by business type.
+
+**For restaurants:**
 
 > Let's understand why customers switch TO you — and what holds them back.
 >
@@ -300,6 +418,22 @@ Present as guided prompts, not blank fields:
 >
 > **What might make someone hesitant to try you or return?**
 > (e.g., parking, price perception, not knowing the menu, wait times)
+
+**For eCommerce / DTC:**
+
+> Let's understand why customers switch TO your brand — and what holds them back.
+>
+> **PUSH — What frustrates people about their current options?**
+> (e.g., "Amazon basics that break after a month," "generic products that all look the same," "big brands that charge a premium for nothing special," "products full of ingredients I can't pronounce," "spending hours comparing nearly identical options")
+>
+> **PULL — What do they say when they recommend you?**
+> (e.g., "the quality is insane for the price," "it's the only brand I trust for ___," "the unboxing experience alone is worth it," "I feel good buying from them because ___")
+>
+> **HABIT — What's their default if they don't buy from you?**
+> (e.g., reordering from Amazon, buying whatever's on sale at Target, sticking with the brand they've used for years, DIY / making their own, buying from a specific competitor)
+>
+> **ANXIETY — What might make someone hesitant to try you or reorder?**
+> (e.g., "is it worth the price vs. what I can get on Amazon?", shipping costs or delivery time, not being sure about sizing/fit/flavor, no easy returns, never heard of this brand before, "what if it doesn't work for me?", subscription commitment fear)
 
 ### File Template
 
@@ -360,11 +494,44 @@ Suggest competitors based on business type, location, and scraped context:
 >
 > → Remove any that don't apply. Add any I missed.
 
+For each confirmed competitor, ask for their **website URL** so we can scrape for positioning intel:
+
+> For each competitor, share their website URL (if you have it) — I'll pull their positioning, messaging, and visual style automatically.
+
 For each confirmed competitor, capture:
+- **URL** (scraped for positioning, messaging, visual cues)
 - Their apparent positioning
 - Their key strength
 - Where they fall short
 - Your counter-position
+
+### Affinity & Inspirational Brands
+
+Beyond direct and indirect competitors, capture brands the audience admires or that the brand wants to be associated with — even if they're in completely different industries. This shapes voice, visual identity, and audience targeting.
+
+> Now let's think bigger than competitors. These are brands your audience already loves, or brands you admire and want to learn from — even if they sell something totally different.
+>
+> **Audience Affinity Brands** — What other brands do your customers love?
+> (e.g., if your customers also shop at Patagonia, listen to podcasts on Spotify, drink Oatly, and wear Nike — that tells us about their identity and values)
+> - Brand 1: ___ — Why they resonate: ___
+> - Brand 2: ___ — Why they resonate: ___
+> - Brand 3: ___ — Why they resonate: ___
+>
+> **Inspirational Brands** — Which brands do YOU admire for how they show up?
+> These don't have to be in your industry. Think about brands whose marketing, voice, visual style, or customer experience you'd love to emulate.
+> - Brand 1: ___ — What you admire: ___
+> - Brand 2: ___ — What you admire: ___
+> - Brand 3: ___ — What you admire: ___
+>
+> **"Brands Like Us"** — If a customer likes your brand, they'd probably also like:
+> (This helps with audience targeting, partnerships, and co-marketing)
+> - ___
+> - ___
+> - ___
+>
+> → Don't overthink it — gut instinct is fine. We'll refine these as your brand context develops.
+
+For each affinity/inspirational brand with a URL, scrape their site for visual and messaging cues to reference later in voice and visual identity work.
 
 ### Objections & Anti-Persona
 
@@ -398,14 +565,29 @@ For each confirmed competitor, capture:
 ## Competitors
 
 ### Direct
-| Competitor | Their Strength | Where They Fall Short | Our Counter-Position |
-|------------|---------------|----------------------|----------------------|
-| {{name}} | {{strength}} | {{weakness}} | {{counter}} |
+| Competitor | URL | Their Strength | Where They Fall Short | Our Counter-Position |
+|------------|-----|---------------|----------------------|----------------------|
+| {{name}} | {{url}} | {{strength}} | {{weakness}} | {{counter}} |
 
 ### Indirect
 | Alternative | Why Customers Default To It | Why We're Better |
 |-------------|----------------------------|-----------------|
 | {{alt}} | {{reason}} | {{advantage}} |
+
+## Affinity & Inspirational Brands
+
+### Audience Affinity Brands
+| Brand | Why They Resonate With Our Audience |
+|-------|-------------------------------------|
+| {{brand}} | {{reason}} |
+
+### Inspirational Brands
+| Brand | What We Admire |
+|-------|----------------|
+| {{brand}} | {{what_we_admire}} |
+
+### "Brands Like Us"
+{{brands_like_us_list}}
 
 ## Objections & Responses
 | Objection | How We Address It |
@@ -443,6 +625,90 @@ From website copy, social media, and any uploaded brand guidelines: tone signals
 >
 > → Anything that doesn't quite fit? Tell me how you'd describe it instead.
 
+### Voice References — Brands & Personalities
+
+Sometimes the fastest way to nail brand voice is to point at someone who already sounds like you want to sound. This bridges the gap between abstract adjectives and real-world tone.
+
+> **Brand voice references** — List 2-5 brands whose voice or tone you'd love to channel. They don't need to be in your industry.
+> (e.g., "Liquid Death's irreverence," "Glossier's best-friend energy," "Patagonia's quiet conviction," "Wendy's Twitter sass," "Apple's minimalist confidence")
+> - Brand 1: ___ — What about their voice: ___
+> - Brand 2: ___ — What about their voice: ___
+> - Brand 3: ___ — What about their voice: ___
+>
+> **Celebrity / personality references** — If your brand were a person, who would it be? List 2-3 celebrities, public figures, or fictional characters.
+> (e.g., "Anthony Bourdain — honest, cultured, no-BS but deeply curious," "Dolly Parton — warm, clever, disarmingly authentic," "Oscar Isaac — effortlessly cool, a little mysterious")
+> - Person 1: ___ — What about their vibe: ___
+> - Person 2: ___ — What about their vibe: ___
+> - Person 3: ___ — What about their vibe: ___
+>
+> → I'll use these references to calibrate your brand voice alongside the personality traits you selected above.
+
+After collecting references, synthesize a voice profile:
+1. Map the brand/celebrity references against the personality traits selected
+2. Identify the throughline (e.g., "confident but approachable, culturally rooted, never corporate")
+3. Draft 3-5 voice rules that capture the intersection
+4. Present for confirmation
+
+### Voice Refinement Cycle — Social Copy Testing
+
+The best way to lock in brand voice is to see it in action and react. This is an iterative cycle that continues until the user confirms the voice is nailed.
+
+**Step 1 — Ask for 2-3 topics:**
+
+> Give me 2-3 topics or announcements your brand might post about on social media.
+> (e.g., "new seasonal menu item," "hiring for our second location," "a behind-the-scenes kitchen moment")
+>
+> 1. ___
+> 2. ___
+> 3. ___
+
+**Step 2 — Write 5 versions per topic:**
+
+For each topic, write 5 distinct social media posts that all use the brand voice but vary in approach:
+
+> Here are 5 versions for Topic 1: "[topic]"
+> Each uses your brand voice but takes a different angle:
+>
+> **Version A** (bold/punchy):
+> [post copy]
+>
+> **Version B** (storytelling/emotional):
+> [post copy]
+>
+> **Version C** (playful/witty):
+> [post copy]
+>
+> **Version D** (informative/value-first):
+> [post copy]
+>
+> **Version E** (community/conversational):
+> [post copy]
+
+**Step 3 — Ask which 3 they like best:**
+
+> Which 3 versions feel most like "you"? (Pick from any topic — not just one.)
+> Also tell me: is there anything that felt off? Too formal? Too jokey? Missing something?
+
+**Step 4 — Refine and repeat:**
+
+Based on their picks and feedback:
+1. Identify the patterns in what they chose (e.g., "you consistently picked the punchy + community ones, never the formal ones")
+2. Refine the voice rules
+3. Write 5 NEW versions for a fresh topic using the refined voice
+4. Ask again: "Getting closer? Pick your favorites."
+
+**Step 5 — Continue until confirmed:**
+
+> Repeat the cycle until the user says something like "yes, that's it," "nailed it," "this is our voice," or "stop, this is perfect."
+>
+> When confirmed, lock in the voice by:
+> 1. Saving the final voice rules to `voice-identity.md`
+> 2. Saving 3-5 "golden examples" (the posts they loved most) as reference samples
+> 3. Noting the rejected patterns in the NEVER list (e.g., "never sound this formal")
+> 4. Updating `system-prompt.md` with the refined voice
+
+The golden examples are critically important — they become the reference that all other plugins use to calibrate copy output.
+
 ### NEVER / ALWAYS Lists
 
 > Let's define what's always true about your voice — and what's never acceptable.
@@ -458,7 +724,59 @@ From website copy, social media, and any uploaded brand guidelines: tone signals
 > - Never sound apologetic or overly formal
 > - [Add from scrape / ask]
 
-### Visual Identity (Optional — Skip if No Guidelines)
+### Visual Identity
+
+**Step 1 — Ask for brand guidelines:**
+
+> Do you have existing brand guidelines (a PDF, doc, or design file with your colors, fonts, logo usage, etc.)?
+> - `[ ]` **Yes — upload them** (I'll extract colors, fonts, logo rules, and visual direction automatically)
+> - `[ ]` **No — I don't have formal guidelines yet**
+
+**Path A: Guidelines uploaded**
+1. Parse the uploaded document
+2. Extract: logo descriptions and usage rules, color palette (hex codes), typography (heading, body, accent fonts), brand pillars/values, any visual do's and don'ts
+3. Present each extracted element for confirmation:
+   > Here's what I found in your brand guidelines:
+   >
+   > **Colors:**
+   > - Primary: [hex] [color swatch description]
+   > - Secondary: [hex]
+   > - Accent: [hex]
+   >
+   > **Typography:**
+   > - Headings: [font name]
+   > - Body: [font name]
+   >
+   > **Logo:** [description]
+   >
+   > → Confirm each, or tell me what needs correcting.
+4. Fill any gaps with questions from Path B
+
+**Path B: No guidelines — scrape and reconstruct**
+
+> No worries — I can look at your website and reconstruct your visual identity from what's live. Want me to scrape your site and build a draft set of visual guidelines?
+> - `[ ]` **Yes — scrape my site and show me what you find**
+> - `[ ]` **No — I'll provide these manually**
+
+If scraping:
+1. Fetch the website homepage, about page, and any other key pages
+2. Extract:
+   - **Colors:** Identify primary, secondary, and accent colors from CSS, headers, buttons, links, and backgrounds. Report as hex codes.
+   - **Typography:** Identify heading and body fonts from CSS font-family declarations and Google Fonts / Adobe Fonts links
+   - **Logo:** Describe the logo from the header image (shape, colors, text, icon elements)
+   - **Visual style:** Note the overall aesthetic (dark/light, minimal/busy, photography style, illustration use)
+   - **Button / CTA style:** Colors, border radius, text style
+3. Present everything for confirmation — one element at a time:
+   > Based on your website, here's what I'm seeing for your visual identity:
+   >
+   > **Primary Color:** #B40066 (deep magenta — used in your logo, nav, and CTAs)
+   > → Is this right? Confirm or correct.
+   >
+   > **Secondary Color:** #1B2A4A (dark navy — used in your footer and text)
+   > → Is this right? Confirm or correct.
+   >
+   > [Continue for each element...]
+4. For anything that can't be scraped, fall back to asking:
 
 | Field | Input |
 |-------|-------|
@@ -477,10 +795,30 @@ From website copy, social media, and any uploaded brand guidelines: tone signals
 ## Personality
 **We are:** {{personality_adjectives}}
 
+## Voice References
+### Brand References
+| Brand | What We Channel |
+|-------|-----------------|
+| {{brand}} | {{what_about_voice}} |
+
+### Personality References
+| Person | What About Their Vibe |
+|--------|----------------------|
+| {{person}} | {{vibe}} |
+
 ## Voice Traits
 | Trait | What It Means In Practice |
 |-------|--------------------------|
 | {{trait}} | {{in_practice}} |
+
+## Golden Examples
+*Copy samples confirmed by the brand as "this is us":*
+
+> {{golden_example_1}}
+
+> {{golden_example_2}}
+
+> {{golden_example_3}}
 
 ## ALWAYS
 {{always_list}}
@@ -494,12 +832,15 @@ From website copy, social media, and any uploaded brand guidelines: tone signals
 | {{preferred}} | {{avoided}} |
 
 ## Visual Identity
+- **Source:** {{uploaded guidelines / scraped from website / manual entry}}
 - **Primary Color:** {{primary_color}}
 - **Secondary Color:** {{secondary_color}}
 - **Accent Color:** {{accent_color}}
 - **Heading Font:** {{heading_font}}
 - **Body Font:** {{body_font}}
 - **Logo:** {{logo_description}}
+- **Visual Style:** {{overall_aesthetic}}
+- **CTA Style:** {{button_style}}
 ```
 
 ---
@@ -765,6 +1106,141 @@ You are an AI assistant working for {{business_name}}. Use the following brand c
 ## Financial Context
 {{assembled_from_financial — high level only}}
 ```
+
+---
+
+## Post-Completion: Review, Brand HQ, and Next Steps
+
+After all areas are complete and `system-prompt.md` is assembled, run this sequence before closing the setup.
+
+### Step 1 — Review and Improve BIC Files
+
+> Your Brand Intelligence Center is built. Before we move on, let's do a quick review to make sure everything is tight.
+
+Walk through each completed area file and present a 2-3 sentence summary of what was captured. For each:
+
+> **Area 1: Business Foundation** — Here's what I have: [summary]
+> → Does this feel complete? Anything to add or change?
+
+> **Area 2: Your Customer** — Here's what I have: [summary]
+> → Does this feel complete? Anything to add or change?
+
+> [Continue for all completed areas...]
+
+Apply any edits inline, then re-assemble `system-prompt.md` if anything changed.
+
+### Step 2 — Introduce the Full Brand HQ
+
+> Now that your Brand Intelligence Center is set, let's talk about the full picture. The Brand Intelligence Center is your foundation — it tells every agent who you are. But a full Brand HQ is where your actual assets live: approved images, videos, copy, templates, financial data, and more.
+>
+> Here's the suggested folder structure for a complete Brand HQ:
+
+```
+brand-hq/
+├── brand-intelligence-center/     ← What we just built (your brand context)
+│   ├── business.md
+│   ├── customer.md
+│   ├── differentiation.md
+│   ├── voice-identity.md
+│   ├── proof-goals.md
+│   ├── digital-ecosystem.md
+│   ├── financial.md
+│   └── system-prompt.md
+│
+├── assets/                        ← Approved brand assets
+│   ├── logos/                     ← Logo files (PNG, SVG, variations)
+│   ├── images/                    ← Approved photography & graphics
+│   │   ├── product/               ← Product shots
+│   │   ├── lifestyle/             ← Lifestyle / in-context imagery
+│   │   ├── team/                  ← Team photos, headshots
+│   │   └── social/                ← Social-ready images
+│   ├── videos/                    ← Approved video assets
+│   │   ├── brand/                 ← Brand films, sizzle reels
+│   │   ├── product/               ← Product demos, how-tos
+│   │   └── social/                ← Short-form social clips
+│   ├── fonts/                     ← Brand font files
+│   └── brand-guidelines.pdf       ← Master brand guidelines document
+│
+├── copy/                          ← Approved copy & messaging
+│   ├── taglines.md                ← Approved taglines & variations
+│   ├── boilerplate.md             ← Brand boilerplate (press, bios, descriptions)
+│   ├── social-captions/           ← Approved social copy library
+│   ├── email-templates/           ← Approved email copy/templates
+│   ├── ad-copy/                   ← Approved ad copy by platform
+│   └── web-copy/                  ← Approved website copy
+│
+├── templates/                     ← Reusable design & content templates
+│   ├── social/                    ← Social media post templates
+│   ├── email/                     ← Email design templates
+│   ├── ads/                       ← Ad creative templates
+│   ├── print/                     ← Print design templates
+│   └── presentations/             ← Pitch deck / presentation templates
+│
+├── financial/                     ← Financial data & reports
+│   ├── p-and-l/                   ← P&L statements
+│   ├── balance-sheets/            ← Balance sheets
+│   ├── budgets/                   ← Marketing & operating budgets
+│   └── reports/                   ← Financial reports & analysis
+│
+├── campaigns/                     ← Campaign history & assets
+│   ├── active/                    ← Currently running campaigns
+│   └── archive/                   ← Past campaigns with results
+│
+├── analytics/                     ← Performance data & reports
+│   ├── social/                    ← Social media analytics exports
+│   ├── web/                       ← Website / GA4 reports
+│   ├── email/                     ← Email performance data
+│   └── ads/                       ← Ad platform performance data
+│
+└── competitors/                   ← Competitive intelligence
+    ├── screenshots/               ← Competitor ad/social screenshots
+    ├── analysis/                  ← Competitive analysis docs
+    └── swipe-file/                ← Inspiration / reference pieces
+```
+
+### Step 3 — Suggest What to Populate First
+
+> You don't need to fill all of this at once. Based on what you've told me, here's where to start:
+
+Prioritize suggestions based on the user's stated business focus and conversion goals from Area 5:
+
+**If primary focus is marketing/growth:**
+> 1. **Upload approved images** → `assets/images/` — Product shots, lifestyle photos, team photos. These power every social, email, and ad creative.
+> 2. **Upload or write approved copy** → `copy/` — Start with boilerplate, taglines, and 10-20 social captions that represent your voice.
+> 3. **Upload brand guidelines** → `assets/brand-guidelines.pdf` — If you have them. If not, we just built a working version in `voice-identity.md`.
+> 4. **Upload social/ad templates** → `templates/` — Any Canva, Figma, or design templates you reuse.
+
+**If primary focus is financial clarity:**
+> 1. **Upload P&L statements** → `financial/p-and-l/` — The CFO Agent can analyze these and build financial dashboards.
+> 2. **Upload budgets** → `financial/budgets/` — Marketing budget, operating budget.
+> 3. **Upload balance sheets** → `financial/balance-sheets/` — For a complete financial picture.
+
+**If primary focus is competitive intelligence:**
+> 1. **Start a swipe file** → `competitors/swipe-file/` — Screenshots of competitor ads, posts, and campaigns you've noticed.
+> 2. **Export competitor social data** → `competitors/analysis/` — Follower counts, engagement rates, posting frequency.
+
+### Step 4 — Suggest the Next Agent
+
+Based on the user's needs and what's missing, recommend which marketplace plugin to work with next:
+
+> Your Brand Intelligence Center is live — every agent in the marketplace can now read your brand context. Here's what I'd suggest next:
+>
+> **Option A: CFO Agent** (`/cfo-agent`)
+> Best if: You want to populate the financial side — upload P&Ls, balance sheets, build budgets, and get financial analysis. The CFO Agent reads your Brand Intelligence Center and adds financial depth.
+>
+> **Option B: Marketing Team** — Start with one of these:
+> - **Content Library** (`/content-library`) — Organize and tag your approved images, videos, and copy so every agent can pull from them.
+> - **Creative Director** (`/creative-director`) — Build visual templates and design direction based on your brand identity.
+> - **Art Director** (`/art-director`) — Generate and refine visual assets using your brand guidelines.
+> - **Campaign Strategist** (`/campaign-strategist`) — Plan your next campaign using your brand context, audience data, and competitive position.
+>
+> **Option C: Brand Asset Manager** (`/brand-asset-manager`)
+> Best if: You have a lot of existing assets (logos, photos, videos, copy) and want to organize them into the Brand HQ structure.
+>
+> **Option D: Performance Marketing** (`/performance-marketing`)
+> Best if: You want to launch ads immediately using your brand context — the plugin reads your voice, audience, and proof points to generate campaigns.
+>
+> Which sounds most useful right now?
 
 ---
 
