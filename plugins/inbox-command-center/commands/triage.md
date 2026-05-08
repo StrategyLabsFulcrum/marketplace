@@ -1,493 +1,654 @@
 # Triage
 
-The core daily command — pulls unread emails, Slack messages, iMessages, and calendar events, applies rules, categorizes everything, and presents in prioritized batches with inline actions.
+The core daily command — pulls unread emails across all connected inboxes, Slack messages, iMessages, and calendar events; applies rules; surfaces VIPs across all inboxes first; then walks the user through prioritized batches in a sequential per-inbox flow with inline actions.
 
-Triggers on: "check my email", "triage", "what did I miss", "any new emails", "inbox", "check my messages", "check my texts", "check iMessage", "clean up my inbox"
+Triggers on: "check my email", "triage", "what did I miss", "any new emails", "inbox", "check my messages", "check my texts", "check iMessage", "clean up my inbox", "triage [inbox-alias]", "anything urgent"
 
 ## Before Starting
 
-0. **Resolve data path:** Check for iCloud sync first: `~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/config.md`. If found, use the iCloud path for all user data files. Otherwise, fall back to `inbox-command-center/` locally. Also check for iCloud conflict copies (e.g., `config 2.md`) — if found, prompt the user to resolve before proceeding.
-1. Load config from `[data-path]/config.md` — connected tools, batch size, preferences, sync settings.
-2. Load rules from `[data-path]/rules.md`.
-3. Load VIP contacts from `[data-path]/vip-contacts.md`.
-4. Load voice profile from `[data-path]/voice-profile.md` (needed for drafting).
-5. If Brand Knowledge Center exists, load `brand-identity.md` for brand-voice drafting.
-6. **Version check:** Compare `Plugin Version` in config against current plugin version. If updated, show the update briefing (see SKILL.md → Plugin Update Notifications) before starting triage. Walk through new feature setup if the user chooses.
-7. **Pending update check:** If `pending_update_setup` is set in config, show a brief reminder: "You have new features from [version] that need setup. Say 'set up updates' to configure." (stops after 3 reminders)
-8. **VIP review check:** Read `last_vip_review` and VIP review cadence from config. If the review is due per the user's configured cadence (monthly / bi-weekly / weekly / quarterly / on demand), trigger the VIP Review prompt (from setup-wizard.md) before starting triage. Update the date after review or skip. If cadence is "on demand", skip this check entirely.
-9. **Voice profile review check:** Read `voice_profile_last_reviewed` from config. If review is due per the user's configured voice review cadence (monthly minimum), trigger the Mandatory Monthly Voice Review prompt (see SKILL.md) before starting triage.
-10. **Inbox report check:** Read `inbox_report_last_generated` from config. If a report is due per the user's configured cadence, note it and generate after triage completes (or remind: "Your monthly inbox report is due. I'll generate it after triage.")
-11. Load folder rules from `[data-path]/folder-rules.md`.
+1. **Read workspace** at `~/Inbox Command Center/` — `.meta.json`, `contacts.md`, `todos.md`, `followups.md`, `rules.md`, `rules-review-queue.md`, `voice-profile.md` (and brand variant if BKC connected).
+
+2. **Run cadence-due checks** (see SKILL.md "Session Start"):
+   - Rule review due? Surface gentle prompt before triage starts.
+   - Voice profile review due? Same.
+   - VIP list review due? Same.
+   - Weekly Fireflies pull due? Run it first (off-hours-fast: ~30 sec for incremental pull).
+   - Monthly inbox report due? Generate after triage.
+
+3. **Detect user-edited workspace files** since last session (mtime check). Log observed edits to today's session log.
+
+4. **Confirm Composio connections** are alive — if any inbox shows expired session, prompt user to re-auth before triage starts.
+
+5. **Append session start** to `session-logs/[today].md`: `**HH:MM** — Session start. Workspace loaded: [N] inboxes, [X] todos, [Y] followups, [Z] pending rules.`
 
 ---
 
-## Step 1: Determine Time Range
+## Step 1: Determine Time Range and Inbox
 
-Ask: **"When did you last check email?"** or accept a stated timeframe.
+Ask if not specified:
+> "When did you last check email, and which inbox today?"
 
-- If the user says a specific time: use that as the `after:` filter
-- If vague ("this morning", "yesterday"): estimate and confirm
-- If first triage of the day: default to last 24 hours or since last triage timestamp
-- Save the current timestamp as the latest triage time in config
+### Time range parsing
+
+| User says | Time range |
+|---|---|
+| "since yesterday at 5pm" | absolute timestamp |
+| "since [last triage]" | from session log of previous triage end |
+| "today" | last 24 hours |
+| (nothing specified) | default from `.meta.json.schedules.triage_default_range` (default: last 24 hours) |
+
+### Inbox selection (multi-account)
+
+If user named an inbox alias ("triage uno-mas"): scope to that inbox only, skip Step 1.5's prompt-to-pick.
+
+If user said "triage" / "all" / nothing specific: proceed to Step 1.5 (VIP cross-inbox scan first), then prompt for inbox selection.
+
+If single inbox connected: proceed directly to Step 2 with that inbox.
+
+If in fallback mode: same as single inbox.
+
+---
+
+## Step 1.5: VIP Cross-Inbox Scan (always runs first when multi-inbox + no scoped inbox)
+
+Before user picks a single inbox, scan ALL connected inboxes for VIP messages.
+
+### Scan logic
+
+```
+vip_emails = []
+
+For each inbox in .meta.json.connected_inboxes:
+  Query (Composio):
+    GMAIL_FETCH_EMAILS / OUTLOOK_FETCH_MESSAGES
+    query: "is:unread after:[last_check] from:[any VIP email in contacts.md]"
+    max_results: 20
+    verbose: false (just headers)
+
+For each VIP message found:
+  - Cross-reference contacts.md for relationship + recent context
+  - If a Fireflies transcript with this person exists in last 30d:
+       attach "📞 You spoke with [name] [date] ([topic])"
+  - Append to vip_emails with inbox alias
+```
+
+### Surface results
+
+If `len(vip_emails) > 0`:
+
+```
+🚨 [N] VIP message(s) waiting across your inboxes:
+
+  • Bryan Howell — re: Q3 numbers (in: uno-mas)        ← 14 min ago
+    📞 You spoke with Bryan May 3 (Q3 numbers call)
+
+  • Joel Barbour — re: Great PNW campaign (in: personal) ← 2 hr ago
+
+  • Melissa — quick favor (in: personal)               ← 4 hr ago
+
+Handle these first, or proceed to inbox triage?
+
+  [ ] Handle VIPs first (recommended)
+  [ ] Skip VIP-first; go to inbox triage
+  [ ] Which inbox should I triage?
+```
+
+If user picks "Handle VIPs first":
+- For each VIP message, run **Step 4 (VIP Immediate Alert)** — full body + pre-written draft + actions
+- After all VIPs handled, return to inbox selection prompt
+
+If user picks "Skip" or proceeds to inbox: log "VIP scan: N surfaced — user deferred" and move to Step 2.
+
+If `len(vip_emails) == 0`: surface a one-liner ("No VIPs waiting across [N] inboxes — clean start.") and proceed.
 
 ---
 
 ## Step 2: Pull Messages
 
-### Email — ALWAYS Query Both Gmail MCP AND Rube
+Per the selected inbox(es), execute Composio fetch.
 
-**IMPORTANT:** Every email pull must query ALL connected email sources in parallel — both Gmail MCP and any Rube-connected email accounts (Gmail via Rube, Outlook, etc.). Never rely on a single source. Merge and deduplicate results before presenting.
+### Email — Composio fetch (per inbox)
 
-**Via Gmail MCP — run TWO searches:**
+For each scoped inbox, run two parallel Composio fetches via `COMPOSIO_MULTI_EXECUTE_TOOL`:
 
-Starred emails:
 ```
-q: "is:starred is:unread"
-maxResults: 20
+[For Gmail inbox]
+Fetch 1 — Starred:
+  tool: GMAIL_FETCH_EMAILS
+  args:
+    query: "is:starred is:unread"
+    max_results: 20
+    verbose: true
+  connection_id: <from .meta.json.connected_inboxes[i]>
+
+Fetch 2 — Unread inbox:
+  tool: GMAIL_FETCH_EMAILS
+  args:
+    query: "in:inbox is:unread after:[YYYY/MM/DD]"
+    max_results: 50
+    verbose: true
+  connection_id: <from .meta.json.connected_inboxes[i]>
 ```
 
-Unread inbox:
-```
-q: "in:inbox is:unread after:YYYY/MM/DD"
-maxResults: 50
-```
+For Outlook inboxes, use `OUTLOOK_FETCH_MESSAGES` with equivalent filters.
 
-**Via Rube — run matching searches in parallel:**
+**Deduplicate by messageId.** Sort: starred first → most recent → oldest.
 
-Query all Rube-connected email accounts with equivalent search criteria (starred + unread, unread inbox for time range). This ensures emails from Outlook, secondary Gmail accounts, or any Rube-connected mail provider are included.
+**Tag each message with its inbox alias** (used in Step 6 batch presentation).
 
-**Merge & Deduplicate:**
+### Sequential mode (multi-inbox triage)
 
-After both sources return results:
-1. Combine all results into a single list
-2. Deduplicate by Message-ID or sender + subject + timestamp
-3. Label which account/connection each email came from (e.g., "[Gmail MCP]", "[Outlook via Rube]")
-4. If the same email appears from both MCP and Rube, keep one and note the source
+When user is triaging multiple inboxes sequentially:
+1. Pull from inbox #1, run full triage flow (Steps 3-9) for it
+2. After Step 9 for inbox #1, ask: "Move to next inbox? [Yes — triage [next] / Done for now]"
+3. Repeat for each inbox in order
 
 ### Slack (if connected)
 
-Search for:
-- DMs to the user (unread)
-- @mentions in priority channels
-- Messages in priority channels since last check
+Pull unread DMs and @mentions from the time range:
+```
+mcp__claude_ai_Slack__slack_search_public_and_private
+  query: "is:unread after:[date]"
+```
+Plus channel-rule-flagged messages from priority channels (configured in `.meta.json`).
 
 ### iMessage (if connected)
 
-Pull unread iMessage conversations via macOS AppleScript/Shortcuts:
-- Unread 1:1 conversations since last triage
-- Unread group chat messages since last triage
-- Messages from VIP contacts (always surface)
-- Match phone numbers/emails to VIP contact list and address book for display names
+Run AppleScript to pull unread iMessages since last triage. Include 1:1 + group chats. Match contacts to `contacts.md` entries (especially VIPs).
 
-### Other Messaging Platforms (if connected)
+### Other messaging platforms (if connected)
 
-Pull unread messages from each connected platform.
+Each via Composio if configured (WhatsApp, Teams, SMS).
 
 ---
 
-## Step 3: Apply Rules & Route to Folders
+## Step 3: Apply Rules and Route to Folders
 
-Before presenting anything, run all active rules and folder rules against every message:
+Before showing anything to the user, run through the pulled messages and apply approved rules per resolution order (see SKILL.md Rules Engine).
 
-1. Process rules in order (first match wins per message)
-2. Route emails to folders based on folder rules (Low Priority, Newsletters, Finance, etc.)
-3. Track which rules were applied and which folders received emails
-4. Auto-processed messages are NOT shown individually — summarized at the top
-5. **VIP check** — Any emails from VIP senders are flagged for immediate alert (see Step 4)
+### Resolution order
 
-**Rules & Folder Summary:**
+1. **Global rules** apply first (across all messages, all inboxes).
+2. **Per-inbox rules** apply second (only to messages in their assigned inbox).
+3. **Conflict resolution:** specific scope wins (per-inbox overrides global if both match).
+4. **VIP-related rules** are inherently global — they ignore per-inbox scope.
+
+### Apply behavior by stakes
+
+**`low_stakes` rules** — execute silently, log to session log, summarize at start of triage:
 
 ```
-⚡ RULES AUTO-PROCESSED: 12 messages
-├── 🗑️ Auto-junked: 7 (LinkedIn ×3, Instagram ×2, marketing ×2)
-├── 🗑️ Auto-deleted: 2 (blocked sender ×1, pattern match ×1)
-├── 📂 Auto-archived: 3 (Amazon order, shipping ×2)
-├── 🏷️ Auto-labeled: 2 (payment confirmation → "Finance")
-└── 0 forwarded, 0 reminders created
+Auto-rules applied to [inbox]:
+  ✓ Archived 8 newsletters (rule: ESPN newsletters)
+  ✓ Labeled 3 receipts as Finance (rule: Bank alerts → Finance)
+  ✓ Marked 6 calendar invites as read (rule: Calendar confirmations)
+  ✓ Routed 4 to Newsletters folder
+  ✓ Auto-junked 12 LinkedIn notifications
 
-📂 ROUTED TO FOLDERS: 8 messages
-├── Low Priority: 4 (CC'd threads ×2, vendor updates ×2)
-├── Newsletters: 2 (Morning Brew, TechCrunch)
-├── Finance: 1 (bank alert)
-├── Automated/Bot: 1 (GitHub notification)
-└── Review cadence: Low Priority (weekly), Newsletters (weekly), Finance (daily)
+Total auto-processed: 33 messages
+```
 
-[Show details] [Review folder items now] or continue to triage?
+**`high_stakes` rules** — queue the proposed action; present per-instance for confirmation in Step 6:
+
+```
+[in batch] HIGH-STAKES RULE MATCH:
+  Rule "Auto-forward AP invoices to operations@dpp" matched message #4
+  Action: Forward to operations@dpp
+  Confirm? [Yes / No / Edit forward / Disable rule]
+```
+
+### Folder routing implementation
+
+For each rule with `Type: folder`, dispatch via the synthetic abstraction:
+
+- **Gmail:** `GMAIL_BATCH_MODIFY_MESSAGES` → `addLabelIds: [Label_ID for "ICC/[FolderName]"]`
+  - If label ID not cached, call `GMAIL_LIST_LABELS` first
+- **Outlook:** `OUTLOOK_MOVE_MESSAGE` → folder `Inbox/ICC/[FolderName]`
+
+If the target folder isn't enabled in this inbox AND the rule scope is global, auto-enable it (create label/subfolder, update `.meta.json.connected_inboxes[i].folders_enabled[]`) and route silently.
+
+### Log to session log
+
+```
+**08:18** — [uno-mas] Auto-rules applied: archived 8 newsletters, labeled 3 receipts, routed 4 to Newsletters folder
 ```
 
 ---
 
-## Step 4: VIP Immediate Alerts
+## Step 4: VIP Immediate Alert
 
-Before normal categorization and batching, check if any unprocessed emails are from VIP senders. If so, present them immediately with full details and a pre-written draft reply.
-
-For each VIP email:
+If VIPs are present in this inbox AND user did not already handle them in Step 1.5, surface each with full alert format.
 
 ```
-🚨 VIP EMAIL — [Sender Name] ([Relationship])
+🚨 VIP EMAIL — [Sender Name] [Relationship from contacts.md]
 
 From: [Full Name] <[email]>
+Inbox: [inbox alias]
 Subject: [Subject line]
 Received: [Day, Date, Time]
 Thread: [New / Reply in thread of X messages]
+Thread ID: [...] | Message ID: [...]
+
+[If recent Fireflies transcript with this person exists]:
+📞 You spoke with [name] on [date] — [topic]
+   [1-2 sentence context summary from transcript]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 FULL EMAIL:
-[Complete email body — not a summary]
+[Complete email body — not just a summary]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📝 PRE-WRITTEN DRAFT REPLY:
-[Draft reply in user's voice, tone matched to VIP relationship tag
-and any priority notes. Uses brand voice if client-facing and BKC connected.
-Considers full thread context if this is a reply.]
+[Draft in user's voice — uses brand voice if recipient tagged [Brand],
+ personal voice otherwise. Refined per recipient via contacts.md notes.]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 → [Send Draft] [Edit Draft] [Rewrite Draft] [Remind Me] [Deep Dive (full thread)] [Skip for now]
 ```
 
-**Draft generation logic:**
-1. Read the full email/thread
-2. Check VIP contact settings for voice override and priority notes
-3. Determine voice: personal (default) or brand (if client + BKC connected)
-4. Generate draft considering email content, thread context, and relationship
-5. Include any CC instructions from VIP priority notes
+**Sending account auto-matches receiving inbox.** If the email arrived at `ramsey@unomastacos.com`, the send/draft uses that account.
 
-If multiple VIP emails exist, present each one sequentially. After all VIP alerts are processed:
-
-> "All VIP emails addressed. Continuing to regular triage..."
+After all VIPs in this inbox: proceed to Step 5 with remaining (non-VIP) messages.
 
 ---
 
 ## Step 5: Categorize Remaining Messages
 
-For each message not handled by rules or VIP alerts, categorize:
+Each remaining message goes into exactly ONE category:
 
-- Check sender against VIP list → 🔴 RESPOND
-- Check for urgency keywords → escalate
-- Check sender/content patterns → 🔴 / 🟡 / 🗑️ / 🔕
-- Apply the categorization logic from SKILL.md
+### 🔴 RESPOND — Needs a reply
+- Direct questions, decisions, follow-ups
+- Anyone in `followups.md` who's now responded
+- Financial/legal matters requiring action
+- Meeting requests needing confirmation
+- Active business relationships
+- Urgency keyword matches not handled by auto-rules
+
+### 🟡 FYI — Worth knowing, no reply needed
+- Task completion notifications
+- Industry news the user follows
+- Calendar/payment confirmations
+- Business metric alerts
+- Shipping confirmations
+
+### 🗑️ JUNK — Flag for deletion
+- Marketing/promotional emails (not auto-handled)
+- Cold outreach / vendor pitches
+- Recruitment spam, surveys
+- PR pitches
+
+### 🔕 UNSUBSCRIBE — Repeat junk senders
+- Senders appearing in JUNK repeatedly across triage history
+- Mailing lists user never engages with
 
 ---
 
 ## Step 6: Present Batch
 
-Sort all categorized messages:
-1. ⭐ Starred first
-2. 🔴 RESPOND by urgency (HIGH → MEDIUM → LOW)
-3. 🟡 FYI
-4. 🗑️ JUNK (grouped at end)
+Batch size from `.meta.json.schedules.batch_size` (default 10). Sort: VIPs (already handled) → starred → 🔴 by urgency → 🟡 → 🗑️ → 🔕.
 
-Present the first batch (default 10):
+Each item tagged with `[inbox-alias]` when in multi-inbox sequential mode.
 
 ```
-📧 INBOX TRIAGE — [X] messages ([X] after rules)
-Last checked: [time range]
+[#1] ⭐🔴 HIGH — [Sender Name] <[email]>  [uno-mas]
+Subject: [Subject line]
+Received: [Day, Date, Time]
+Thread ID: [...] | Message ID: [...]
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[1-2 sentence summary of what's needed]
 
-[#1] ⭐🔴 HIGH — Jim Schlosser <jim@example.com>
-Subject: Re: Q2 Projections — need your input
-Received: Today, 8:42 AM
-
-Jim needs your sign-off on the Q2 revenue projections before
-his Friday meeting with the board. Attached a spreadsheet with
-3 scenarios — wants to know which you're comfortable presenting.
-
-→ [Draft Reply] [Remind Me] [Mark Read] [Deep Dive] [Create Rule]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-[#2] 🔴 MED — Joel Barbour <joel@thegreatpnw.com>
-Subject: Wholesale pricing question
-Received: Today, 7:15 AM
-
-Joel asking about wholesale margin structure for a potential
-retail partnership. Wants to know if 50% off retail is standard
-or if you'd recommend a different approach.
-
-→ [Draft Reply] [Remind Me] [Mark Read] [Deep Dive] [Create Rule]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-[#3] 🟡 FYI — Google Calendar
-Subject: Accepted: Client Sync with Bryan Howell
-Received: Today, 6:30 AM
-
-Bryan accepted the 2pm meeting. No action needed.
-
-→ [Mark Read] [Remind Me]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-[#4-7] 🗑️ JUNK (4 items)
-├── #4: Salesforce — "Your trial is expiring"
-├── #5: Webinar invitation — "Scale Your Agency in 2026"
-├── #6: HubSpot — Product update newsletter
-├── #7: Unknown sender — "Quick question about your services"
-→ [Delete All Junk] [Review Each] [Create Rules]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💬 SLACK (2 items)
-
-[#8] 🔴 — Scott Ellis (DM)
-"Hey, the dashboard prototype is ready for review.
-Can you take a look today? Link: [url]"
-
-→ [Draft Reply] [Remind Me] [Mark Read]
-
-[#9] 🟡 — #team-updates
-Annie posted the weekly metrics report. Revenue up 12% WoW.
-
-→ [Mark Read] [Remind Me]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💬 iMESSAGE (2 items)
-
-[#10] 🔴 — Kory Davis
-"Hey can you send me the updated contract?
-Client is asking for it today"
-
-→ [Draft Reply] [Remind Me] [Mark Read]
-
-[#11] 🟡 — Family Group Chat
-Mom shared a photo and asked about weekend plans.
-
-→ [Draft Reply] [Mark Read] [Skip]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📅 CALENDAR — Today
-├── ❓ 10:00 AM — "Vendor Review" (unresponded — from Sarah Kim)
-├── ✅ 2:00 PM — "Client Sync" (Bryan Howell — confirmed)
-├── ✅ 4:00 PM — "Team Standup"
-→ Calendar: [Accept C1] [Decline C1] [Tentative C1]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 TASKS — 2 due today, 1 overdue
-├── 🔴 OVERDUE: T012 — Follow up with Kory on dashboard feedback (due yesterday)
-├── 🟡 Today: T015 — Review Adam's March ad report (due 5pm)
-└── 🟡 Today: T016 — Send JTC retargeting notes to Annie (due EOD)
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Give me your calls — e.g. "1: draft, 2: remind tomorrow 9am, 3: read, 4-7: delete, 8: draft, 9: read, 10: draft, 11: skip, C1: accept"
-(Tip: add "via imessage", "via slack", or "via channel" to any remind action to override your default reminder channel)
+→ Actions: [Draft Reply] [Reply Now] [Archive] [Trash] [Mark Read]
+           [Add Followup] [Add Todo] [Create Rule] [Deep Dive]
 ```
+
+If a `high_stakes` rule matched this message in Step 3, surface its proposed action inline:
+
+```
+[#4] 🟡 FYI — accounting@somesupplier.com  [uno-mas]
+Subject: April invoice
+[Summary]
+
+⚠️ HIGH-STAKES RULE MATCH:
+   "Auto-forward AP invoices to operations@dpp"
+   Confirm? [Yes / No / Edit forward target / Disable rule]
+
+→ Actions: [Standard action codes still available]
+```
+
+After 10 items: "Ready for the next batch, or want to take action on these first?"
 
 ---
 
 ## Step 7: Process Actions
 
-After the user gives their calls:
+User responds with action codes per item. Process them per the table below.
 
-### Immediate Actions (process silently, confirm in batch)
-- `read` → Mark as read
-- `delete` → Flag for deletion
-- `skip` → Leave in inbox
+### Action codes
 
-> "✓ Done — #3, #9 marked read. #4-7 deleted."
+| Code | Action | Implementation |
+|---|---|---|
+| `draft` | Draft reply in voice | See Draft Actions below |
+| `reply` | Same as draft + send on confirmation | `GMAIL_REPLY_TO_THREAD` / `OUTLOOK_REPLY_MESSAGE` |
+| `remind [time]` | Add to todos.md + calendar event | See Remind Actions |
+| `read` | Mark as read | `GMAIL_BATCH_MODIFY_MESSAGES` removeLabelIds: ["UNREAD"] / Outlook equivalent |
+| `delete` | Move to trash | `GMAIL_MOVE_TO_TRASH` (recoverable) |
+| `archive` | Remove INBOX label | `GMAIL_BATCH_MODIFY_MESSAGES` removeLabelIds: ["INBOX"] |
+| `unsub` | Execute unsubscribe | See Unsubscribe Actions |
+| `dive` | Show full thread | `GMAIL_FETCH_MESSAGE_BY_THREAD_ID` |
+| `delegate [name]` | Forward + add to followups.md | See Delegate Actions |
+| `skip` | Leave for later | No-op |
+| `rule` | Create a rule based on this message | Trigger /create-rule with prefilled context |
+| `todo [description]` | Add to todos.md without remind time | Append to todos.md |
+| `followup` | Add sender to followups.md | Append to followups.md |
 
-### Draft Actions
+Multiple actions can be batched in one response: `1: draft, 2: remind monday 9am, 3-6: delete, 7: read, 8: delegate annie`
 
-**Single draft:** Generate and present immediately for review. Save/send only after approval.
+### Immediate actions (process silently, confirm in batch)
 
-**Multiple drafts (2 or more) — batch mode:** Generate all drafts in parallel, present together for a single review pass. Eliminates sequential back-and-forth.
-
-For each draft:
-1. Read the full email thread
-2. Determine voice: personal voice (default) or brand voice (if recipient is a client and BKC connected)
-3. Auto-select tone from VIP contact settings; otherwise use voice profile defaults
-4. Draft in the user's voice
-
-**Batch format:**
-
-```
-DRAFTS READY — 3 to review
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DRAFT 1 — Reply to Jim Schlosser (Email)
-[Full draft text]
-
-[Save as Draft / Send / Edit / Start Over]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DRAFT 2 — Reply to Joel Barbour (Email)
-[Full draft text]
-
-[Save as Draft / Send / Edit / Start Over]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DRAFT 3 — Reply to Kory Davis (iMessage)
-[Draft text]
-
-[Send / Edit / Start Over]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Say "approve all" to save/send all, or call out specific ones:
-"1: approve, 2: edit — make it shorter, 3: approve"
-```
-
-- **"Save as Draft"** appears when email is connected via Gmail MCP (draft only — user sends manually from Gmail)
-- **"Send"** appears when email is connected via Rube (full write) or for iMessage/Slack
-- When editing a single draft in a batch, regenerate and re-present only that draft
-- Only save/send after the user approves each draft or says "approve all"
-
-### Remind Actions
-For each `remind [time]` or `remind [time] via [channel]`:
-1. Add row to task tracker Google Sheet
-2. Create Google Calendar event with context
-3. Schedule reminder delivery via the user's configured channel (Slack channel, Slack DM, or iMessage) — or the channel specified with `via imessage` / `via slack` / `via channel`
-4. If delivering to Slack channel: post a formatted reminder message to the configured channel (e.g., `#inbox-reminders`) at the scheduled time
-5. If delivering to iMessage: send a formatted iMessage to the user at the scheduled time
-6. Confirm: "✓ T017 created — remind you about Jim's projections tomorrow at 9am via [channel]"
-
-### Standalone Remind (outside triage)
-Users can create reminders at any time without being in a triage session:
-
-> "Remind me to follow up with Joel about wholesale pricing tomorrow at 2pm"
-> "Set a reminder for Friday 9am to send the updated contract to Kory"
-> "Remind me every Monday at 9am to check the client dashboard"
-
-Process:
-1. Parse task description, time, and any recurrence pattern
-2. Add to task tracker + calendar + schedule delivery via configured channel
-3. For recurring reminders: store the recurrence pattern, auto-schedule next instance after each fires
-4. Confirm: "✓ T018 created — I'll remind you to [task] at [time] via [channel]"
-
-### Unsubscribe Actions
-
-For each `unsub`, execute the unsubscribe — not just flag it. Behavior depends on `unsubscribe_mode` in config.
-
-**For each sender:**
-1. Check for `List-Unsubscribe` header in the raw email:
-   - `mailto:` → send the unsubscribe email automatically
-   - `https://` → execute a GET request to complete the unsubscribe
-2. If no header, scan the email body for "unsubscribe", "opt out", "manage preferences" links → extract URL
-3. If nothing found → offer to create an auto-junk rule for the sender
-
-**In `auto` mode:** Execute immediately, report in the confirmation line with other immediate actions.
-
-**In `batch` mode:** Queue all unsubscribes and present at the end of triage:
+For `read`, `delete`, `archive`, `skip`: process during user's input parse, no confirmation per item. Confirm in batch summary at end:
 
 ```
-UNSUBSCRIBE QUEUE — [X] senders
+✓ Processed:
+  - Marked read: 7
+  - Trashed: 3
+  - Archived: 2
+  - Skipped: 1
+```
 
-├── [sender1] — List-Unsubscribe header ✓ (will execute automatically)
-├── [sender2] — Link found: [url] — confirm? [Yes / Skip]
-└── [sender3] — No mechanism found — create auto-junk rule? [Yes / Skip]
+### Draft actions
+
+For `draft` (or `reply`):
+
+1. Determine voice profile to use:
+   - Recipient tagged `[Brand]` in contacts.md → brand voice
+   - Otherwise → personal voice
+   - Ambiguous → ask
+
+2. Generate all batch drafts in parallel (one tool call per draft) for efficiency.
+
+3. Present batch:
+   ```
+   📝 DRAFT BATCH ([N] drafts ready)
+   
+   ─── Draft 1: Reply to Bryan Howell ───
+   [Full draft body]
+   
+   ─── Draft 2: Reply to Joel Barbour ───
+   [Full draft body]
+   
+   ...
+   
+   [Approve all & send] [Save all as drafts] [Edit individually] [Rewrite #X]
+   ```
+
+4. **For Composio-connected inboxes:** "Send" → `GMAIL_REPLY_TO_THREAD` / `OUTLOOK_REPLY_MESSAGE`. Auto-matches sending account to receiving inbox.
+
+5. **For native MCP fallback:** "Send" creates a draft via `GMAIL_CREATE_EMAIL_DRAFT`; user must send manually from Gmail. Prompt label: "Save as Draft" instead of "Send".
+
+6. **Edit tracking:** when user edits before send, compute diff:
+   - Tag edit type (tone / wording / structure / sign-off / cc)
+   - Append observation to recipient's section in `contacts.md` under "Voice notes"
+   - If substantial edit (>10% character change OR sign-off / greeting / structure shift), increment `voice_drift_counter` in `.meta.json`
+
+7. After send: append to followups.md if reply expects a response back. Log to session log.
+
+### Remind actions
+
+For `remind [time]`:
+
+1. Parse time (e.g. "tomorrow 9am", "monday", "in 2 hours")
+2. Append to `todos.md`:
+   ```
+   - [ ] [task description from email subject/summary] — from [sender] — added [today] — due [parsed-time]
+   ```
+3. Create Google Calendar event (or Outlook Calendar / Apple Reminders depending on user's mirroring config):
+   `📬 [Task ID]: [Description]`
+4. Schedule reminder delivery via configured channel:
+   - Slack channel (`#inbox-reminders` or custom)
+   - Slack DM
+   - iMessage
+5. Per-reminder channel override: `remind tomorrow 9am via imessage` — overrides default for this one
+6. Confirm: "✓ T018 created — I'll remind you to [task] tomorrow at 9am via [channel]"
+
+### Standalone remind (outside triage)
+
+User says: "Remind me to [task] at [time]" outside any active triage.
+
+Same flow — parse, append to todos.md, create calendar event, schedule delivery. No email/message context required.
+
+### Unsubscribe actions
+
+For `unsub`, execute per `.meta.json.schedules.unsubscribe_mode`:
+
+#### `auto` (immediate)
+For each `unsub` assignment:
+1. Fetch full message via `GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID`
+2. Try List-Unsubscribe header:
+   - `mailto:` → send via `GMAIL_SEND_EMAIL`
+   - `https://` → execute GET/POST request
+3. If no header, scan body for unsubscribe link, attempt direct call (Composio) or open browser
+4. If neither works, propose auto-junk rule
+
+Confirm in action summary:
+```
+✓ Unsubscribed from: [sender1] (one-click), [sender2] (one-click)
+⚠ [sender3]: no link found — auto-junk rule queued
+```
+
+#### `batch` (end of triage)
+Collect all `unsub` assignments. At end of triage, present queue:
+```
+UNSUBSCRIBE QUEUE — 4 senders
+
+├── [sender1] — List-Unsubscribe header found ✓ (will execute)
+├── [sender2] — List-Unsubscribe header found ✓ (will execute)
+├── [sender3] — Body link found: [url] — confirm? [Yes / Skip]
+└── [sender4] — No link — create auto-junk rule? [Yes / Skip]
 
 [Execute all] [Review each]
 ```
 
-**In `manual` mode:** Surface the link or header URL, let the user handle it.
+#### `manual`
+Surface mechanism per item; user handles externally.
 
-**After each successful unsubscribe:**
-- Create a rule to auto-junk future emails from that sender (they may still arrive)
-- Count in the triage complete summary under "🔕 Unsubscribed"
+### Post-unsubscribe
 
-### Delegate Actions
-For each `delegate [name]`:
-1. Draft a forwarding email to the named person
-2. Include context for the delegate
-3. Present for approval before sending
+For each successful unsubscribe:
+- Create auto-junk rule for sender (sender may still send post-unsub)
+- Log to session log under "🔕 Unsubscribed"
 
-### Rule Actions
-For each `rule`:
-1. Launch the `/create-rule` flow for that specific message
-2. Return to triage after rule is created
+### Delegate actions
+
+For `delegate [name]`:
+
+1. Resolve `[name]` to email via contacts.md or `GMAIL_SEARCH_PEOPLE`
+2. Forward via `GMAIL_REPLY_TO_THREAD` (forward variant) or `OUTLOOK_FORWARD_MESSAGE`
+3. Append to `followups.md`:
+   ```
+   - [delegated-to-name] — re: [subject] — delegated [today] — waiting [N] days
+   ```
+4. Confirm: "✓ Forwarded to [name]; tracking in followups.md"
+
+### Rule actions
+
+For `rule`:
+1. Trigger `/create-rule` with prefilled context from this message:
+   - Suggested trigger: sender or subject pattern
+   - Suggested type: based on message category (delete/prioritize/folder/organize)
+   - Suggested stakes: per default-by-action
+   - Suggested scope: current inbox
+
+2. After rule created, return to triage at next message.
 
 ---
 
 ## Step 8: Next Batch
 
-After all actions processed:
+After processing actions for the current batch:
+1. Confirm batch summary
+2. If unread messages remain: "Ready for the next batch?" → repeat Steps 6-7
+3. If no more unread: proceed to Step 9
 
-> "Batch 1 complete. [X] messages remaining. Ready for the next batch?"
-
-Repeat Steps 6-8 until all messages are triaged.
+If multi-inbox sequential and current inbox is done: "Move to [next inbox alias]? [Yes / Done]"
 
 ---
 
 ## Step 9: Triage Complete
 
+After all messages handled across all scoped inboxes:
+
+### Summary
+
 ```
-✅ TRIAGE COMPLETE
+✓ Triage complete.
 
-Processed: [X] messages
-├── 🚨 VIP emails addressed: [X] (drafts sent/pending)
-├── 🔴 Responded/drafted: [X]
-├── 🟡 Marked read: [X]
-├── 🗑️ Deleted: [X] (manual: [X], rule-based: [X])
-├── 🔕 Unsubscribed: [X]
-├── ⏰ Reminders set: [X]
-├── 📤 Delegated: [X]
-├── ⚡ Auto-processed by rules: [X]
-├── 📂 Routed to folders: [X]
-│   ├── Low Priority: [X]
-│   ├── Newsletters: [X]
-│   └── [Other folders]: [X]
-├── 📅 Calendar actions: [X]
-├── 💬 iMessage processed: [X]
+ACROSS [N] INBOXES:
+  📬 Processed: [X] emails
+  📝 Drafts sent: [Y]
+  💾 Drafts saved: [Z]  (fallback mode only)
+  ⏰ Reminders set: [W]
+  👥 Followups added: [V]
+  🗑️ Trashed: [T]
+  🔕 Unsubscribed: [U]
+  ⚡ Auto-rules applied: [A] silently
 
-📋 Open tasks: [X] (including [X] new from this triage)
+[If new rule suggestions queued]:
+🆕 [N] new rule suggestions queued in rules-review-queue.md
+   Review now? [Yes / Later]
 
-Next triage: Say "any new emails?" anytime for a quick check.
+[If voice_drift_counter >= 3]:
+🎙️ I noticed [N] substantial edits this session. Want a quick 5-pair
+    A/B to recalibrate? (~2 min) [Yes / Skip]
+
+[If rule review / voice review / VIP review is overdue]:
+📋 Reminders:
+  • Rule review: [N] days overdue
+  • Voice profile review: due
 ```
 
-Save triage timestamp to config for next session's time range. Track deletion counts (manual vs. rule-based) for inbox report.
+### Drift-triggered A/B (if applicable)
+
+If `voice_drift_counter >= 3` and user accepts:
+1. Generate 5 A/B pairs targeting scenarios that triggered the edits
+2. User picks preferred option for each
+3. Update voice-profile.md
+4. Reset `voice_drift_counter` in `.meta.json`
+5. Log: `**HH:MM** — Drift A/B completed: 5 pairs, [N] preferences updated`
+
+### Update workspace files
+
+1. `followups.md` — add anyone the user replied to (via draft) where reply expects response back
+2. `todos.md` — add new items from `remind` and `todo` actions
+3. `contacts.md` — observations from edit-tracking accumulated during session
+4. `.meta.json`:
+   - Increment `session_count`
+   - Update `last_triage_end`
+   - Reset `voice_drift_counter` if A/B fired
+
+### Session log entry
+
+```
+**HH:MM** — Session end: [X] emails handled across [N] inboxes, [Y] sent, [Z] drafts, [V] followups added, [W] todos added, [N] rules queued, drift_counter=[X]
+```
 
 ---
 
 ## Quick Triage Mode
 
-When the user says "any new emails?" or "quick check" (not a full triage):
+Triggered by: "any new emails?", "anything important?", "what did I miss"
 
-1. Only pull emails received since last triage timestamp
-2. Apply rules silently
-3. If nothing needs attention: "All clear since [last check time]. [X] messages auto-processed by rules."
-4. If items need attention: Present only 🔴 RESPOND items, summarize the rest
-   > "3 new emails since 10am. 1 needs your attention, 2 are FYI:"
+Lightweight version:
+1. Skip cadence-due checks (don't surface review prompts unless critical)
+2. Run VIP cross-inbox scan
+3. Show counts only:
+   ```
+   Quick check across [N] inboxes:
+   
+   ⭐ VIPs waiting: [N]
+   📧 Unread total: [M] ([X] 🔴, [Y] 🟡, [Z] 🗑️)
+   💬 Slack: [A] unread
+   
+   Want me to triage, or just the VIPs?
+   ```
+4. If user wants to triage, fall through to Step 1.5 of full flow
+5. Otherwise, surface only the VIPs with full alert format
 
 ---
 
 ## Step 10: Post-Triage Actions
 
-After triage is complete, check for pending automated actions:
+If new rule suggestions are queued AND cadence is due (per `.meta.json.schedules.rule_suggestion_cadence`):
 
-1. **Inbox report due?** If a report is due per the user's configured cadence, generate and deliver it now:
-   > "Your [monthly/bi-weekly/weekly] inbox report is ready. Generating now..."
-   > [Run `/inbox-report` flow]
+```
+🆕 [N] rule suggestions ready for review:
 
-2. **Folder digest due?** If any folder digests are due (e.g., weekly Low Priority digest), present them:
-   > "Your weekly Low Priority digest is ready — [X] emails this week. Want to review?"
+  • [low_stakes][per-inbox: uno-mas][delete] Auto-archive Substack newsletters
+    Reason: archived 8 from this sender in last 7 days
+    [Approve / Modify / Reject]
 
-3. **Rule suggestions due?** Based on the user's configured review cadence, present learned suggestions.
+  • [high_stakes][global][organize] Auto-forward AP invoices to operations@dpp
+    Reason: forwarded manually 3 times this week
+    [Approve / Modify / Reject]
+
+  ...
+
+[Review all] [Approve all low_stakes] [Skip — review later]
+```
+
+For each approved: append to `rules.md` with full structure. Remove from `rules-review-queue.md`. Log to session log.
+
+If voice profile review or VIP list review is due, mention gently:
+```
+Heads up:
+  📅 Voice profile review is due (last reviewed [N] days ago)
+  📅 VIP list review is due
+
+Run `/voice-calibration` or "review my VIP list" when you have time.
+```
 
 ---
 
-## Learned Rule Suggestions
+## Learned Rule Suggestions (background)
 
-Based on the user's configured review cadence (every triage / every 3rd triage / weekly / monthly / on demand), check for patterns and suggest rules:
+While triage runs, the skill continuously detects patterns and queues suggestions to `rules-review-queue.md` (not surfaced inline unless cadence is due — see Post-Triage Actions).
 
-> "I've noticed some patterns from your recent triages:"
->
-> **DELETE RULES:**
-> - "You've deleted emails from [sender] 5 times. Auto-delete future emails from them?" [Enable / Dismiss]
-> - "You never open emails from [sender]. Auto-delete + unsubscribe?" [Enable / Dismiss]
->
-> **PRIORITIZATION RULES:**
-> - "You respond to [sender] within an hour every time. Add them as VIP?" [Enable / Dismiss]
-> - "You always star emails from [sender]. Auto-escalate to 🔴 HIGH?" [Enable / Dismiss]
->
-> **ORGANIZATION RULES:**
-> - "You always mark read emails from [type]. Auto-archive them?" [Enable / Dismiss]
-> - "You always label [type] emails the same way. Auto-label?" [Enable / Dismiss]
->
-> "[Enable all / Review each / Dismiss all / Change review cadence]"
+Patterns to detect (selection — full list in SKILL.md):
+
+**Delete patterns:**
+- Same sender junked 3+ times → "Auto-delete from [sender]?"
+- Sender's emails never opened (5+ times) → "Auto-delete + unsubscribe?"
+
+**Prioritization patterns:**
+- User replies to sender within 1h consistently → "Mark as VIP?"
+- Cross-inbox correspondence (same person emails 2+ accounts) → "VIP candidate?"
+- Fireflies meeting frequency (3+ in 30d) → "VIP candidate?"
+
+**Organization patterns:**
+- Same email type always foldered → "Auto-route to [folder]?"
+- Same email type always labeled → "Auto-label as [label]?"
+
+For each detected pattern, append to `rules-review-queue.md`:
+```
+- [ ] **[stakes][scope][type]** [rule text] — proposed [today] — reasoning: [pattern]
+```
+
+Don't propose duplicates — check existing queue first.
+
+---
+
+## Notes for the skill
+
+- **Always confirm before sending** — never auto-send a draft without user approval
+- **Always confirm permanent delete** — `GMAIL_BATCH_DELETE_MESSAGES` is irreversible
+- **Preserve thread integrity** — always use `GMAIL_REPLY_TO_THREAD` with thread_id for replies
+- **Match sending account** — outgoing replies use the inbox the message arrived at
+- **Edit tracking is continuous** — capture every diff, write to contacts.md
+- **Be decisive on categorization** — if it's junk, call it junk; user can override
+- **Keep FYI brief** — single line per item
+- **Cross-reference contacts.md before asking** — if the user has notes about a person, use them
+- **Log to session-logs/[today].md** continuously — not at end-of-session
+- **Update .meta.json incrementally** — don't batch counter increments
+- **Honor fallback mode** — if `.meta.json.fallback_mode: true`, route through native Gmail MCP instead of Composio; flag features that are disabled

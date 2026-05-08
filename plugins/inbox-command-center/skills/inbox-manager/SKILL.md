@@ -1,214 +1,362 @@
 ---
 name: inbox-manager
 description: >
-  Inbox Command Center for managing email, Slack, iMessage, and messaging platforms.
-  Use when the user mentions "check my email", "inbox", "triage", "what did I miss",
-  "clean up my inbox", "draft a reply", "inbox zero", "unsubscribe", "email manager",
-  "comms manager", "check Slack", "check iMessage", "check my texts", "any important emails",
-  "what do I need to respond to", "create a rule", "message rules", "voice profile",
-  "daily briefing", "morning update", "check my messages", "send me a reminder",
-  "inbox report", "email report", "email stats", "VIP contacts", "VIP summary",
-  "voice review", "calibrate my voice", "folder rules", "low priority emails",
+  Inbox Command Center for managing email (multi-account Gmail and Outlook via Composio),
+  Slack, iMessage, and messaging platforms. Use when the user mentions "check my email",
+  "inbox", "triage", "what did I miss", "clean up my inbox", "draft a reply", "inbox zero",
+  "unsubscribe", "email manager", "comms manager", "check Slack", "check iMessage",
+  "check my texts", "any important emails", "what do I need to respond to",
+  "create a rule", "message rules", "voice profile", "daily briefing", "morning update",
+  "check my messages", "send me a reminder", "inbox report", "email stats",
+  "VIP contacts", "VIP summary", "voice review", "calibrate my voice",
+  "folder rules", "low priority emails", "edit my contacts",
+  "who's waiting on me", "show my followups", "show my todos",
   or anything related to email, messaging, or communications management.
 ---
 
 # Inbox Command Center
 
-An AI communications manager that triages email, Slack, iMessage, and messaging platforms — categorizes messages, drafts replies in the user's authentic voice, manages calendar, tracks tasks, enforces smart rules, and delivers scheduled briefings and reminders via the user's preferred channel.
+An AI communications manager that triages email (multi-account via Composio), Slack, iMessage, and messaging platforms — categorizes messages, drafts replies in the user's authentic voice, manages calendar, tracks tasks via a hand-editable workspace folder, enforces smart rules with stakes and scope, and delivers scheduled briefings and reminders via the user's preferred channel.
 
 ## How It Works
 
-The Inbox Command Center has seven layers:
+The Inbox Command Center has eight layers:
 
-1. **Connection Layer** — Connects to email, Slack, messaging, calendar, and meeting transcript tools via MCP or Rube.
-2. **Rules Layer** — Applies user-configured rules to auto-categorize, archive, forward, label, or escalate messages before triage.
-3. **Triage Layer** — Categorizes remaining messages as RESPOND, FYI, JUNK, or UNSUBSCRIBE. Presents in prioritized batches with inline actions.
-4. **Voice Layer** — Maintains a living voice profile built from meeting transcripts, sent emails, and A/B calibration. Drafts replies that sound like the user.
-5. **Calendar Layer** — Detects conflicts, unresponded invites, marathon blocks, and meetings needing prep.
-6. **Task Layer** — Tracks reminders and follow-ups via Apple Reminders, a markdown task list, ClickUp, or Google Sheets. Delivers scheduled reminders via a dedicated Slack channel or iMessage.
-7. **Briefing Layer** — Delivers scheduled daily summaries and reminders via Slack, iMessage, email, or calendar.
+1. **Connection Layer** — Connects to email (Gmail/Outlook via Composio, multi-account), Slack/Calendar/Fireflies (native MCP), iMessage (AppleScript), and other tools.
+2. **Workspace Layer** — Reads and writes a hand-editable workspace folder at `~/Inbox Command Center/` containing todos, followups, contacts, rules, voice profile, and session logs.
+3. **Rules Layer** — Applies user-configured rules to auto-categorize, archive, forward, label, or escalate messages before triage. Each rule has type, stakes (low/high), and scope (per-inbox/global).
+4. **Triage Layer** — Categorizes remaining messages as RESPOND, FYI, JUNK, or UNSUBSCRIBE. Sequential per-inbox processing with rapid-fire action codes.
+5. **Voice Layer** — Maintains a living voice profile primarily fed by Fireflies meeting transcripts, secondary sources (sent email, Slack, iMessage), continuous draft-edit learning, and A/B calibration.
+6. **Calendar Layer** — Detects conflicts, unresponded invites, marathon blocks, and meetings needing prep.
+7. **Task Layer** — Tracks todos and followups in markdown files (`todos.md`, `followups.md`). Optional augmentation: Apple Reminders, Google Calendar events for time-bound items.
+8. **Briefing Layer** — Delivers scheduled daily summaries, VIP digests, weekly Fireflies pulls, monthly reports, and reminders via Slack, iMessage, email, or calendar.
+
+## Session Start — Run Every Time
+
+Before any other action, the skill performs these checks:
+
+1. **Read workspace files** at `~/Inbox Command Center/`:
+   - `.meta.json` — version, connected_inboxes, last_rule_review, last_fireflies_pull, schedules, voice_drift_counter
+   - `contacts.md` — VIPs and per-recipient notes
+   - `todos.md` — open todos
+   - `followups.md` — people waiting on the user
+   - `rules.md` — active rules with type/stakes/scope
+   - `rules-review-queue.md` — pending suggestions
+   - `voice-profile.md` and `voice-profile-brand.md` (if BKC connected)
+
+2. **Migration check** — If old v1.3 paths exist (`~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/`) and new path is empty, trigger v1.3 → v1.4 migration flow.
+
+3. **Version check** — If installed plugin version differs from `.meta.json.version`, present update briefing.
+
+4. **Detect cadence-due automations:**
+   - Rule review (compare `last_rule_review` against cadence)
+   - Voice profile review (compare against cadence)
+   - VIP list review (compare against cadence)
+   - Fireflies pull (compare `last_fireflies_pull` against weekly cadence)
+   - Monthly inbox report (compare against cadence)
+
+5. **Detect user edits** to workspace files since last session (via mtime). Log to today's session log: e.g. "User edited contacts.md (Bryan section)".
+
+6. **Greet with brief context, not a wall:**
+   > "Morning Ramsey. You have N todos, M followups, K pending rule suggestions across [inbox count] inboxes. Last session [most recent log entry]. What are we working on?"
+
+Then wait. Let the user drive.
 
 ## Connection Methods
 
-Tools can be connected two ways:
+The plugin uses three connection types depending on the tool:
 
-### Direct MCP Connection
-Claude's built-in MCP integrations for:
-- Gmail (read, search, draft, label) — **draft only via MCP; cannot send directly. Connect Gmail via Rube for full read + write/send.**
-- Slack (read channels, DMs, send messages)
-- Google Calendar (read, create, respond to events)
-- Fireflies.ai (meeting transcripts)
+### Composio (primary connection layer)
 
-### iMessage Connection
-iMessage is connected via macOS AppleScript/Shortcuts integration:
-- **Read:** Pull recent iMessage conversations, unread messages, and group chats
-- **Write:** Send iMessage replies and new messages to contacts
-- **Scheduled reminders:** Send timed reminder messages to yourself via iMessage (alternative to Slack DM reminders)
-- **Requires:** macOS with Messages app configured, iMessage account active
-- **Note:** iMessage integration runs locally on the user's Mac via AppleScript automation through Rube or direct shell access
+For email (Gmail and Outlook, multi-account) and tools without native MCP support. All Composio calls go through `mcp__claude_ai_Composio__COMPOSIO_MULTI_EXECUTE_TOOL`.
 
-### Rube Connection
-For tools not available via MCP, or for full email read + write/send capability, use Rube:
-- **Gmail** — Full read + write/send (vs. MCP which is draft-only). Recommended if you want approved drafts sent automatically.
-- **Outlook / Microsoft 365** — Full read + write/send
-- Otter.ai, Gong, Fathom (meeting transcripts)
-- Zoom cloud recordings
-- SMS platforms (Twilio, etc.)
-- iMessage (via macOS AppleScript/Shortcuts as a fallback if direct connection isn't available)
-- Any tool with an API that Rube can reach
+**Gmail tools:**
 
-**Gmail: MCP vs. Rube**
-| Capability | Gmail MCP | Gmail via Rube |
-|-----------|-----------|---------------|
-| Read emails | ✅ | ✅ |
-| Search | ✅ | ✅ |
-| Create drafts | ✅ | ✅ |
-| Label / archive | ✅ | ✅ |
-| Send directly | ❌ | ✅ |
+| Tool Slug | What It Does |
+|---|---|
+| `GMAIL_FETCH_EMAILS` | Search + fetch emails (any Gmail query syntax). Primary triage tool. |
+| `GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID` | Get full email by message ID |
+| `GMAIL_FETCH_MESSAGE_BY_THREAD_ID` | Get all messages in a thread |
+| `GMAIL_LIST_THREADS` | List threads matching a query |
+| `GMAIL_LIST_LABELS` | List all Gmail labels (needed for label IDs) |
+| `GMAIL_SEND_EMAIL` | Send a new email immediately |
+| `GMAIL_REPLY_TO_THREAD` | Reply within an existing thread |
+| `GMAIL_CREATE_EMAIL_DRAFT` | Create a draft (doesn't send) |
+| `GMAIL_UPDATE_DRAFT` / `GMAIL_SEND_DRAFT` | Update / send saved drafts |
+| `GMAIL_LIST_DRAFTS` / `GMAIL_GET_DRAFT` | Manage drafts |
+| `GMAIL_BATCH_MODIFY_MESSAGES` | Bulk add/remove labels (mark read, archive, etc.) up to 1000 at once |
+| `GMAIL_ADD_LABEL_TO_EMAIL` | Add/remove labels on a single message |
+| `GMAIL_MODIFY_THREAD_LABELS` | Add/remove labels on a thread |
+| `GMAIL_CREATE_LABEL` | Create custom Gmail label (used for synthetic ICC folders) |
+| `GMAIL_MOVE_TO_TRASH` | Move single message to trash (recoverable) |
+| `GMAIL_UNTRASH_MESSAGE` | Restore from trash |
+| `GMAIL_BATCH_DELETE_MESSAGES` | Permanently delete multiple messages (high_stakes — confirm always) |
+| `GMAIL_GET_ATTACHMENT` | Download an attachment |
+| `GMAIL_SEARCH_PEOPLE` | Search contacts by name or email |
 
-When Gmail is connected via MCP only, the triage send prompt reads "Save as draft" — the user sends manually from Gmail. When connected via Rube, the prompt reads "Send" — it sends immediately after approval.
+**Outlook / Microsoft 365 tools** (Composio's `OUTLOOK_*` and `OFFICE365_*` slugs):
+- `OUTLOOK_FETCH_MESSAGES`, `OUTLOOK_SEND_MESSAGE`, `OUTLOOK_REPLY_MESSAGE`, `OUTLOOK_CREATE_DRAFT`, `OUTLOOK_MOVE_MESSAGE` (folder routing), `OUTLOOK_DELETE_MESSAGE`, `OUTLOOK_FORWARD_MESSAGE`
 
-### Connection Config
+**Other Composio connectors:**
+- Outlook Calendar (for Outlook users)
+- Otter.ai, Gong, Fathom (additional transcript sources)
 
-Stored in `inbox-command-center/config.md`:
+**Session initialization:**
+- Call `COMPOSIO_MANAGE_CONNECTIONS` to start/check OAuth for an account
+- Use `COMPOSIO_WAIT_FOR_CONNECTIONS` while user completes browser flow
+- Use `COMPOSIO_GET_TOOL_SCHEMAS` if a tool's schema isn't yet loaded
+
+**Tool usage rules:**
+- **Mark as read:** `GMAIL_BATCH_MODIFY_MESSAGES` → `removeLabelIds: ["UNREAD"]`
+- **Mark as unread:** `addLabelIds: ["UNREAD"]`
+- **Archive:** `removeLabelIds: ["INBOX"]`
+- **Star:** `GMAIL_ADD_LABEL_TO_EMAIL` → `add_label_ids: ["STARRED"]`
+- **Custom labels:** Must use label IDs (e.g., `Label_123`), NOT display names. Call `GMAIL_LIST_LABELS` first.
+- **Trash vs. permanent delete:** Default to `GMAIL_MOVE_TO_TRASH` (recoverable). Use `GMAIL_BATCH_DELETE_MESSAGES` only after explicit user confirmation — high_stakes.
+- **Thread replies:** Always use `GMAIL_REPLY_TO_THREAD` with thread_id to keep conversations intact.
+- **Message IDs:** Always use values from `GMAIL_FETCH_EMAILS` results. Never invent.
+
+### Native MCP
+
+Used where the native MCP feature surface is richer than Composio's wrapper:
+
+| Tool | Why native |
+|---|---|
+| Slack | Richer thread, canvas, scheduled-message support |
+| Google Calendar | `suggest_time`, `respond_to_event`, native event creation |
+| Fireflies | Summaries, soundbites, analytics, sentiment beyond Composio's wrapper |
+
+Tool calls follow standard MCP patterns:
+- `mcp__claude_ai_Slack__slack_send_message`, `mcp__claude_ai_Slack__slack_read_channel`, etc.
+- `mcp__claude_ai_Google_Calendar__list_events`, `mcp__claude_ai_Google_Calendar__create_event`, etc.
+- `mcp__claude_ai_Fireflies__fireflies_get_transcripts`, `mcp__claude_ai_Fireflies__fireflies_get_transcript`, etc.
+
+### AppleScript
+
+iMessage uses macOS AppleScript/Shortcuts integration. No Composio or MCP — direct shell access via the local Mac. Requires Messages app configured and iMessage account active.
+
+### Composio fallback path
+
+If a user opts out of Composio, the skill operates in **fallback mode**:
+- Native Gmail MCP only (single account)
+- No Outlook
+- No multi-account
+- No Otter / Gong / Fathom
+- Slack, Calendar, Fireflies, iMessage still work
+
+Fallback mode is flagged in `.meta.json.fallback_mode: true`. Triage start displays a warning: "You're in fallback mode — features X, Y, Z are unavailable. Run `/setup-wizard` to add Composio."
+
+## Workspace
+
+All user data lives at `~/Inbox Command Center/` (iCloud-synced if iCloud Drive is enabled, local fallback otherwise).
+
+```
+~/Inbox Command Center/
+├── .meta.json                  # bookkeeping
+├── contacts.md                 # per-recipient memory + VIPs
+├── todos.md                    # things you owe yourself
+├── followups.md                # people waiting on you
+├── rules.md                    # active rules with type/stakes/scope
+├── rules-review-queue.md       # pending rule suggestions
+├── voice-profile.md            # personal voice
+├── voice-profile-brand.md      # brand voice (if BKC connected)
+├── session-logs/
+│   └── YYYY-MM-DD.md          # daily journal
+└── reports/
+    └── YYYY-MM.md             # monthly inbox reports
+```
+
+### File-by-file responsibilities
+
+**`.meta.json`** — Bookkeeping. Read at session start, update on changes.
+
+```json
+{
+  "version": "1.4.0",
+  "migrated_from": "1.3.0",
+  "connected_inboxes": [
+    {
+      "alias": "personal",
+      "platform": "gmail",
+      "account": "ramsey@strategylabs.us",
+      "composio_connection_id": "...",
+      "folders_enabled": ["Newsletters", "Receipts", "Low Priority"]
+    },
+    {
+      "alias": "uno-mas",
+      "platform": "gmail",
+      "account": "ramsey@unomastacos.com",
+      "composio_connection_id": "...",
+      "folders_enabled": ["Receipts", "Finance", "Low Priority"]
+    }
+  ],
+  "last_rule_review": "2026-05-01",
+  "last_fireflies_pull": "2026-05-05",
+  "session_count": 47,
+  "fallback_mode": false,
+  "devices": ["MacBook Pro", "iMac"],
+  "schedules": {
+    "daily_briefing": {"time": "07:30", "days": "weekdays", "channel": "slack-dm", "enabled": true},
+    "vip_digest": {"channel": "slack-dm", "enabled": true},
+    "fireflies_pull": {"day": "sunday", "enabled": true},
+    "voice_review_cadence": "monthly",
+    "vip_review_cadence": "monthly",
+    "inbox_report_cadence": "monthly",
+    "rule_suggestion_cadence": "every-3rd",
+    "batch_size": 10,
+    "unsubscribe_mode": "batch"
+  },
+  "voice_drift_counter": 0,
+  "reminder_delivery": {"channel": "slack-channel", "slack_channel": "#inbox-reminders"}
+}
+```
+
+**`contacts.md`** — Per-recipient memory. Section per person; `[VIP]` tag in header marks priority. Auto-tracked timeline + manual notes.
 
 ```markdown
-# Inbox Command Center — Configuration
-
-## Connected Accounts
-| Tool | Connection | Account | Status | Send Capability |
-|------|-----------|---------|--------|----------------|
-| Gmail | MCP | [email] | Active | Draft only |
-| Gmail | Rube | [email] | Active | Full read + write |
-| Outlook | Rube | [email] | Active | Full read + write |
-| Slack | MCP | [workspace] | Active | Full read + write |
-| iMessage | AppleScript | [phone/email] | Active | Full read + write |
-| Google Calendar | MCP | primary | Active | — |
-| Fireflies | MCP | [account] | Active | — |
-
-## Primary Email
-[email] — used for drafting replies by default
-
-## Time Zone
-[timezone]
-
-## Batch Size
-[number] emails per batch (default: 10)
-
-## Scheduled Briefing
-- Delivery: [Slack DM / iMessage / Email / Calendar / None]
-- Time: [HH:MM AM/PM]
-- Days: [Mon-Fri / Daily / Custom]
-
-## Reminder Delivery
-- Channel: [Slack Channel / Slack DM / iMessage]
-- Slack Channel: [#inbox-reminders or custom name]
-- Default: [user's preference]
-
-## Task Tracker
-- Backend: [apple-reminders / markdown / clickup / google-sheets / calendar-only / none]
-- Location: [list name / file path / sheet URL / list ID]
-
-## Unsubscribe
-- Mode: [auto / batch / manual]
-
-## VIP Review
-- Last reviewed: [date]
-- Frequency days: [14 / 30 / 90 / never]
+## Bryan Howell <bryan@dieselpowerproducts.com> [VIP]
+**Review:** monthly | **Since:** 2026-04
+- Tone: concise, numbers-forward, skip pleasantries
+- Preferred cc: operations@dpp on financial threads
+- Reply target: within 4 hours
+- Inboxes seen: ramsey@strategylabs.us, ramsey@unomastacos.com
+- Last email: 2026-05-07 (uno-mas)
+- Last meeting: 2026-05-03 (Fireflies — Q3 numbers call)
+- Recent context: Decision pending re funding source. Tamara at Riverbank offered fund transfer.
 ```
 
-## Cross-Device Sync
+Brand-voice contacts get `[Brand]` tag (in addition to or instead of `[VIP]`).
 
-The Inbox Command Center supports syncing all user data across multiple macOS devices via iCloud Drive. This ensures your configuration, voice profile, rules, VIP contacts, and triage state are consistent whether you're on your laptop or desktop.
-
-### How It Works
-
-All user data files are stored in a shared iCloud Drive folder instead of a local-only directory:
-
+**`todos.md`** — Things the user owes themselves. Append-only with status:
+```markdown
+- [ ] Confirm Q3 numbers — from Joel Barbour — added 2026-04-15 — due 2026-04-20 — priority HIGH
+- [ ] Review marketing brief — from Annie — added 2026-05-07 — priority MED
+- [x] Send invoice to Bryan — from manual — completed 2026-05-06
 ```
-~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/
-├── config.md                 # Connected tools, preferences, schedule, version tracking
-├── voice-profile.md          # Living voice profile
-├── vip-contacts.md           # Priority contact list with relationship tags
-├── rules.md                  # Active message rules
-├── folder-rules.md           # Folder-based rules and settings
-├── rule-suggestions.md       # Pending learned suggestions
-├── tasks.md                  # Task list (if markdown backend selected)
-├── task-tracker-link.md      # Link to Google Sheet or ClickUp (if external backend selected)
-├── reports/                  # Monthly inbox reports
-│   └── [YYYY-MM].md
-└── CHANGELOG.md              # Version history and update notes
+Done items kept for 14 days then auto-pruned. Time-bound items also create Google Calendar events (or Apple Reminders / Outlook tasks if user opted in).
+
+**`followups.md`** — People waiting on a reply from the user.
+```markdown
+- Joel Barbour — re: wholesale pricing — sent 2026-05-01 — waiting 6 days
+- Annie — re: budget Q — sent 2026-05-04 — waiting 3 days
+```
+Add when user sends/drafts something expecting a reply. Remove when reply lands. Update "waiting N days" each session.
+
+**`rules.md`** — Active rules. Each rule has type, stakes, and scope.
+
+```markdown
+### Rule: Auto-archive ESPN newsletters
+- **Type:** delete
+- **Stakes:** low_stakes
+- **Scope:** per-inbox (personal)
+- **Status:** Active
+- **Trigger:**
+  - Sender: notifications@espn.com
+- **Action:**
+  - Move to Trash
+- **Created:** 2026-04-12
+- **Last triggered:** 2026-05-07
+- **Times triggered:** 47
+
+### Rule: Escalate emails from Bryan
+- **Type:** prioritize
+- **Stakes:** low_stakes
+- **Scope:** global (VIP)
+- **Status:** Active
+- **Trigger:**
+  - Sender: bryan@dieselpowerproducts.com
+- **Action:**
+  - Escalate to 🔴 HIGH
+- **Created:** 2026-04-01
 ```
 
-### Data Path Resolution
+**`rules-review-queue.md`** — Pending suggestions. User reviews on cadence.
 
-When loading or saving user data, the plugin resolves the data directory in this order:
+```markdown
+- [ ] **[low_stakes][per-inbox: uno-mas][delete]** Auto-archive Substack newsletters — proposed 2026-05-05 — reasoning: archived 8 from this sender in last 7 days
+- [ ] **[high_stakes][global][organize]** Auto-forward AP invoices to operations@dpp — proposed 2026-05-04 — reasoning: forwarded manually 3 times this week
+```
 
-1. **iCloud path** (preferred): `~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/`
-2. **Local fallback**: `inbox-command-center/` in the current working directory
+**`voice-profile.md`** and **`voice-profile-brand.md`** — Living voice documents. (See Voice Layer section below.)
 
-On first run, the setup wizard asks whether to enable cross-device sync. If enabled, all user data is created in and read from the iCloud path. If the iCloud path is not available (e.g., iCloud Drive is disabled or not signed in), the plugin falls back to local storage and warns the user.
+**`session-logs/YYYY-MM-DD.md`** — Append-only daily journal.
 
-### What Syncs
+```markdown
+# Session log — 2026-05-07
+
+- **08:14** — Session start
+- **08:14** — Workspace loaded: 3 inboxes, 14 todos, 4 followups, 6 pending rules
+- **08:15** — VIP scan across all inboxes: 2 surfaced (Bryan@uno-mas, Joel@personal)
+- **08:18** — [uno-mas] Triaged 23 emails: 3 respond, 5 FYI, 15 junk
+- **08:18** — [uno-mas] Auto-rules applied: archived 8 newsletters, labeled 3 receipts
+- **08:21** — [uno-mas] Sent reply to Bryan re Q3 numbers (2 edits → contacts.md)
+- **08:24** — [personal] Triaged 12 emails: 1 respond, 4 FYI, 7 junk
+- **08:26** — Proposed rule: auto-archive ESPN newsletters (low_stakes) → queued
+- **08:28** — Session end: 35 emails handled, 2 sent, 1 followup added, 1 rule queued
+- **09:14** — User edited contacts.md (Bryan section) detected via mtime
+```
+
+**Log these events:** triage runs, sends, bulk actions, rule proposals/reviews, voice learning events, Fireflies pulls, user-made workspace edits.
+**Don't log:** casual back-and-forth, reading individual emails, meta-commentary.
+
+**`reports/YYYY-MM.md`** — Monthly inbox reports (see Monthly Inbox Report section).
+
+### Writing to the workspace
+
+Use Filesystem MCP tools (`mcp__filesystem__write_file` for overwrites; read + append pattern for session logs). Always use absolute paths.
+
+For overwriting (todos, followups, rules, contacts):
+```
+mcp__filesystem__write_file → ~/Inbox Command Center/[filename]
+```
+
+For appending (session logs):
+```
+mcp__filesystem__read_text_file → existing log
+[append your line]
+mcp__filesystem__write_file → updated log
+```
+
+### Cross-Device Sync
+
+When iCloud Drive is enabled, the workspace lives at `~/Library/Mobile Documents/com~apple~CloudDocs/Inbox Command Center/`. The skill creates a symlink at `~/Inbox Command Center/` pointing to the iCloud path so Finder and shell access both work via the friendly path.
 
 | Data | Syncs via iCloud | Notes |
-|------|-----------------|-------|
-| config.md | Yes | All preferences, connected accounts, schedule, version tracking |
-| voice-profile.md | Yes | Full voice profile — consistent drafting voice across devices |
-| vip-contacts.md | Yes | VIP list stays current on both devices |
-| rules.md | Yes | Rules apply everywhere |
-| folder-rules.md | Yes | Folder rules consistent across devices |
-| rule-suggestions.md | Yes | Learned suggestions accumulate across devices |
-| reports/ | Yes | Monthly reports available on all devices |
-| tasks.md | Yes | Markdown task list syncs with all other data (if markdown backend selected) |
-| task-tracker-link.md | Yes | Points to the same external task tracker (if Google Sheets or ClickUp selected) |
-| Apple Reminders tasks | Already cloud | Reminders sync via iCloud independently — no action needed |
-| Google Sheet tasks | Already cloud | Google Sheets syncs independently — no action needed |
-| Google Calendar events | Already cloud | Calendar syncs independently |
-| Slack reminders | Already cloud | Slack messages sync independently |
+|---|---|---|
+| All workspace .md files | Yes | Hand-editable on any synced device |
+| `.meta.json` | Yes | Includes device list — auto-registers new devices |
+| `session-logs/` | Yes | Per-day files |
+| `reports/` | Yes | Monthly reports available everywhere |
+| Apple Reminders | Already cloud | Independent iCloud sync |
+| Google Calendar / Sheets | Already cloud | Independent sync |
+| Composio account state | Already cloud | Stored server-side |
 
-### Conflict Handling
+**Conflict handling:** iCloud creates conflict copies (e.g., `contacts 2.md`). On next session, skill detects conflict copies and prompts resolution with diff summary.
 
-iCloud Drive handles file-level sync automatically. In rare cases where the same file is edited on two devices simultaneously before sync completes:
-- iCloud creates a conflict copy (e.g., `config 2.md`)
-- On next plugin load, the plugin detects conflict copies and prompts: "A sync conflict was detected in [file]. Which version do you want to keep?" Shows a diff summary of the two versions.
-- After resolution, the conflict copy is deleted
-
-### Sync Status in Config
-
-```markdown
-## Cross-Device Sync
-- Enabled: Yes
-- Storage: iCloud Drive
-- Path: ~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/
-- Devices: [MacBook Pro, iMac]
-- Last synced: [auto-managed by iCloud]
-```
-
-### Setup on a New Device
-
-When the plugin detects that iCloud sync is enabled (the iCloud folder exists with a valid `config.md`) but is running on a device not yet listed:
-1. Auto-detect the device name
-2. Add it to the devices list in config
-3. Confirm: "Synced! Found your Inbox Command Center config from [other device]. You're all set."
-4. Verify MCP connections are active on this device (Gmail, Slack, etc. may need re-authentication per device)
+**New device detection:** On first launch on a device not in `.meta.json.devices[]`, auto-add device name and verify Composio + native MCP connections (may need re-auth per device).
 
 ## Rules Engine
 
-### How Rules Work
+### How rules work
 
-Rules run automatically before every triage. They process messages in order — first match wins. Rules can be:
-- **Standard rules** — Pre-built common rules suggested during setup
-- **Custom rules** — Created by the user via `/create-rule`
-- **Learned rules** — Suggested by the plugin based on repeated user behavior
+Rules run automatically before every triage. They process messages using this resolution order:
 
-### Rule Structure
+1. **Global rules** apply first (across all inboxes).
+2. **Per-inbox rules** apply second (only to messages in their assigned inbox).
+3. **Conflict resolution:** specific scope wins (per-inbox overrides global if both match).
+4. **VIP-related rules** are inherently global and never per-inbox-scoped.
+5. **Stakes determine apply behavior:**
+   - `low_stakes` → execute silently, log to session log, summarize at triage start
+   - `high_stakes` → always confirm with user before executing each instance, even after rule approval
 
-Each rule has:
+### Rule structure
 
 ```markdown
 ### Rule: [Name]
-- **Status:** Active / Paused
+- **Type:** delete | prioritize | folder | organize
+- **Stakes:** low_stakes | high_stakes
+- **Scope:** per-inbox: [alias] | global
+- **Status:** Active | Paused
 - **Trigger:**
   - Sender: [email, domain, or pattern]
   - Subject contains: [keywords]
@@ -221,11 +369,13 @@ Each rule has:
   - Categorize as: [🔴 / 🟡 / 🗑️ / 🔕]
   - Label: [label name]
   - Mark as: [read / starred]
-  - Forward to: [email]
-  - Auto-draft using: [template]
+  - Forward to: [email]                       ← high_stakes default
+  - Auto-draft using: [template]              ← low_stakes (drafts only)
+  - Auto-reply: [template]                    ← high_stakes default
   - Create task: [priority]
   - Create reminder in: [time]
-  - Archive / Delete
+  - Archive / Trash                           ← low_stakes default
+  - Move to folder: [synthetic name]          ← low_stakes default
   - Snooze until: [time]
   - Escalate to: 🔴 HIGH
 - **Exceptions:**
@@ -236,261 +386,210 @@ Each rule has:
 - **Times triggered:** [count]
 ```
 
+### Default stakes by action type
+
+| Action | Default Stakes | Why |
+|---|---|---|
+| Categorize / label / mark | low_stakes | Reversible metadata |
+| Archive | low_stakes | Reversible |
+| Move to folder | low_stakes | Reversible |
+| Auto-junk / trash | low_stakes | Recoverable from trash |
+| Permanent delete | **high_stakes** | Irreversible |
+| Auto-forward | **high_stakes** | Touches another human |
+| Auto-reply / template send | **high_stakes** | Touches another human |
+| Auto-draft | low_stakes | Drafts only, user reviews before send |
+| Unsubscribe | low_stakes | Reversible (re-subscribe) |
+| VIP escalate / VIP-related | low_stakes (always global) | Just metadata |
+
+User can override default stakes during rule creation in `/create-rule`.
+
 ### Standard Rules (suggested during onboarding)
 
-These are offered during setup based on inbox scan:
+| Category | Rule | Default Action | Stakes |
+|---|---|---|---|
+| Social Notifications | LinkedIn, Instagram, Facebook, X | 🗑️ Auto-junk | low |
+| Shipping Confirmations | Amazon, UPS, FedEx, USPS | 🟡 Label "Orders", mark read | low |
+| Marketing Emails | Promotional emails | 🗑️ Auto-junk | low |
+| Financial Alerts | Bank alerts, payment confirmations | 🟡 Label "Finance" | low |
+| App Notifications | GitHub, Jira, Trello, Asana, Notion | 🟡 Bundle into digest | low |
+| Calendar Confirmations | Accepted/declined notifications | Mark read, archive | low |
+| VIP Priority | Emails from VIP contacts | Always 🔴 RESPOND | low (global) |
+| Urgency Keywords | "urgent", "ASAP", "deadline", "EOD" | Escalate to 🔴 HIGH | low |
+| Stale Follow-Up | User-sent emails with no reply 3+ days | Create followup reminder | low |
+| New Sender Alert | First-time sender | Flag "New sender — verify" | low |
+| Quiet Hours | Messages received between [X PM - Y AM] | Hold for morning triage | low |
+| Newsletter Digest | Newsletters user reads | Bundle into weekly digest | low |
+| Bot/Automated | System notifications | Skip triage unless keyword match | low |
 
-| Category | Rule | Default Action |
-|----------|------|----------------|
-| Social Notifications | LinkedIn, Instagram, Facebook, X notifications | 🗑️ Auto-junk |
-| Shipping Confirmations | Amazon, UPS, FedEx, USPS tracking | 🟡 Label "Orders", mark read |
-| Marketing Emails | Promotional emails, sales blasts | 🗑️ Auto-junk |
-| Financial Alerts | Bank alerts, payment confirmations | 🟡 Label "Finance", keep in triage |
-| App Notifications | GitHub, Jira, Trello, Asana, Notion | 🟡 Bundle into digest |
-| Calendar Confirmations | Accepted/declined meeting notifications | Mark read, archive |
-| VIP Priority | Emails from VIP contact list | Always 🔴 RESPOND |
-| Urgency Keywords | "urgent", "ASAP", "deadline", "EOD" | Escalate to 🔴 HIGH |
-| Stale Follow-Up | Emails user sent with no reply in 3 days | Create follow-up reminder |
-| New Sender Alert | First-time sender not in contacts | Flag "New sender — verify" |
-| Quiet Hours | Messages received between [X PM - Y AM] | Hold for morning triage |
-| Newsletter Digest | Newsletters user actually reads | Bundle into weekly digest |
-| Bot/Automated | Automated system notifications | Skip triage unless keyword match |
+All Standard Rules default to per-inbox scope when applied during setup.
 
-### Learned Rule Suggestions
+### Learned rule suggestions
 
-The plugin tracks patterns and suggests rules across three categories:
+Three categories: **delete**, **prioritization**, **organization**. Suggestions queue in `rules-review-queue.md` with proposed scope and stakes. Cadence configurable: every triage / every 3rd / weekly / monthly / on demand.
 
-#### Delete Rules
-| Pattern Detected | Suggestion |
-|-----------------|-----------|
-| Same sender junked 3+ times | "Auto-delete all from [sender]?" |
-| User never opens emails from sender | "Auto-delete + unsubscribe from [sender]?" |
-| User deletes all emails matching a pattern | "Auto-delete emails with [subject pattern]?" |
-| Emails from a domain always deleted | "Auto-delete all from @[domain]?" |
-| User deletes without reading from sender 5+ times | "Permanently block [sender]? (auto-delete, skip trash)" |
+**Trigger patterns** (selection — full list preserved from v1.3):
 
-#### Prioritization Rules
-| Pattern Detected | Suggestion |
-|-----------------|-----------|
-| User responds to same sender within 1 hour | "Mark [sender] as VIP?" |
-| User always forwards invoices to same person | "Auto-forward invoices to [person]?" |
-| User stars emails from a sender every time | "Escalate [sender] to 🔴 HIGH automatically?" |
-| User always reads a sender's emails immediately | "Prioritize [sender] above other 🟡 FYI?" |
-| User repeatedly creates tasks from a sender's emails | "Auto-create task for emails from [sender]?" |
-| Emails from a domain always triaged first | "Move @[domain] to top of batch?" |
-| User always replies to emails with specific keywords | "Escalate emails containing [keywords] to 🔴?" |
+#### Delete suggestions
+- Same sender junked 3+ times → "Auto-delete from [sender]?"
+- User never opens emails from sender 5+ times → "Auto-delete + unsubscribe?"
+- All from a domain always deleted → "Auto-delete domain @[X]?"
 
-#### Organization Rules
-| Pattern Detected | Suggestion |
-|-----------------|-----------|
-| Same email type always marked read | "Auto-archive [type]?" |
-| User creates similar reminders for same email type | "Create recurring reminder for [type]?" |
-| User drafts similar replies to same type | "Create a template for [type]?" |
-| User always labels a sender's emails the same way | "Auto-label [sender] as [label]?" |
-| Emails from a sender always routed to a folder | "Auto-route [sender] to [folder]?" |
+#### Prioritization suggestions
+- User responds within 1 hour → "Mark [sender] as VIP?"
+- User always forwards invoices → "Auto-forward invoices to [person]?"
+- User always reads sender's emails immediately → "Prioritize above other 🟡?"
+- Cross-inbox correspondence pattern → "[sender] emails 2+ of your accounts — VIP candidate?"
+- Fireflies meeting frequency → "You met with [X] 3+ times in 30d — VIP candidate?"
 
-#### Rule Suggestion Review Cadence
+#### Organization suggestions
+- Same email type always labeled → "Auto-label [type] as [label]?"
+- Same email type always foldered → "Auto-route [sender] to [folder]?"
+- Similar drafts repeatedly → "Create a template?"
 
-Users choose how often they review rule suggestions during onboarding. Options:
+### Folder rules — synthetic abstraction
 
-| Cadence | When Suggestions Are Presented |
-|---------|-------------------------------|
-| **Every triage** | After each triage session, show any new suggestions |
-| **Every 3rd triage** (default) | After every 3rd triage session |
-| **Weekly** | Once per week, at the start of the first triage of the week |
-| **Monthly** | Bundled into the monthly inbox report |
-| **On demand only** | Never auto-present — user must say "show rule suggestions" |
+Inbox Command Center defines 7 logical "buckets" that map to platform-native implementations:
 
-Stored in config:
-```markdown
-## Rule Suggestions
-- Review cadence: [every triage / every 3rd triage / weekly / monthly / on demand]
-- Last reviewed: [date]
-- Pending suggestions: [count]
+| Logical folder | Gmail | Outlook / IMAP |
+|---|---|---|
+| Low Priority | Label `ICC/Low Priority` | Subfolder `Inbox/ICC/Low Priority` |
+| Newsletters | Label `ICC/Newsletters` | Subfolder `Inbox/ICC/Newsletters` |
+| Receipts & Orders | Label `ICC/Receipts` | Subfolder `Inbox/ICC/Receipts` |
+| Finance | Label `ICC/Finance` | Subfolder `Inbox/ICC/Finance` |
+| Automated/Bot | Label `ICC/Bot` | Subfolder `Inbox/ICC/Bot` |
+| Pending Review | Label `ICC/Pending` | Subfolder `Inbox/ICC/Pending` |
+| Delegated | Label `ICC/Delegated` | Subfolder `Inbox/ICC/Delegated` |
+
+The skill abstraction `route_to_folder(inbox_id, message_id, folder_alias)` dispatches to the right tool per platform (`GMAIL_BATCH_MODIFY_MESSAGES` add label, or `OUTLOOK_MOVE_MESSAGE`).
+
+**Per-inbox enablement.** Setup wizard asks per-inbox which folders to enable. Folders auto-create on the platform when enabled. Tracked in `.meta.json.connected_inboxes[i].folders_enabled[]`.
+
+**Default folder behavior:**
+
+| Folder | Default Review | Auto-Action |
+|---|---|---|
+| Low Priority | Weekly digest | Archive 30d, delete 90d |
+| Newsletters | Weekly digest | Delete 14d unread |
+| Receipts & Orders | Never (searchable) | Keep |
+| Finance | Daily digest | Keep |
+| Automated/Bot | Daily count | Delete 7d |
+| Pending Review | Every triage | Remind 3d |
+| Delegated | Daily | Remind 5d if no response |
+
+**Global rule + missing folder behavior:** if a global folder rule references a folder not enabled in some inbox, auto-enable it silently and route. User sees the folder appear after first match.
+
+### Rules storage
+
+`rules.md` for active rules; `rules-review-queue.md` for pending suggestions. Folder rules are a sub-type of rules with `Type: folder` — stored in the same `rules.md` file rather than a separate file (simpler than v1.3's split).
+
+## Voice Profile
+
+### Sources, in priority order
+
+1. **Fireflies meeting transcripts** — primary, highest authenticity (you actually talking)
+2. **Sent email analysis** — written voice patterns
+3. **Slack messages** — internal/casual register
+4. **iMessage / SMS** — most casual
+5. **Continuous draft-edit learning** — every edit feeds voice + per-recipient `contacts.md` notes
+6. **A/B calibration** — explicit preference testing
+
+Voice profile is **unified across all inboxes** — one user, one voice. Brand voice (BKC) is a second profile applied to recipients tagged `[Brand]` in `contacts.md`.
+
+### Initial setup (in `/setup-wizard`)
+
+1. Connect Fireflies (recommended).
+2. **Pull last 30 days of transcripts (blocking, ~1-3 min).**
+3. Pull last 30 days of sent email across all inboxes.
+4. Analyze Slack last 30 days.
+5. Analyze iMessage last 30 days.
+6. Run A/B calibration (20+ pairs across email / Slack / SMS / formal scenarios).
+7. Generate `voice-profile.md` and `voice-profile-brand.md` (if BKC connected).
+
+### Weekly Fireflies pull (scheduled)
+
+Cadence: weekly off-hours by default. Configurable.
+
+```
+Pull Fireflies transcripts since last_fireflies_pull
+  ↓
+Pass 1 (voice extraction):
+  → phrasing, decision language, register shifts, new phrases, sign-offs
+  → append to voice-profile.md (flagged for next monthly review if substantial)
+
+Pass 2 (per-participant extraction):
+  → tone observations per person you spoke with
+  → append to contacts.md under each name's section
+  → IF person not in contacts.md:
+       create entry ONLY IF they're a VIP or appear in user's sent mail
+       (avoids bloat from one-off transcript participants)
+
+Update .meta.json.last_fireflies_pull = today
+Log to session-logs/YYYY-MM-DD.md
 ```
 
-When presenting suggestions:
-> "I've noticed some patterns. Here are rule suggestions based on your behavior:"
->
-> **DELETE RULES:**
-> - "You've deleted emails from [sender] 5 times. Auto-delete future emails from them?" [Enable / Dismiss]
->
-> **PRIORITIZATION RULES:**
-> - "You respond to [sender] within an hour every time. Add them as VIP?" [Enable / Dismiss]
->
-> **ORGANIZATION RULES:**
-> - "You always label invoices as 'Finance'. Auto-label them?" [Enable / Dismiss]
->
-> "[Enable all / Review each / Dismiss all / Change review cadence]"
+### Triage-time enrichment
 
-### Folder-Based Rules
+When an email arrives from someone who appeared in a Fireflies transcript in the last 30 days, surface inline:
 
-The plugin supports folder-based organization with custom review settings for each folder. Folders act as holding zones with their own triage behavior.
-
-#### Folder Structure
-
-```markdown
-### Folder: [Name]
-- **Purpose:** [description]
-- **Priority level:** HIGH / MEDIUM / LOW / ARCHIVE
-- **Auto-route rules:** [which emails go here]
-- **Review cadence:** [every triage / daily digest / weekly digest / monthly digest / never]
-- **Review style:** [individual items / summary only / count only]
-- **Auto-actions:**
-  - After [X] days unread: [archive / delete / escalate / remind]
-  - After [X] days in folder: [archive / delete / keep]
-- **Created:** [date]
-- **Email count:** [current count]
+```
+[#3] 🔴 HIGH — Bryan Howell <bryan@dieselpowerproducts.com>
+📞 You spoke with Bryan May 3 (Q3 numbers call) — context continues
+Subject: Re: Q3 numbers — confirming next steps
 ```
 
-#### Standard Folders (suggested during onboarding)
+Lets the user draft replies that pick up where the conversation left off, not where the email thread did.
 
-| Folder | Purpose | Default Review | Default Auto-Action |
-|--------|---------|---------------|-------------------|
-| **Low Priority** | Emails that aren't urgent but shouldn't be deleted | Weekly digest summary | Archive after 30 days unread |
-| **Newsletters** | Newsletters user actually reads | Weekly digest | Delete after 14 days unread |
-| **Receipts & Orders** | Purchase confirmations, shipping updates | Never (searchable archive) | Keep indefinitely |
-| **Finance** | Bank alerts, invoices, payment confirmations | Daily digest | Keep indefinitely |
-| **Automated/Bot** | CI/CD notifications, system alerts, app notifications | Daily summary (count only) | Delete after 7 days |
-| **Pending Review** | Emails user wants to come back to | Every triage | Remind after 3 days |
-| **Delegated** | Emails forwarded to someone else, awaiting their response | Daily check | Remind after 5 days if no response |
+### Continuous learning from edits
 
-#### Low Priority Folder — Special Behavior
+Every time the user edits a draft before sending:
+1. Compute diff between draft and final
+2. Tag the edit type (tone / wording / structure / sign-off / cc)
+3. Update `contacts.md` under that recipient with the observation (under a "Voice notes" sub-section)
+4. Increment `voice_drift_counter` in `.meta.json` if substantial (>10% character change OR sign-off / greeting / structure shift)
 
-The Low Priority folder has enhanced settings for managing email noise without losing potentially useful messages:
+### Drift-triggered A/B
 
-```markdown
-### Folder: Low Priority
-- **Purpose:** Non-urgent emails that don't need immediate attention
-- **What goes here:**
-  - Emails from senders not on VIP list and not flagged 🔴
-  - Newsletters user sometimes reads
-  - CC'd emails where user isn't primary recipient
-  - Internal FYI announcements
-  - Vendor/partner updates that aren't time-sensitive
-- **Review cadence:** Weekly digest (default) — configurable
-- **Review style:** Summary with counts by sender/type
-- **Digest format:**
-  > 📂 LOW PRIORITY DIGEST — [X] emails this week
-  > ├── [X] from newsletters ([list top 3 senders])
-  > ├── [X] CC'd threads ([list top 3])
-  > ├── [X] vendor updates ([list top 3])
-  > ├── [X] internal FYI ([list top 3])
-  > └── Oldest unread: [X] days
-  >
-  > [Review all] [Delete all read] [Archive all > 30 days] [Skip]
-- **Auto-actions:**
-  - After 30 days unread: Archive (move to All Mail, remove from folder)
-  - After 90 days unread: Delete
-  - If sender escalates (sends follow-up or marks urgent): Move to inbox for next triage
+If `voice_drift_counter >= 3` in a single session, at session end:
+
+> "I noticed 3 substantial edits this session. Want a quick 5-pair A/B to recalibrate the areas that drifted? (~2 min)"
+
+If user accepts, generate 5 A/B pairs targeting the scenarios that triggered the edits. Reset counter after.
+
+### Mandatory monthly voice review
+
+Cadence configurable: monthly (default), bi-weekly, weekly. Stored in `.meta.json.schedules.voice_review_cadence`.
+
+When due, on first triage of the day:
+
+```
+🎙️ VOICE PROFILE REVIEW — Due
+
+Last reviewed [N] days ago.
+
+WHAT'S CHANGED:
+├── Fireflies: [N] new transcripts ingested
+├── Email: [N] new sent items analyzed
+├── Slack: [N] new messages analyzed
+├── iMessage: [N] new messages analyzed
+├── Edits: [N] substantial draft edits captured
+
+DETECTED SHIFTS:
+├── [Description of any drift]
+
+[Full review (re-analyze + A/B)] [Quick review (no A/B)] [Snooze 1 week] [Change cadence]
 ```
 
-#### Folder Review Settings
-
-Users configure how each folder is reviewed:
-
-| Setting | Options |
-|---------|---------|
-| **Review cadence** | Every triage / Daily / Weekly / Monthly / Never / On demand |
-| **Review style** | Individual items (full triage) / Summary with drill-down / Count only / Skip |
-| **Presentation order** | Before main triage / After main triage / Separate session |
-| **Notification** | Include in briefing / Include in inbox report only / Silent |
-
-#### Folder Rules in Config
-
-```markdown
-## Folder Rules
-| Folder | Review Cadence | Review Style | Auto-Action | Notification |
-|--------|---------------|-------------|-------------|-------------|
-| Low Priority | Weekly digest | Summary | Archive 30d, Delete 90d | Briefing |
-| Newsletters | Weekly | Summary | Delete 14d unread | Report only |
-| Receipts & Orders | Never | — | Keep | Silent |
-| Finance | Daily | Summary | Keep | Briefing |
-| Automated/Bot | Daily | Count only | Delete 7d | Report only |
-| Pending Review | Every triage | Individual | Remind 3d | Briefing |
-| Delegated | Daily | Individual | Remind 5d | Briefing |
-```
-
-### Rules Storage
-
-All rules stored in `inbox-command-center/rules.md`. Folder rules stored in `inbox-command-center/folder-rules.md`. Learned suggestions stored in `inbox-command-center/rule-suggestions.md` until approved or dismissed.
-
-## Voice Profile System
-
-### Building the Voice Profile
-
-The voice profile is built from five sources during setup and refined continuously:
-
-**Source A: Meeting Transcripts & Phone Calls**
-If Fireflies, Otter, Gong, Fathom, or other transcript tools are connected:
-- Analyze last 30 days of transcripts (meetings, phone calls, video calls)
-- Extract: greetings, closings, common phrases, tone shifts by audience, vocabulary, humor style, sentence structure
-- Weight recent transcripts higher than older ones
-- Phone call transcripts are especially valuable for capturing the user's natural, unscripted voice
-
-**Source B: Sent Email Analysis**
-Scan the connected email's sent folder (last 30-60 days):
-- Greeting patterns by recipient type
-- Sign-off patterns
-- Average email length
-- Tone range (formal ↔ casual)
-- Common phrases and structures
-- How they handle requests, follow-ups, difficult conversations
-
-**Source C: Slack Message Analysis**
-If Slack is connected, analyze the user's sent messages (last 30 days):
-- Tone and formality by channel (public vs. DM vs. thread)
-- Emoji and reaction usage patterns
-- Message length by context
-- How they give feedback, ask questions, and acknowledge work
-- Differences between team-facing and client-facing channels
-- Common Slack-specific phrases and shorthand
-
-**Source D: iMessage / SMS Analysis**
-If iMessage is connected, analyze sent messages (last 30 days):
-- Casual tone patterns
-- Abbreviation and emoji usage
-- How style differs between personal and professional contacts
-- Response patterns (length, tone, speed)
-
-**Source E: A/B Voice Calibration**
-After analyzing all available sources, generate A/B comparison messages for the user to choose between. This refines the profile through direct preference testing.
-
-### A/B Calibration Process
-
-1. **First batch: 10 pairs** — Cover a range of scenarios:
-   - Responding to a client question
-   - Following up on a missed deadline
-   - Saying no to a meeting request
-   - Thanking someone for their work
-   - Introducing yourself to a new contact
-   - Asking for a favor
-   - Delivering bad news
-   - Quick acknowledgment
-   - Scheduling a call
-   - Handling a complaint
-
-   For each scenario, present Option A and Option B with different tone/style approaches. User picks which sounds more like them (or says "neither" and explains).
-
-2. **Second batch: Channel-specific** — After the first 10 refine the core profile:
-   - 5 Slack message pairs (shorter, more casual)
-   - 5 SMS pairs (ultra-short)
-   - 5 formal email pairs (client-facing, longer)
-
-3. **Continue until both options approved** — When the user says "both sound like me" on a pair, that scenario is dialed in. Keep generating new pairs for uncalibrated scenarios until all types are approved.
-
-### Voice Profile Storage
-
-Stored in `inbox-command-center/voice-profile.md`:
+### Voice profile storage
 
 ```markdown
 # Voice Profile — [User's Name]
 
 ## Generated From
+- Fireflies transcripts: [X] from [date range] — primary signal
 - Sent email analysis: [X] emails from [date range]
-- Meeting transcripts: [X] transcripts from [tool name]
-- A/B calibration: [X] pairs tested, [X] preferences captured
-- Guided questions: [answered/skipped]
+- Slack messages: [X] messages
+- iMessage/SMS: [X] messages
+- A/B calibration: [X] pairs tested
 - Last updated: [date]
 
 ## Core Style
@@ -498,7 +597,7 @@ Stored in `inbox-command-center/voice-profile.md`:
 
 ## Greetings
 | Audience | Greeting | Example |
-|----------|----------|---------|
+|---|---|---|
 | Close colleagues | [pattern] | [real example] |
 | Clients | [pattern] | [real example] |
 | New contacts | [pattern] | [real example] |
@@ -506,23 +605,23 @@ Stored in `inbox-command-center/voice-profile.md`:
 
 ## Sign-Offs
 | Context | Sign-off |
-|---------|----------|
+|---|---|
 | Standard | [pattern] |
 | Warm/relationship | [pattern] |
 | Quick/casual | [pattern] |
 
 ## Signature Phrases
-[Phrases this person actually uses, with context for when to use each]
+[Phrases the user actually uses, with context]
 
 ## NEVER List
-[Words, phrases, and patterns this person would never write]
+[Words, phrases, and patterns the user would never write]
 
 ## Structure Pattern
 [How they typically structure messages]
 
 ## Tone by Audience
 | Audience | Tone | Example |
-|----------|------|---------|
+|---|---|---|
 | Team/internal | [description] | [example] |
 | Clients | [description] | [example] |
 | Vendors/partners | [description] | [example] |
@@ -530,7 +629,7 @@ Stored in `inbox-command-center/voice-profile.md`:
 
 ## Channel Differences
 | Channel | How Style Differs |
-|---------|------------------|
+|---|---|
 | Email | [description] |
 | Slack | [description] |
 | iMessage | [description] |
@@ -540,857 +639,499 @@ Stored in `inbox-command-center/voice-profile.md`:
 [Typical length + when they go longer/shorter]
 
 ## A/B Calibration Results
-[Key preferences captured from calibration pairs]
-```
+[Key preferences captured]
 
-### Two-Voice System
-
-If Brand Knowledge Center is connected:
-- **Personal voice** (from voice profile) — for most messages
-- **Brand voice** (from BKC `brand-identity.md`) — for client-facing, marketing, or business development
-- Auto-select based on recipient (VIP contact relationship tag) or ask when ambiguous
-
-### Continuous Voice Learning
-
-| Trigger | What Happens |
-|---------|-------------|
-| User edits a draft before approving | Note changes as voice corrections, update profile |
-| New meeting transcripts available | Periodic re-analysis for tone evolution |
-| New phone call transcripts available | Re-analyze for natural speech patterns |
-| User gives explicit feedback | Immediate update to voice profile |
-| User runs `/voice-calibration` | New A/B pairs for scenarios that need refinement |
-
-### Mandatory Monthly Voice Review
-
-The voice profile **must** be revisited at least once per month. Users can optionally increase this frequency.
-
-#### Review Cadence Config
-
-```markdown
-## Voice Profile Review
-- Review cadence: [monthly / bi-weekly / weekly]
-- Last reviewed: [date]
-- Next review due: [date]
-- Review sources: [transcripts, email, slack, imessage] (which sources to re-analyze)
-```
-
-#### How the Monthly Review Works
-
-On the first triage after the review is due, the plugin triggers:
-
-```
-🎙️ VOICE PROFILE REVIEW — Due for your [monthly / bi-weekly / weekly] check-in
-
-Your voice profile was last updated [X] days ago.
-
-WHAT'S CHANGED SINCE LAST REVIEW:
-├── 📧 [X] new sent emails analyzed
-├── 🎙️ [X] new call/meeting transcripts available
-├── 💬 [X] new Slack messages analyzed
-├── 📱 [X] new iMessages analyzed
-├── ✏️ [X] draft edits you made (voice corrections captured)
-
-DETECTED SHIFTS:
-├── Your email tone has shifted slightly more [casual/formal] this month
-├── New phrase detected: "[phrase]" — used [X] times
-├── Sign-off change: You've been using "[new sign-off]" more than "[old sign-off]"
-├── [Any other detected changes]
-
-RECOMMENDATIONS:
-├── Re-analyze [X] new transcripts to capture current speech patterns
-├── Run a quick 5-pair A/B calibration focused on [area]
-├── Update your NEVER list — you used "[phrase]" twice this month (still avoid it?)
-
-[Full review (re-analyze all sources + A/B calibration)]
-[Quick review (update from new data, skip A/B)]
-[Snooze 1 week]
-[Change review cadence]
-```
-
-#### Multi-Source Re-Analysis
-
-During a monthly review, the plugin re-analyzes all connected sources:
-
-1. **Phone calls / Meeting transcripts** — Pull any new transcripts since last review. These are the highest-signal source for authentic voice because they capture unscripted, real-time communication.
-2. **Sent emails** — Analyze emails sent since last review for tone drift, new patterns, or changes in greeting/sign-off usage.
-3. **Slack messages** — Analyze sent Slack messages for changes in casual tone, emoji usage, and how the user communicates with different teams.
-4. **iMessage / SMS** — If connected, analyze for shifts in personal communication style.
-5. **Draft edits** — Compile all edits the user made to drafts since last review. These are direct voice corrections and the most explicit signal.
-
-After re-analysis, present a summary of changes and offer A/B calibration for any areas where the profile seems outdated.
-
-#### Voice Profile Version History
-
-Each monthly review creates a snapshot. The voice profile tracks:
-
-```markdown
 ## Review History
 | Date | Sources Analyzed | Key Changes | A/B Pairs Tested |
-|------|-----------------|-------------|-----------------|
-| [date] | 45 emails, 12 transcripts, 200 Slack msgs | Tone shifted casual, new sign-off | 5 pairs |
-| [date] | 30 emails, 8 transcripts | Added 3 phrases to NEVER list | 0 pairs |
+|---|---|---|---|
+| [date] | Fireflies 14, email 45, Slack 200 | Tone shifted casual, new sign-off | 5 pairs |
 ```
+
+### Two-voice system
+
+If Brand Knowledge Center is connected:
+- **Personal voice** (from `voice-profile.md`) — internal/casual contacts (default)
+- **Brand voice** (from `voice-profile-brand.md`, sourced from BKC `brand-identity.md`) — recipients tagged `[Brand]` in `contacts.md`
+- Auto-select based on recipient tag. Ask if ambiguous.
 
 ## Email Triage
 
-### Categorization
+### Step 1: Time Range and Inbox Selection
 
-Every email goes into exactly ONE category:
+Ask: "When did you last check email?" or accept stated timeframe.
 
-#### 🔴 RESPOND — Needs a reply
-- Direct questions, decisions, follow-ups
-- VIP contacts (always)
-- Financial/legal matters requiring action
-- Meeting requests needing confirmation
-- Anyone with active business relationship
-- Urgency keyword matches
+For multi-account users: "Which inbox today, or all of them?" Default behavior:
+- **Single inbox** if user names one ("triage uno-mas")
+- **Sequential** if user says "triage" or "all" — see Step 1.5
 
-#### 🟡 FYI — Worth knowing, no reply needed
-- Task completion notifications
-- Industry news user follows
-- Calendar/payment confirmations
-- Business metric alerts
-- Shipping confirmations
+### Step 1.5: VIP Cross-Inbox Scan (always runs first)
 
-#### 🗑️ JUNK — Flag for deletion
-- Marketing/promotional emails
-- Social media notifications
-- Cold outreach / vendor pitches
-- Recruitment spam, surveys
-- Software updates, PR pitches
-
-#### 🔕 UNSUBSCRIBE — Repeat junk senders
-- Senders appearing in JUNK repeatedly
-- Mailing lists user never engages with
-
-### Dual-Source Email Scanning
-
-**IMPORTANT:** Every email operation — triage, quick check, search, report, or any email-related request — MUST query both Gmail MCP and all Rube-connected email accounts in parallel. Never rely on a single source. Merge and deduplicate results before processing.
-
-### Batch Processing
-
-1. Pull all unread + starred emails for the time range from ALL connected email sources (Gmail MCP + Rube)
-2. Apply rules first — auto-processed emails are reported as a summary, not individually
-3. **VIP check** — If any emails are from VIP senders, surface them immediately (see VIP Immediate Alert below)
-4. Route emails to folders based on folder rules (Low Priority, Newsletters, etc.)
-5. Sort remaining by: starred first → 🔴 by urgency → 🟡 → 🗑️
-6. Present in batches of [configured size, default 10]
-7. After each batch: "Ready for the next batch, or take action on these first?"
-
-### VIP Immediate Alert
-
-When an email is received from a VIP sender, it is **always surfaced immediately** — before normal batch processing. The alert includes full email details and a pre-written draft reply.
+Before user picks a single inbox, scan ALL connected inboxes for VIP messages.
 
 ```
-🚨 VIP EMAIL — [Sender Name] ([Relationship])
+For each inbox in connected_inboxes:
+  GMAIL_FETCH_EMAILS / OUTLOOK_FETCH_MESSAGES with query:
+    "is:unread after:[last_check] from:[any VIP email in contacts.md]"
+  → collect VIP messages across inboxes
+```
+
+Surface results:
+
+```
+3 VIP messages waiting across your inboxes:
+  • Bryan Howell — re: Q3 numbers (in: uno-mas)        ← 14 min ago
+  • Joel Barbour — re: Great PNW campaign (in: personal) ← 2 hr ago
+  • Melissa — quick favor (in: personal)               ← 4 hr ago
+
+Handle these first, or proceed to inbox triage? Which inbox?
+```
+
+If user handles VIPs first, run VIP Immediate Alert flow for each (full body + pre-written draft). Then return to inbox selection.
+
+### Step 2: Pull Messages
+
+Per the selected inbox(es), execute Composio fetch. Two parallel fetches:
+
+```
+COMPOSIO_MULTI_EXECUTE_TOOL with two calls:
+  Fetch 1 — Starred:
+    GMAIL_FETCH_EMAILS / OUTLOOK_FETCH_MESSAGES
+    query: "is:starred is:unread"
+    max_results: 20
+    verbose: true
+
+  Fetch 2 — Unread inbox:
+    GMAIL_FETCH_EMAILS / OUTLOOK_FETCH_MESSAGES
+    query: "in:inbox is:unread after:[date]"
+    max_results: 50
+    verbose: true
+```
+
+Deduplicate by messageId. Sort by most recent first.
+
+If multi-inbox sequential: tag each message with its inbox alias.
+
+### Step 3: Apply Rules and Route to Folders
+
+Before showing anything to the user, run through the emails and apply approved rules per the resolution order (global → per-inbox).
+
+For `low_stakes` rules: execute silently, log to session log, summarize at start of triage:
+
+```
+Auto-rules applied to [inbox]:
+  ✓ Archived 8 newsletters
+  ✓ Labeled 3 receipts as Finance
+  ✓ Marked 6 calendar invites as read
+```
+
+For `high_stakes` rules: queue the proposed action and present it to the user for per-instance confirmation (same flow as v1.3 high-stakes pattern).
+
+### Step 4: VIP Immediate Alert (per inbox)
+
+```
+🚨 VIP EMAIL — [Sender Name] [Relationship from contacts.md]
 
 From: [Full Name] <[email]>
+Inbox: [inbox alias]
 Subject: [Subject line]
 Received: [Day, Date, Time]
 Thread: [New / Reply in thread of X messages]
 
+[Optional Fireflies enrichment line if recent transcript exists]
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 FULL EMAIL:
-[Complete email body displayed — not just a summary]
+[Complete email body — not just a summary]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📝 PRE-WRITTEN DRAFT REPLY:
-[Draft reply written in the user's voice, appropriate to the sender's
-relationship tag and the email content. Uses personal voice for
-internal/casual contacts, brand voice for client-facing if BKC connected.]
+[Draft in user's voice; brand voice if recipient tagged [Brand]]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-→ [Send Draft] [Edit Draft] [Rewrite Draft] [Remind Me] [Deep Dive (full thread)] [Skip for now]
+→ [Send Draft] [Edit Draft] [Rewrite Draft] [Remind Me] [Deep Dive] [Skip for now]
 ```
 
-#### VIP Alert Behavior
+Sending account auto-matches receiving inbox.
 
-| Scenario | What Happens |
-|----------|-------------|
-| **During triage** | VIP emails are pulled to the top of the first batch with full alert format |
-| **Quick check ("any new emails?")** | VIP emails are always shown, even if everything else is clear |
-| **Between triages** | If daily briefing or VIP digest is configured, VIP emails appear there |
-| **Multiple VIP emails** | Each gets its own alert block, presented in order of receipt |
+### Step 5: Categorize Remaining Messages
 
-#### Pre-Written Draft Logic
+🔴 RESPOND / 🟡 FYI / 🗑️ JUNK / 🔕 UNSUBSCRIBE — same definitions as v1.3.
 
-The draft is generated automatically based on:
-1. **Email content** — What's being asked/discussed
-2. **Sender relationship** — Tone and formality adjusted per VIP contact settings
-3. **Thread context** — If a reply in an existing thread, draft considers the full conversation
-4. **Voice profile** — Uses the user's authentic voice (personal or brand as appropriate)
-5. **Priority notes** — Any VIP-specific instructions (e.g., "Always CC [person] on replies", "More formal with this person")
+### Step 6: Present Batch
 
-The user should never have to write from scratch for a VIP email — the draft is ready for review and send.
-
-### Presentation Format
+Batch size from `.meta.json.schedules.batch_size` (default 10). For multi-inbox sequential, tag each item with `[inbox-alias]`.
 
 ```
-[#1] ⭐🔴 HIGH — [Sender Name] <[email]>
+[#1] ⭐🔴 HIGH — [Sender Name] <[email]>  [uno-mas]
 Subject: [Subject line]
 Received: [Day, Date, Time]
+Thread ID: [...] | Message ID: [...]
 
-[1-2 sentence summary of what's needed]
+[1-2 sentence summary]
 
-→ Actions: [Draft Reply] [Remind Me] [Mark Read] [Deep Dive] [Create Rule]
+→ Actions: [Draft Reply] [Reply Now] [Archive] [Trash] [Mark Read] [Add Followup] [Add Todo] [Create Rule]
 ```
 
-### Quick Action Codes
+After 10: "Ready for the next batch, or want to take action on these first?"
 
-| Code | Action |
-|------|--------|
-| `draft` | Draft a reply in user's voice |
-| `remind [time]` | Add to task tracker + calendar event + deliver via configured channel |
-| `read` | Mark as read, no action |
-| `delete` | Flag for deletion |
-| `unsub` | Unsubscribe |
-| `dive` | Pull and display full email/thread |
-| `delegate [name]` | Forward to named person |
-| `skip` | Leave in inbox |
-| `rule` | Create a rule based on this email |
+### Step 7: Process Actions
+
+| Code | Action | Implementation |
+|---|---|---|
+| `draft` | Draft a reply in user's voice | Compose; sending account auto-matches receiving inbox |
+| `reply` | Same as draft + send on confirmation | `GMAIL_REPLY_TO_THREAD` / `OUTLOOK_REPLY_MESSAGE` |
+| `remind [time]` | Add to todos.md + calendar event | Append + `mcp__claude_ai_Google_Calendar__create_event` |
+| `read` | Mark as read | `GMAIL_BATCH_MODIFY_MESSAGES` removeLabelIds: ["UNREAD"] |
+| `delete` | Move to trash | `GMAIL_MOVE_TO_TRASH` (recoverable) |
+| `unsub` | Execute unsubscribe | List-Unsubscribe header → body link → fallback rule |
+| `dive` | Show full email/thread | `GMAIL_FETCH_MESSAGE_BY_THREAD_ID` |
+| `delegate [name]` | Forward + add to followups.md | `GMAIL_REPLY_TO_THREAD` (forward variant) + append |
+| `skip` | Leave in inbox | No-op |
+| `rule` | Create a rule based on this email | Trigger `/create-rule` flow |
+
+**Edit tracking on drafts:** when user edits before sending, compute diff. Update `contacts.md` under recipient. Increment `voice_drift_counter` if substantial.
+
+### Step 8: Next Batch / Step 9: Triage Complete
+
+After all batches:
+
+1. Append summary to today's session log.
+2. If `voice_drift_counter >= 3`, offer mini A/B (drift-triggered).
+3. Update `followups.md` with anything sent expecting a reply.
+4. Update `todos.md` with new items.
+5. If pending rule suggestions, surface per cadence.
+6. If a rule review or voice review is due, mention it.
+
+## Workspace Memory — Always Read, Always Write
+
+The skill operates on the principle that the workspace is the source of truth across sessions:
+
+1. **Read at session start** — load all workspace files into context.
+2. **Update during session** — write changes to workspace files as they happen, don't batch at end.
+3. **Log meaningful events** — append to today's session log throughout.
+4. **Detect user edits** — check mtimes; log user edits as observed.
+
+Workspace files are markdown so the user can hand-edit at any time. Don't fight user edits — treat them as authoritative when the user changes something the skill had different.
 
 ## Unsubscribe Workflow
 
-When the user assigns `unsub` to a message, execute the unsubscribe — don't just flag it.
+When the user assigns `unsub`, execute the unsubscribe — don't just flag it.
 
-### Execution Methods (in priority order)
+### Execution methods (priority order)
 
 **1. List-Unsubscribe header (one-click)**
-Check the raw email headers for a `List-Unsubscribe` field. This is included in most legitimate marketing and newsletter emails. It contains either a `mailto:` address or an `https://` URL.
-- `mailto:` unsubscribe: Send the specified unsubscribe email automatically
-- `https://` unsubscribe: Execute a GET/POST request to the URL to complete the unsubscribe
+- Fetch full message via `GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID`
+- Parse the `List-Unsubscribe` header
+- `mailto:` → send via `GMAIL_SEND_EMAIL` to the unsubscribe address
+- `https://` → execute GET/POST request
 
-This is the cleanest method — no link extraction, no browser required.
+**2. Body link extraction**
+- If no header, scan body for "unsubscribe", "manage preferences", "opt out", "email preferences"
+- Extract URL; for Composio-connected accounts attempt direct call, otherwise open in browser
 
-**2. Unsubscribe link extraction**
-If no `List-Unsubscribe` header is present, scan the email body for unsubscribe links. Look for text containing "unsubscribe", "manage preferences", "opt out", "email preferences", or "manage your subscription".
+**3. Auto-junk fallback**
+- No mechanism found → create rule: auto-junk all future from sender
 
-Extract the URL and present:
-> "Found unsubscribe link for [sender]: [url] — Open to complete? [Open / Skip]"
+### Modes (per `.meta.json.schedules.unsubscribe_mode`)
 
-If the email was connected via Rube (full write access), attempt to call the URL directly. Otherwise, open in the user's browser.
+- **`auto`** — execute each unsubscribe immediately during triage
+- **`batch`** — collect during triage, execute at end as a confirmable queue
+- **`manual`** — surface mechanism only, user handles externally
 
-**3. Auto-junk rule (no mechanism found)**
-If neither method finds an unsubscribe mechanism (automated alerts, scraper lists, transactional emails repurposed for spam):
-> "No unsubscribe link found in this email from [sender]. Want me to create a rule to auto-junk all future emails from them? [Yes / No]"
-
-### Batch vs. Immediate Mode
-
-Behavior is controlled by `unsubscribe_mode` in config:
-
-**`auto` (immediate):** Execute each unsubscribe as soon as it's assigned during triage. Report in the action confirmation batch:
-> "✓ Unsubscribed from: [sender1] (one-click), [sender2] (one-click). [sender3]: no link found — created auto-junk rule."
-
-**`batch` (end of triage):** Collect all `unsub` assignments during triage. At the end, execute together:
-
-```
-UNSUBSCRIBE QUEUE — 4 senders
-
-├── [sender1] — List-Unsubscribe header found ✓ (will execute)
-├── [sender2] — List-Unsubscribe header found ✓ (will execute)
-├── [sender3] — Unsubscribe link found: [url] — confirm? [Yes / Skip]
-└── [sender4] — No link found — create auto-junk rule? [Yes / Skip]
-
-[Execute all] [Review each]
-```
-
-**`manual`:** Present the unsubscribe link or header URL for each, let the user handle it themselves. Just surface the mechanism, don't execute.
-
-### Post-Unsubscribe
-
-After a successful unsubscribe:
-- Create a rule: auto-junk any future emails from the same sender (they may still arrive despite unsubscribing)
-- Log in triage complete summary under "🔕 Unsubscribed"
+After successful unsubscribe: also create auto-junk rule (sender may still send despite unsubscribing).
 
 ## Slack Triage
 
-### Categorization
-
-Same system as email:
-- 🔴 RESPOND — DMs asking questions, @mentions needing decisions
-- 🟡 FYI — Team updates, completed tasks, shared resources
-- ⏭️ SKIP — Bot messages, conversations between others, general chatter
-
-### Channel Rules
-
-Channel-level rules from setup:
-- **Priority channels** — Always surface (e.g., #client-alerts)
-- **Muted channels** — Never surface (e.g., #random)
-- **Keyword alerts** — Surface from any channel if keywords match
-
-### Integration with Email Triage
-
-Slack items are numbered after email items in the same batch (email #1-8, Slack #9-10, iMessage #11-12) so user can rapid-fire across all platforms in one response.
+Same v1.3 behavior. Categorization (🔴 / 🟡 / ⏭️). Channel rules (priority / muted / keyword alerts). Slack items integrate with email batches in same triage stream — numbered after email items.
 
 ## iMessage Triage
 
-### Connection
-iMessage is connected via macOS AppleScript/Shortcuts integration. The Messages app must be running on the user's Mac.
+Same v1.3 behavior. macOS AppleScript/Shortcuts integration. Categorization, action codes (draft/remind/read/skip), reminder delivery. iMessage items numbered after Slack items in batches.
 
-### Categorization
+## Calendar Triage
 
-Same system as email and Slack:
-- 🔴 RESPOND — Direct messages asking questions, time-sensitive requests, VIP contacts
-- 🟡 FYI — Confirmations, shared links/photos, casual updates
-- ⏭️ SKIP — Group chat chatter, reactions, tapbacks
+Same v1.3 behavior via native Google Calendar MCP. For Outlook users, use Composio's Outlook Calendar slugs.
 
-### Message Pulling
-- Pull unread iMessage conversations since last triage
-- Include both 1:1 conversations and group chats
-- Prioritize VIP contacts and messages containing questions or action items
-- Show contact name (matched from VIP list and contacts) alongside phone number/email
+Flags: ❓ UNRESPONDED / ⚠️ CONFLICTS / 🏃 MARATHON / 📋 PREP NEEDED.
 
-### iMessage Actions
-| Code | Action |
-|------|--------|
-| `draft` | Draft an iMessage reply in user's voice (casual/SMS style) |
-| `remind [time]` | Create task + send yourself an iMessage reminder at the specified time |
-| `read` | Mark conversation as read |
-| `skip` | Leave for later |
-
-### Integration with Triage Batches
-iMessage items are numbered after Slack items in the same batch so the user can rapid-fire actions across email, Slack, and iMessage in a single response.
-
-### iMessage as Reminder Delivery Channel
-Users can choose iMessage instead of (or in addition to) Slack for scheduled reminders:
-- **Task reminders** — When a `remind [time]` action fires, send an iMessage to the user at the scheduled time instead of a Slack DM
-- **Briefing delivery** — Morning briefings can be sent via iMessage
-- **Follow-up nudges** — Stale follow-up reminders delivered via iMessage
-- Configured in `config.md` under `Reminder Delivery` — user chooses Slack channel, Slack DM, or iMessage as their default reminder channel
+Action codes: accept / decline / tentative / reschedule / buffer / prep.
 
 ## Scheduled Reminders
 
-The reminder system lets users create, schedule, and deliver future reminders through their preferred channel — a dedicated Slack channel, Slack DM, or iMessage.
+Same delivery mechanics as v1.3 (Slack channel / Slack DM / iMessage). Reminder data lives in `todos.md` (with due dates) instead of Google Sheets. Standalone creation, recurring reminders, dedicated `#inbox-reminders` channel — all preserved.
 
-### Creating Reminders
-
-Reminders can be created from multiple entry points:
-
-| Entry Point | How |
-|-------------|-----|
-| **During triage** | `remind [time]` or `remind [time] via [channel]` on any message |
-| **Standalone** | "Remind me to [task] at [time]" or "Set a reminder for [time]" |
-| **From rules** | Rules can auto-create reminders (e.g., stale follow-ups) |
-| **Recurring** | "Remind me every [Monday/day/week] to [task]" |
-
-### Reminder Delivery Channels
-
-| Channel | How It Works | Best For |
-|---------|-------------|----------|
-| **Slack Channel** | Posts reminder to a dedicated channel (e.g., `#inbox-reminders`) — created during setup or on first use | Teams who want a visible reminder log; easy to review history |
-| **Slack DM** | Sends reminder as a DM to yourself | Personal/quiet reminders within Slack |
-| **iMessage** | Sends reminder as an iMessage to yourself at the scheduled time | Users who live on their phone; reminders that follow you outside of work tools |
-
-### Dedicated Slack Reminder Channel
-
-During setup (or on first reminder if not yet configured), the plugin offers to create a dedicated Slack channel for reminders:
-
-> "Would you like me to create a dedicated Slack channel for your reminders? This gives you a single place to see all upcoming and past reminders."
->
-> - **Yes, create #inbox-reminders** — Creates a private channel named `#inbox-reminders` (or custom name)
-> - **Use a different name** — User specifies channel name
-> - **Use an existing channel** — User picks from existing channels
-> - **No, use DMs instead** — Reminders go to Slack DM
-> - **No, use iMessage** — Reminders go to iMessage
-
-When posting to the Slack reminder channel:
 ```
 📬 REMINDER — [Time]
 
-[Task context / original message summary]
+[Task context]
 
-Source: [Email from Jim Schlosser / Slack DM from Scott / Manual]
+Source: [Email from X / Slack DM from Y / Manual]
 Created: [date] during triage
-Task ID: T017
+Task: T017 (in todos.md)
 
 → [Mark Done] [Snooze 1hr] [Snooze Tomorrow]
 ```
 
-### Reminder Format by Channel
+Per-reminder channel override: `remind tomorrow 9am via imessage`.
 
-**Slack Channel / DM:**
+## Task Tracker — workspace-native
+
+Canonical store: `todos.md` + `followups.md`. Replaces v1.3's four-backend model.
+
+Optional one-way mirroring (workspace → external):
+- **Apple Reminders** for time-bound items, mirrored to "Inbox Tasks" list (Mac users)
+- **Google Calendar event** for any item with a due date (so the OS reminds you)
+- **Outlook Tasks** for Outlook users (via Composio)
+
+Mirroring is opt-in during setup wizard. Workspace remains canonical — if external and workspace diverge, workspace wins.
+
+### Task data model in `todos.md`
+
+```markdown
+- [ ] [task description] — from [source: email / Slack / iMessage / manual] — added YYYY-MM-DD — due YYYY-MM-DD — priority HIGH/MED/LOW
 ```
-📬 Reminder: [Brief description]
-Due: [time]
-Context: [1-2 sentence summary of the original message or task]
-Task: T017 | Source: [Email / Slack / iMessage / Manual]
-```
 
-**iMessage:**
-```
-📬 Reminder: [Brief description]
-[1-2 sentence context]
-(from Inbox Command Center)
-```
+Status flips to `- [x]` on completion. Done items kept 14 days, then auto-pruned.
 
-### Standalone Reminder Creation
+### Morning integration
 
-Users can create reminders outside of triage:
+During morning triage, after first email batch:
+> "You have N open todos — X overdue, Y due today."
 
-> "Remind me to follow up with Joel about the wholesale pricing tomorrow at 2pm"
-> "Set a reminder for Friday 9am to review the Q2 projections"
-> "Remind me every Monday at 8am to check the client dashboard"
-
-The plugin:
-1. Parses the task, time, and any recurrence
-2. Adds to task tracker Google Sheet
-3. Creates Google Calendar event
-4. Schedules delivery via the user's configured channel (or asks if not yet configured)
-5. Confirms: "✓ T018 created — I'll remind you to follow up with Joel tomorrow at 2pm via [channel]"
-
-### Recurring Reminders
-
-For recurring reminders:
-- Stored in task tracker with recurrence pattern
-- Each instance is scheduled independently
-- After each reminder fires, the next instance is auto-scheduled
-- User can cancel the series or skip individual instances
-- Examples:
-  - "Remind me every Monday at 9am to check the weekly report"
-  - "Remind me on the 1st of every month to send invoices"
-  - "Remind me every Friday at 4pm to update the client dashboard"
-
-## Calendar Triage
-
-### Flags
-
-| Flag | What It Catches |
-|------|----------------|
-| ❓ UNRESPONDED | Events with `needsAction` or `tentative` status |
-| ⚠️ CONFLICTS | Overlapping meeting times |
-| 🏃 MARATHON | 3+ consecutive meetings with < 15 min gap |
-| 📋 PREP NEEDED | Meetings with "review", "presentation", "pitch", or external attendees |
-
-### Calendar Action Codes
-
-| Code | Action |
-|------|--------|
-| `accept` | Accept invitation |
-| `decline [reason]` | Decline with optional message |
-| `tentative` | Mark tentative |
-| `reschedule` | Find alternative times |
-| `buffer` | Add 15-min buffer before/after |
-| `prep` | Set reminder 30 min before |
-
-## Task Tracker
-
-The task tracker backend is configured during setup. All backends use the same task data model and action commands — only the storage mechanism differs.
-
-### Task Data Model
-
-| Field | Description |
-|-------|-------------|
-| ID | T001, T002... |
-| Created | Date added |
-| Due | Target date/time |
-| Source | Email, Slack, iMessage, Calendar, Manual |
-| From | Sender name |
-| Description | Brief task name |
-| Summary | 1-2 sentence context |
-| Priority | HIGH / MEDIUM / LOW |
-| Status | ⬜ Open / 🔄 In Progress / ✅ Done / ⏭️ Deferred |
-| Completed | Date completed |
-| Notes | Follow-up notes |
-
-### Supported Backends
-
-**Apple Reminders** (`task_tracker: apple-reminders`)
-- Create: Add reminder to "Inbox Tasks" list with due date, priority, and notes
-- Read: List open reminders from the list for morning summary
-- Update: Mark complete, update due date, add notes
-- Best for: Mac/iPhone users who want zero friction and no extra accounts
-
-**Markdown task list** (`task_tracker: markdown`)
-- Stored at `[data-path]/tasks.md` — same iCloud folder as config, voice profile, and rules
-- Read/write as a structured markdown table
-- Update status in-place; append new rows
-- Best for: users who want everything in one simple folder
-
-**ClickUp** (`task_tracker: clickup`)
-- Create tasks in a configured ClickUp list via Rube
-- Read open tasks, update status, add comments
-- Best for: users who already use ClickUp for project management
-
-**Google Sheets** (`task_tracker: google-sheets`)
-- Sheet name: "Inbox Task Tracker" (created during setup if not found)
-- Add rows, update status, filter by due date and priority
-- Best for: users who want flexible filtering and reporting
-
-### Calendar Reminder Integration
-
-Regardless of backend, when a task is created with a due time:
-1. Add task to the configured backend
-2. Create Google Calendar event: "📬 [Task ID]: [Description]"
-3. Event description includes task context
-4. Schedule reminder delivery via the user's configured channel (Slack channel, Slack DM, or iMessage)
-
-### Morning Integration
-
-During morning triage, after email/Slack batch 1:
-- Surface tasks due today or overdue
-- "You also have [X] open tasks — [X] overdue, [X] due today."
+Surface overdue/today items inline.
 
 ## Scheduled Daily Briefing
 
-### Delivery Methods
-
-| Method | How It Works |
-|--------|-------------|
-| **Slack DM** | Auto-send summary to user at configured time |
-| **iMessage** | Send summary as an iMessage to the user at configured time |
-| **Email Digest** | Send summary email to user's inbox |
-| **Calendar Block** | Create/update recurring event with briefing in description |
-| **All** | Maximum coverage — deliver via all connected channels |
-
-### Briefing Content
+**Multi-account aware:** briefing aggregates across all connected inboxes with per-inbox sections.
 
 ```
 ☀️ Morning Briefing — [Date]
 
-📧 EMAIL: [X] unread ([X] 🔴 need response, [X] 🟡 FYI, [X] 🗑️ junk)
-├── 🔴 [Top 3 RESPOND items with sender + subject + 1-line summary]
+📧 EMAIL ACROSS INBOXES: [N] unread total
+├── personal:  [N] unread ([X] 🔴, [Y] 🟡, [Z] 🗑️)
+│   └── 🔴 [Top 1-2 RESPOND items]
+├── uno-mas:   [N] unread ([X] 🔴, [Y] 🟡, [Z] 🗑️)
+│   └── 🔴 [Top 1-2 RESPOND items]
+└── ms365:     [N] unread
 
-💬 SLACK: [X] unread ([X] 🔴 need response)
-├── 🔴 [Top items]
+⭐ VIPs WAITING: [N] across all inboxes
+├── [VIP — subject — inbox]
 
-💬 iMESSAGE: [X] unread ([X] 🔴 need response)
-├── 🔴 [Top items]
+💬 SLACK: [X] unread ([Y] 🔴)
+💬 iMESSAGE: [X] unread ([Y] 🔴)
 
-📅 CALENDAR: [X] meetings today, [X] unresponded, [X] conflicts
-├── [Any flags]
+📅 CALENDAR: [X] meetings today, [Y] unresponded, [Z] conflicts
 
-📋 TASKS: [X] due today, [X] overdue
-├── [Top items]
+📋 TASKS: [X] due today, [Y] overdue (todos.md)
+👥 FOLLOWUPS: [N] people waiting on you (followups.md)
 
-⚡ RULES APPLIED: [X] messages auto-processed since last triage
-├── [X] auto-junked, [X] auto-archived, [X] auto-labeled
+⚡ RULES APPLIED since last triage: [X] auto-processed
+├── [X] auto-junked, [Y] auto-archived, [Z] auto-labeled, [W] auto-routed
 
 → Say "triage" to take action
 ```
 
-### Briefing Schedule Config
+Delivery: Slack DM / iMessage / Email / Calendar block / All — per `.meta.json.schedules.daily_briefing.channel`.
 
-```markdown
-## Scheduled Briefing
-- **Delivery:** Slack DM / iMessage / Email / Calendar / All
-- **Time:** 7:30 AM
-- **Days:** Monday through Friday
-- **Include:** Email summary, Slack summary, iMessage summary, Calendar flags, Task reminders, Rules summary, VIP summary
-```
+## Daily VIP Summary — per inbox
 
-## Daily VIP Summary
-
-A dedicated daily summary of all VIP communications is generated and sent to the user. This is separate from (and in addition to) the morning briefing.
-
-### VIP Summary Config
-
-```markdown
-## VIP Summary
-- Enabled: Yes
-- Delivery: [Slack DM / iMessage / Email / All]
-- Time: [HH:MM AM/PM] (default: same as morning briefing)
-- Include: [emails received, emails sent, threads active, pending drafts]
-```
-
-### VIP Summary Format
+One digest per connected inbox. VIP person can appear in multiple digests if they email more than one of your accounts. Same delivery channel for all by default; per-inbox override available.
 
 ```
-⭐ DAILY VIP SUMMARY — [Date]
+⭐ VIP SUMMARY — uno-mas — [Date]
 
-[X] VIP communications today
+[X] VIP communications today (this inbox)
 
-━━━ EMAILS RECEIVED FROM VIPs ━━━
+━━━ EMAILS RECEIVED ━━━
+📧 Bryan Howell — re: Q3 numbers — 14 min ago
+   Status: Unread 🔴
+   Last meeting: Fireflies May 3 (Q3 numbers call)
 
-📧 [Sender Name] ([Relationship]) — [Time]
-   Subject: [Subject line]
-   Summary: [1-2 sentence summary]
-   Status: [Replied ✅ / Draft pending ✏️ / Unread 🔴 / Read, no reply needed 🟡]
+━━━ EMAILS SENT ━━━
+📤 To: Tamara Kemper — re: Riverbank — 2 hr ago
 
-📧 [Sender Name] ([Relationship]) — [Time]
-   Subject: [Subject line]
-   Summary: [1-2 sentence summary]
-   Status: [Replied ✅ / Draft pending ✏️ / Unread 🔴]
-
-━━━ EMAILS SENT TO VIPs ━━━
-
-📤 To: [Name] — [Subject] — [Time]
-📤 To: [Name] — [Subject] — [Time]
-
-━━━ ACTIVE VIP THREADS ━━━
-
-🔄 [Name] — [Subject] — [X] messages, last activity [time]
-   [Brief context of where the thread stands]
+━━━ ACTIVE THREADS ━━━
+🔄 Bryan — re: Q3 numbers — 5 messages
 
 ━━━ PENDING ━━━
+⏳ [N] VIP emails awaiting your response in this inbox
 
-⏳ [X] VIP emails awaiting your response
-├── [Name] — [Subject] — received [time ago]
-├── [Name] — [Subject] — received [time ago]
-
-→ Say "triage" to take action on pending VIP items
+→ Say "triage uno-mas" to take action
 ```
-
-### VIP Summary Delivery
-
-The VIP summary is delivered daily at the configured time via the user's chosen channel. It provides a complete picture of all VIP communications for the day — what came in, what went out, what's pending, and what threads are active.
 
 ## Monthly Inbox Report
 
-A comprehensive monthly report on inbox activity, trends, and communications. Generated automatically and sent to the user on the cadence they choose.
-
-### Report Cadence Config
-
-```markdown
-## Inbox Report
-- Cadence: [monthly / bi-weekly / weekly]
-- Delivery: [Email / Slack DM / iMessage / All]
-- Day: [1st of month / last business day / custom]
-- Time: [HH:MM AM/PM]
-- Last generated: [date]
-```
-
-### Report Content
+**Single report**, two layers — cross-inbox unified entities and per-inbox breakdowns.
 
 ```
-📊 INBOX REPORT — [Month Year]
+📊 INBOX COMMAND CENTER REPORT — [Period]
 Generated: [Date]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📧 EMAIL VOLUME
-├── Total received: [X]
-├── Total sent: [X]
-├── Average per day: [X] received / [X] sent
-├── Busiest day: [Day, Date] ([X] emails)
-├── Quietest day: [Day, Date] ([X] emails)
+CROSS-INBOX (unified entities)
+
+⭐ VIP COMMUNICATIONS
+├── Total received: [N]    Total sent: [M]
+├── Avg response time: [X]h
+├── Per-VIP breakdown:
+│   ├── Bryan Howell — Recv: [X] | Sent: [Y] | Avg: [Z]h | Inboxes: [list]
+│   └── ...
+├── VIP threads still open: [N]
+├── Notable: [silent VIPs, new VIP candidates, etc.]
+
+🎙️ VOICE PROFILE
+├── Drift events this period: [N]
+├── Mini A/B fires: [N]
+├── Mandatory review: [completed / due]
+
+📞 FIREFLIES INGESTED
+├── Total meetings analyzed: [N]
+├── New transcripts feeding contacts.md: [N]
+├── New VIP candidates from meetings: [N]
+
+⚡ GLOBAL RULES PERFORMANCE
+├── Total triggers: [N]
+├── Top global rules: [list]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🗑️ DELETION BREAKDOWN
-├── Total emails deleted: [X]
-│   ├── Manually deleted (during triage): [X]
-│   ├── Rule-based auto-deleted: [X]
-│   │   ├── By rule: [Rule Name] — [X] deleted
-│   │   ├── By rule: [Rule Name] — [X] deleted
-│   │   └── By rule: [Rule Name] — [X] deleted
-│   ├── Folder auto-cleanup (expired): [X]
-│   └── Unsubscribe + delete: [X]
-├── Deletion rate: [X]% of all received emails
-├── Manual vs. automated: [X]% manual / [X]% automated
-└── Trend: [↑ X% more / ↓ X% fewer / → same] as last month
+PER-INBOX
+
+── personal (ramsey@strategylabs.us) ──
+  📧 Volume: [N] received, [M] sent
+  🗑️ Deletions: [X] manual / [Y] rule / [Z] folder cleanup
+  📖 Read but unanswered (RESPOND): [N]
+  📂 Folder activity: [Newsletters X | Receipts Y | ...]
+  ⚡ Per-inbox rules: [N] triggers
+  📈 Inbox zero days: [X] of [Y] business days
+
+── uno-mas (ramsey@unomastacos.com) ──
+  [same structure]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📖 READ BUT NOT RESPONDED
-├── Total read without reply: [X]
-├── By category:
-│   ├── 🟡 FYI (expected — no reply needed): [X]
-│   ├── 🔴 RESPOND (flagged but not replied): [X] ⚠️
-│   │   ├── [Sender] — [Subject] — [X] days ago
-│   │   ├── [Sender] — [Subject] — [X] days ago
-│   │   └── [Sender] — [Subject] — [X] days ago
-│   └── Skipped during triage: [X]
-├── Average time to respond (when you do): [X] hours
-└── Response rate: [X]% of 🔴 items replied to
+TRENDS
+
+📈 Volume vs. last period: [+/-X%]
+📈 Response time vs. last: [+/-X%]
+📈 Triage efficiency: [X]% auto-handled by rules
+📈 Top 5 senders: [list]
+📈 New senders this period: [N] ([X] became repeat)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⭐ VIP COMMUNICATIONS SUMMARY
-├── Total VIP emails received: [X]
-├── Total VIP emails sent: [X]
-├── VIP response rate: [X]%
-├── Average VIP response time: [X] hours
-│
-├── BY VIP CONTACT:
-│   ├── [Name] ([Relationship])
-│   │   ├── Received: [X] | Sent: [X] | Avg response: [X]h
-│   │   └── Key threads: [brief list]
-│   ├── [Name] ([Relationship])
-│   │   ├── Received: [X] | Sent: [X] | Avg response: [X]h
-│   │   └── Key threads: [brief list]
-│   └── [Name] ([Relationship])
-│       ├── Received: [X] | Sent: [X] | Avg response: [X]h
-│       └── Key threads: [brief list]
-│
-├── VIP threads still open/pending: [X]
-│   ├── [Name] — [Subject] — awaiting [your reply / their reply]
-│   └── [Name] — [Subject] — awaiting [your reply / their reply]
-│
-└── Notable: [Any VIP who went silent, new VIP candidates, etc.]
+ACTIONS DUE
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-⚡ RULES PERFORMANCE
-├── Total messages auto-processed: [X]
-├── By action:
-│   ├── Auto-junked: [X]
-│   ├── Auto-archived: [X]
-│   ├── Auto-labeled: [X]
-│   ├── Auto-forwarded: [X]
-│   ├── Auto-deleted: [X]
-│   └── Auto-routed to folder: [X]
-├── Top rules by volume:
-│   ├── [Rule Name] — triggered [X] times
-│   ├── [Rule Name] — triggered [X] times
-│   └── [Rule Name] — triggered [X] times
-├── Rules with 0 triggers this month: [list — candidates for cleanup]
-└── New rule suggestions pending: [X]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📂 FOLDER ACTIVITY
-├── Low Priority: [X] received, [X] auto-archived, [X] auto-deleted
-├── Newsletters: [X] received, [X] read, [X] auto-deleted
-├── Finance: [X] received
-├── Automated/Bot: [X] received, [X] auto-deleted
-├── [Other folders]: [stats]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📈 TRENDS & INSIGHTS
-├── Email volume trend: [↑/↓/→] vs. last month
-├── Response time trend: [↑/↓/→] vs. last month
-├── Top 5 senders (by volume): [list with counts]
-├── Top 5 senders you reply to most: [list]
-├── New senders this month: [X] ([X] became repeat)
-├── Busiest time of day: [hour range]
-├── Triage efficiency: [X]% of inbox handled by rules (vs. [X]% last month)
-├── Average triage session: [X] minutes, [X] messages
-└── Inbox zero days: [X] out of [X] business days
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💬 SLACK & iMESSAGE (if connected)
-├── Slack: [X] messages triaged, [X] replied, [X] skipped
-├── iMessage: [X] messages triaged, [X] replied, [X] skipped
-├── Cross-platform dedup: [X] items merged
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 ACTIONS DUE
-├── Pending rule suggestions: [X] — [Review now]
+├── Pending rule suggestions: [N] — [Review now]
 ├── VIP list review: [due / not due]
 ├── Voice profile review: [due / not due]
-├── Stale follow-ups: [X] emails sent with no reply > 7 days
-└── [Any other action items]
+├── Stale follow-ups: [N] > 7 days (in followups.md)
 ```
 
-### Report Delivery
+**Source data:** primary feed is `session-logs/YYYY-MM-DD.md` files within the report period; supplemented by current state queries (folder counts via Composio, rule trigger counts from `rules.md`).
 
-The report is delivered via the user's configured channel. If delivered via email, it is formatted as a clean, readable email. If via Slack or iMessage, it is sent as a structured message with the key highlights and a link to the full report (stored in the user data directory as `inbox-command-center/reports/[YYYY-MM].md`).
-
-### Report Storage
-
-Monthly reports are saved to the user data directory:
-
-```
-inbox-command-center/
-├── reports/
-│   ├── 2026-01.md
-│   ├── 2026-02.md
-│   └── 2026-03.md
-```
-
-Users can view past reports anytime: "Show my inbox report for January" or "Compare this month to last month".
+Stored at `~/Inbox Command Center/reports/[YYYY-MM].md`. Optionally delivered via Slack DM / iMessage / email per `.meta.json.schedules.inbox_report_cadence`.
 
 ## Plugin Update Notifications
 
-When the Inbox Command Center (or any Strategy Labs marketplace plugin) is updated, the plugin detects the version change and presents the user with a guided update message on the next session. This is powered by the marketplace-wide update notification system (see `UPDATE-NOTIFICATIONS.md` at the marketplace root).
+Same v1.1 mechanic; v1.4 adds a targeted v1.3 → v1.4 migration branch.
 
-### How It Works
-
-1. Each plugin stores its installed version in `config.md` under `Plugin Version`
-2. The plugin's `CHANGELOG.md` tracks all version changes with new features, connections, and setup steps
-3. On load, the plugin compares the installed version vs. the current plugin version
-4. If a new version is detected, the plugin presents an update briefing before any other action
-
-### Update Briefing Format
+When `installed_version` from `.meta.json` is older than skill version:
 
 ```
-🆕 INBOX COMMAND CENTER — Updated to v1.2.0
+🆕 INBOX COMMAND CENTER — Updated to v[X.Y.Z]
 
-Here's what's new:
+[Brief description of what's new]
 
-NEW FEATURES:
-├── 🔄 Cross-Device Sync — Config, voice profile, rules, and VIP contacts sync across Macs via iCloud
-├── 💬 iMessage Integration — Read, write, and triage iMessages alongside email and Slack
-├── ⏰ Scheduled Reminders — Create, schedule, and deliver reminders via Slack channel, Slack DM, or iMessage
-├── 📢 Dedicated Slack Reminder Channel — All reminders in one place (#inbox-reminders)
-├── 🔁 Recurring Reminders — "Remind me every Monday at 9am to..."
-
-SETUP NEEDED:
-├── 1. Cross-Device Sync — Enable iCloud sync for your config and data [Set up now / Skip]
-├── 2. iMessage — Connect your iMessage account [Set up now]
-├── 3. Reminder Channel — Choose where reminders are delivered [Configure]
-├── 4. Slack Reminder Channel — Create #inbox-reminders [Create now / Skip]
-
-[Set up all new features] [Set up later] [Show full changelog]
+[Set up new features now] [Set up later — remind me on next 3 triages] [Show full changelog]
 ```
 
-### Guided Setup for New Features
+If user skips, set `pending_update` in `.meta.json`. Remind on next 3 sessions.
 
-When the user chooses "Set up all new features" or "Set up now" on any item:
-- Walk through only the new/changed setup steps (not the full setup wizard)
-- Pre-fill existing configuration where possible
-- Update `config.md` with new settings
-- Mark the update as acknowledged
+### v1.3 → v1.4 specific migration
 
-If the user chooses "Set up later":
-- Save a flag in `config.md`: `pending_update_setup: v1.1.0`
-- On next triage, show a brief reminder: "You have new features from v1.1.0 that need setup. Say 'set up updates' to configure."
-- After 3 reminders, stop prompting (user can always say "set up updates" manually)
+If `installed_version == "1.3.0"` (or `migrated_from` is unset and old workspace path exists), trigger the migration flow described in `docs/v1.4-migration.md`. Migration is interactive, idempotent, runs entirely through the skill (no bash scripts), and preserves a v1.3 backup at `.v1.3-backup/` for 30 days.
 
-### Version Tracking in Config
+## Error Handling
 
-```markdown
-## Plugin Version
-- Installed: 1.1.0
-- Last update acknowledged: 1.1.0
-- Pending setup: none
-```
+| Error | Behavior |
+|---|---|
+| No results | Treat as valid empty state. Widen query / date range. |
+| Composio rate limit (429/403) | Back off and retry; surface to user if persistent. |
+| Invalid Gmail label IDs | Call `GMAIL_LIST_LABELS` first to refresh. |
+| Composio session expired | Re-run `COMPOSIO_MANAGE_CONNECTIONS` for the affected connector. |
+| Tool schema not loaded | Call `COMPOSIO_GET_TOOL_SCHEMAS` for the slug before executing. |
+| Workspace file missing on session start | Tell user to run setup-wizard. Don't recreate from scratch — they may have data in iCloud not yet synced. |
+| iCloud conflict copy detected | Prompt user with diff summary, ask which version to keep. |
+| Filesystem MCP unavailable | Tell user to check Claude config. Workspace is read-only without it. |
+
+## Smart Behaviors
+
+- **Batch threads** — 5 emails in one thread = summarize once; use thread_id for replies
+- **Flag phishing/anomalies** — unexpected invoices, password resets, unusual requests
+- **Time zone** — User's tz from `.meta.json` (Pacific Time default for SL deployment in Spokane, WA)
+- **Keep FYI brief** — single line per item
+- **Be decisive** — if it's junk, call it junk; user can override
+- **Cross-reference** — same email + Slack DM = one item
+- **Always show drafts before sending** — never auto-send without confirmation
+- **Always confirm permanent delete** — trash is recoverable; batch delete is not
+- **Use the workspace, don't reinvent** — check `contacts.md` before asking
+- **Propose, don't impose** — when patterns appear, queue rule suggestions
+
+## Session End
+
+If the user signals they're done ("that's all", "thanks", "I'm good"):
+
+1. Update `followups.md` with anything sent expecting reply
+2. Update `todos.md` with anything new
+3. If `voice_drift_counter >= 3`, offer mini A/B
+4. Append final session-log line summary
+5. Increment `session_count` in `.meta.json`
+6. If pending rule review or voice review is due and skipped, mention it gently
+7. Sign off briefly
 
 ## File Structure
 
-### Plugin Source (in marketplace repo)
+### Plugin source (in marketplace repo)
+
 ```
 plugins/inbox-command-center/
 ├── .claude-plugin/plugin.json   # Plugin metadata and version
-├── CHANGELOG.md                 # Version history and update notes
+├── CHANGELOG.md                 # Version history
 ├── README.md                    # Plugin overview
-├── commands/                    # Command files (setup-wizard, triage, create-rule, voice-calibration, inbox-report)
-└── skills/inbox-manager/SKILL.md  # This file — full skill documentation
+├── commands/
+│   ├── setup-wizard.md
+│   ├── triage.md
+│   ├── create-rule.md
+│   ├── voice-calibration.md
+│   └── inbox-report.md
+├── skills/inbox-manager/SKILL.md  # This file
+└── docs/
+    ├── v1.4-audit.md            # Build checklist for v1.4
+    └── v1.4-migration.md        # v1.3 → v1.4 migration spec
 ```
 
-### User Data (synced via iCloud or local)
+### User workspace (synced via iCloud Drive — Finder-visible)
 
-When cross-device sync is enabled:
 ```
-~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/
-├── config.md                 # Connected tools, preferences, schedule, version tracking, sync settings
-├── voice-profile.md          # Living voice profile
-├── vip-contacts.md           # Priority contact list with relationship tags
-├── rules.md                  # Active message rules
-├── folder-rules.md           # Folder-based rules and review settings
-├── rule-suggestions.md       # Pending learned suggestions
-├── tasks.md                  # Task list (markdown backend only)
-├── task-tracker-link.md      # Link to external tracker (Google Sheets / ClickUp)
-└── reports/                  # Monthly inbox reports
-    └── [YYYY-MM].md
-```
-
-When local only:
-```
-inbox-command-center/
-├── config.md
-├── voice-profile.md
-├── vip-contacts.md
+~/Inbox Command Center/   (symlinked from ~/Library/Mobile Documents/com~apple~CloudDocs/Inbox Command Center/)
+├── .meta.json
+├── contacts.md
+├── todos.md
+├── followups.md
 ├── rules.md
-├── folder-rules.md
-├── rule-suggestions.md
-├── task-tracker-link.md
-└── reports/
-    └── [YYYY-MM].md
+├── rules-review-queue.md
+├── voice-profile.md
+├── voice-profile-brand.md
+├── session-logs/
+│   └── YYYY-MM-DD.md
+├── reports/
+│   └── YYYY-MM.md
+└── .v1.3-backup/  (only present after v1.3 → v1.4 migration; auto-removed after 30d)
 ```
+
+When iCloud Drive is unavailable, fall back to local `~/Inbox Command Center/` (no sync). Warn user.

@@ -2,243 +2,391 @@
 
 Step-by-step guided rule creation for message handling. Can be triggered standalone or from within a triage session when the user says "rule" or "create rule" on a specific message.
 
+In v1.4, every rule has three dimensions: **type** (delete / prioritize / folder / organize), **stakes** (low_stakes / high_stakes), and **scope** (per-inbox or global). The wizard collects all three plus the trigger and action.
+
 ## Entry Points
 
 ### From Triage (contextual)
-When the user selects `rule` on a specific message during triage, pre-populate the rule builder with that message's sender, subject, and patterns.
 
-> "Let's create a rule based on this email from [Sender]. I'll walk you through it."
+When user types `rule` on a message during triage, prefill the rule wizard with context from that message:
+- Suggested **trigger**: sender (most common) or subject pattern
+- Suggested **type**: based on message category (delete/prioritize/folder/organize)
+- Suggested **stakes**: per default-by-action table (see SKILL.md Rules Engine)
+- Suggested **scope**: current inbox alias
+
+Show prefilled values and ask user to confirm or override each.
 
 ### Standalone
-When the user runs `/create-rule` directly:
 
-> "Let's create a new message rule. I'll walk you through each step."
+User says: "create a rule" / "make a rule" / "I want to set up a rule"
 
----
+Walk through Steps 1-6 from a blank slate.
 
 ## Step 1: What Triggers This Rule?
 
-> "What should trigger this rule? Pick one or combine multiple:"
+Ask what should match. Multiple trigger types can combine.
 
 ### Sender-Based
-> - **Specific sender:** "Messages from [email address / phone number]"
-> - **Domain:** "Emails from anyone @[domain.com]"
-> - **Sender type:** "Emails from mailing lists / newsletters / no-reply addresses"
-> - **Platform:** "Only from [Email / Slack / iMessage / All]"
-> - **New senders:** "First-time senders not in my contacts"
 
-If from triage context, pre-fill:
-> "Trigger: Emails from [sender's email]. Want to broaden to all emails from @[domain]?"
+```
+[ ] Specific email address (e.g., bryan@dieselpowerproducts.com)
+[ ] Domain (e.g., @strategylabs.us)
+[ ] Sender pattern (e.g., contains "noreply")
+[ ] Multiple senders (comma-separated list)
+```
 
 ### Content-Based
-> - **Subject contains:** [keywords or phrases]
-> - **Body contains:** [keywords or phrases]
-> - **Has attachments:** Yes / No / Specific types (.pdf, .xlsx, etc.)
-> - **Thread length:** More than [X] messages
+
+```
+[ ] Subject contains: [keywords]
+[ ] Subject matches pattern: [regex]
+[ ] Body contains: [keywords]
+[ ] Has attachment / specific attachment type
+```
 
 ### Timing-Based
-> - **Received during:** [time window] (e.g., 8 PM - 7 AM for quiet hours)
-> - **Day of week:** [specific days]
-> - **Recurring:** "Every email from this sender" vs. "Just this week"
+
+```
+[ ] Received during quiet hours (e.g., 9pm-7am)
+[ ] Older than [N] days unread
+[ ] No reply after [N] days (for sent emails)
+```
 
 ### Behavior-Based
-> - **I've junked this sender [X]+ times:** Auto-junk after threshold
-> - **No reply from me after [X] days:** Follow-up reminder
-> - **I sent an email and got no reply in [X] days:** Stale follow-up
 
-### Combine Triggers
-> "Want to combine triggers? For example: 'Emails from @linkedin.com that contain notification in the subject'"
->
-> Current trigger(s):
-> 1. [trigger 1]
-> 2. [add another?]
+```
+[ ] Sender flagged as junk [N]+ times
+[ ] User has trashed similar emails [N]+ times
+[ ] User has replied to this sender within [time]
+[ ] First-time sender (not in contacts.md)
+```
 
----
+### Combine triggers
+
+```
+Combine multiple triggers?
+
+  [ ] Match ALL conditions (AND)
+  [ ] Match ANY condition (OR)
+  [ ] Single condition only (default)
+```
 
 ## Step 2: What Should Happen?
 
-> "When this rule triggers, what should I do? Pick one or chain multiple actions:"
+Choose the action. Each action implies a default `Type` and `Stakes` (shown inline). User can override stakes if they want.
 
-### Delete Rules
-> - **Delete:** Move to trash
-> - **Permanently delete:** Skip trash, delete immediately (use with caution)
-> - **Delete after [X] days:** Keep for a period, then auto-delete
-> - **Delete + unsubscribe:** Delete and attempt to unsubscribe from the sender
-> - **Block sender:** Auto-delete all future emails from this sender without even hitting trash
+### Delete actions
 
-### Prioritization Rules
-> - **Categorize as:** 🔴 RESPOND / 🟡 FYI / 🗑️ JUNK / 🔕 UNSUBSCRIBE
-> - **Escalate to HIGH:** Always treat as urgent, surface at top of triage
-> - **Add to VIP list:** Automatically add sender to VIP contacts (prompts for relationship tag)
-> - **Priority bump:** Move ahead of other emails in the same category
-> - **Always show first:** This sender's emails appear before all others in triage batches
+```
+[ ] Move to trash (recoverable)              → Type: delete | Stakes: low (default)
+[ ] Permanent delete                         → Type: delete | Stakes: high (default — irreversible)
+[ ] Auto-junk + create unsubscribe attempt   → Type: delete | Stakes: low (default)
+```
 
-### Organization
-> - **Label as:** [label name] (create new or use existing)
-> - **Mark as:** Read / Starred / Important
-> - **Archive:** Move out of inbox, keep in All Mail
+### Prioritization actions
 
-### Folder Routing
-> - **Route to folder:** [Low Priority / Newsletters / Receipts & Orders / Finance / Automated/Bot / Pending Review / Delegated / Custom]
-> - **Create new folder:** Define a new folder with review cadence and auto-actions
-> - Folder routing respects the folder's review cadence — emails won't appear in main triage unless the folder review is due
+```
+[ ] Categorize as: 🔴 RESPOND / 🟡 FYI / 🗑️ JUNK / 🔕 UNSUBSCRIBE
+[ ] Mark as: read / starred
+[ ] Escalate to 🔴 HIGH priority
+[ ] Mark sender as VIP (adds [VIP] tag in contacts.md)
+                                              → Type: prioritize | Stakes: low (default)
+```
 
-### Routing
-> - **Forward to:** [email address] — with or without a note
-> - **Delegate to:** [person's name] — draft a forwarding email for approval
-> - **Auto-draft reply using:** [template or instructions]
+### Organization actions
 
-### Task Management
-> - **Create a task:** With priority [HIGH / MED / LOW]
-> - **Create a reminder in:** [time period]
-> - **Add to follow-up queue:** Check back in [X] days
+```
+[ ] Add label / category: [name]              → Type: organize | Stakes: low (default)
+[ ] Auto-archive (remove from INBOX)          → Type: organize | Stakes: low (default)
+[ ] Bundle into digest: [digest name]         → Type: organize | Stakes: low (default)
+```
 
-### Visibility
-> - **Snooze until:** [time / day] — hide until then, resurface in triage
-> - **Bundle into digest:** Group with similar messages, show as one item in weekly digest
-> - **Skip triage:** Process silently, never show in batches
+### Folder routing
 
-### Chain Actions
-> "Want to chain multiple actions? For example: 'Label as Finance AND route to Finance folder AND mark read' or 'Delete + unsubscribe from sender'"
->
-> Current action(s):
-> 1. [action 1]
-> 2. [add another?]
+```
+Move to folder:
+[ ] Low Priority
+[ ] Newsletters
+[ ] Receipts & Orders
+[ ] Finance
+[ ] Automated/Bot
+[ ] Pending Review
+[ ] Delegated
+[ ] Custom folder: [name]                     → Type: folder | Stakes: low (default)
+```
 
----
+The skill creates the underlying Gmail label or Outlook subfolder automatically (synthetic abstraction — see SKILL.md Folder Rules).
+
+### Reply / forward actions
+
+```
+[ ] Auto-draft using template                 → Type: organize | Stakes: low (drafts only)
+[ ] Auto-reply with template                  → Type: organize | Stakes: high (default — sends)
+[ ] Auto-forward to [email]                   → Type: organize | Stakes: high (default — touches another human)
+```
+
+### Task management
+
+```
+[ ] Add to todos.md (priority [HIGH/MED/LOW])
+[ ] Add sender to followups.md
+[ ] Create reminder in [time] via [channel]
+                                              → Type: organize | Stakes: low (default)
+```
+
+### Snooze
+
+```
+[ ] Snooze until [time/condition]             → Type: prioritize | Stakes: low (default)
+```
+
+### Chain actions
+
+```
+Combine multiple actions on a match?
+
+  [ ] Yes, chain actions
+       → User picks 2+ actions; they execute in order
+  [ ] Single action only
+```
+
+## Step 2b: Stakes (confirm or override)
+
+Based on the chosen action, the wizard suggests a default stakes level. Show user:
+
+```
+Suggested stakes: [low_stakes / high_stakes]
+
+  Low stakes  — Auto-applies silently after approval. Logged to session log.
+                Examples: archive, label, trash, mark-read, route to folder.
+
+  High stakes — Always confirms with you per-instance, even after rule
+                approval. Examples: permanent delete, auto-reply, auto-forward.
+
+  [ ] Use suggested ([X])
+  [ ] Override to other ([Y])
+```
+
+If user overrides high → low for an inherently risky action (auto-reply, permanent delete), warn:
+> "⚠️ This action sends or destroys data. Setting it to low_stakes means it'll execute without per-instance confirmation. Are you sure?"
+
+## Step 2c: Scope
+
+```
+Step 2c — Scope
+
+Apply this rule to:
+
+  [ ] All inboxes (global)
+       → Useful when the rule is about a person or pattern that
+         crosses inboxes (VIP escalation, urgency keywords).
+       
+  [ ] Just this inbox: [current alias] (per-inbox, recommended default)
+       → Useful when the rule reflects a per-account preference
+         (e.g., "newsletters in personal go to Newsletters, but in
+         uno-mas they're already filtered").
+
+  [ ] Specific inboxes: [pick 2+]
+       → Apply to a subset of your inboxes (rare).
+```
+
+VIP-related rules (sender-is-VIP triggers) auto-default to global with no override option — they're inherently global per the rules engine.
 
 ## Step 3: Any Exceptions?
 
-> "Should this rule have exceptions — situations where it should NOT apply?"
-
-### Common Exceptions
-> - **VIP override:** "Don't apply if sender is on my VIP list"
-> - **Keyword override:** "Don't apply if subject contains [keywords]" (e.g., "urgent", "action required")
-> - **Thread override:** "Don't apply if I'm already in the conversation"
-> - **Attachment override:** "Don't apply if there's an attachment"
-> - **Time override:** "Only apply during [time window]"
-> - **No exceptions:** "Apply this rule every time, no exceptions"
-
----
-
-## Step 4: Review & Name the Rule
-
-Present the complete rule for review:
-
 ```
-📋 NEW RULE — Ready for Review
+Step 3 — Exceptions
 
-NAME: [Auto-suggested based on trigger + action]
-(e.g., "Auto-junk LinkedIn notifications", "Forward invoices to bookkeeper")
+Should this rule NOT apply when:
 
-TRIGGER:
-├── Sender: @linkedin.com
-└── Subject contains: "notification"
-
-ACTION:
-├── Categorize as: 🗑️ JUNK
-└── Delete automatically
-
-EXCEPTIONS:
-└── Don't apply if sender is on VIP list
-
-STATUS: Active (will start applying immediately)
+  [ ] Sender is a VIP (recommended for delete/junk rules)
+  [ ] Subject contains override keyword: [e.g., "urgent"]
+  [ ] Sender is in your contacts.md
+  [ ] Email is part of a thread you've already replied to
+  [ ] (No exceptions)
 ```
 
-> "Does this look right?"
-> - **Activate** — Save and start applying immediately
-> - **Edit** — Go back and change a step
-> - **Test first** — Run against your last 30 days of email to see what it would have caught
-> - **Save as draft** — Save but don't activate yet
+Exceptions are checked before the rule's main action runs.
 
----
+## Step 4: Review and Name the Rule
+
+Show the complete rule preview:
+
+```
+Step 4 — Review Rule
+
+Name: [Auto-archive ESPN newsletters]   ← user can edit
+
+  Type:    delete
+  Stakes:  low_stakes
+  Scope:   per-inbox: personal
+
+  Trigger:
+    - Sender: notifications@espn.com
+
+  Action:
+    - Move to Trash
+
+  Exceptions:
+    - (none)
+
+  Status: Active
+
+Save this rule?
+  [ ] Save and activate
+  [ ] Save and pause (don't apply yet)
+  [ ] Edit something
+  [ ] Cancel
+```
+
+If user picks "Edit something", show numbered fields they can edit by saying e.g. "edit trigger" or "edit stakes".
 
 ## Step 5: Test Run (optional)
 
-If the user wants to test before activating:
+```
+Step 5 — Test Run (Optional)
 
-> "Testing rule against your last 30 days of email..."
->
-> "This rule would have matched **23 messages:**
-> - 18 LinkedIn notification emails
-> - 3 LinkedIn InMail notifications
-> - 2 LinkedIn job alert emails
->
-> **False positives (0):** No messages that shouldn't have been caught.
->
-> Looks clean. Activate? [Yes / Edit / Cancel]"
+Run this rule against the last [N] days of email to see what it
+would have caught? Doesn't make any actual changes.
 
-If false positives are found:
-> "**Possible false positive:** This rule would have caught an email from [Name] at LinkedIn
-> (a real recruiter message, not a notification). Want to add an exception?"
+  [ ] Yes, test against last 7 days
+  [ ] Yes, test against last 30 days
+  [ ] Skip — just save it
+```
 
----
+If yes:
+1. Query messages from the test period using rule's trigger
+2. Apply scope filter (which inbox(es))
+3. Show count and a few sample matches:
+   ```
+   Test results — last 7 days:
+   
+   Rule would have matched [N] messages in [inbox(es)]:
+     - 2026-05-05 — notifications@espn.com — "Tonight's MLB scores"
+     - 2026-05-04 — notifications@espn.com — "Trade deadline rumors"
+     - 2026-05-02 — notifications@espn.com — "NBA finals preview"
+     ...
+   
+   Action that would have run: Move to Trash
+   
+   Looks right? [Save and activate / Edit / Cancel]
+   ```
 
-## Step 6: Save & Confirm
+## Step 6: Save and Confirm
 
-After activation:
+On save:
 
-1. Append the rule to `inbox-command-center/rules.md`
-2. Confirm:
-   > "✅ Rule created: **[Rule Name]**
-   > Active immediately. I'll apply it to all future triages.
-   >
-   > You can edit or pause this rule anytime — say 'show my rules' or 'edit [rule name]'."
+1. Append to `~/Inbox Command Center/rules.md` with full rule structure (Type, Stakes, Scope, Status, Trigger, Action, Exceptions, Created date, Last triggered = null, Times triggered = 0)
+
+2. If folder routing rule with new folder: create the underlying Gmail label or Outlook subfolder. Update `.meta.json.connected_inboxes[i].folders_enabled[]`.
+
+3. Log to session log:
+   ```
+   **HH:MM** — Rule created: [Name] (type=[X], stakes=[Y], scope=[Z])
+   ```
+
+4. Confirm:
+   ```
+   ✓ Rule saved: [Name]
+   
+   It will apply on your next triage. To pause/edit/delete anytime,
+   open ~/Inbox Command Center/rules.md or say "show my rules".
+   ```
+
+5. If from triage context: return to the next message in the batch.
 
 ---
 
 ## Rule Management Commands
 
-At any time, the user can manage existing rules:
-
 ### View Rules
-> "Show my rules" / "What rules do I have?"
 
-Present all active rules:
+User says: "show my rules" / "list rules" / "what rules do I have"
+
+Read `rules.md`. Group by scope:
+
 ```
-📋 ACTIVE RULES ([X] total)
+RULES — [N] active, [M] paused
 
-1. Auto-junk LinkedIn notifications
-   Trigger: @linkedin.com + "notification"
-   Action: 🗑️ JUNK → Delete
-   Triggered: 47 times | Last: today
-   [Edit] [Pause] [Delete]
+GLOBAL ([X])
+─────────
+  • [Name] — Type: [X] | Stakes: [Y] | Triggered [Z] times
+  • ...
 
-2. Forward invoices to Stephen
-   Trigger: Subject contains "invoice" or "receipt"
-   Action: Forward to stephen@grifco.com + Label "Finance"
-   Triggered: 12 times | Last: 3 days ago
-   [Edit] [Pause] [Delete]
+PER-INBOX: personal ([X])
+────────────────────────
+  • [Name] — Type: [X] | Stakes: [Y] | Triggered [Z] times
+  • ...
 
-3. VIP Priority
-   Trigger: Sender on VIP list
-   Action: Always 🔴 RESPOND
-   Triggered: 89 times | Last: today
-   [Edit] [Pause] [Delete]
+PER-INBOX: uno-mas ([X])
+───────────────────────
+  • ...
 
-[+ Create New Rule]
+PAUSED ([M])
+──────────
+  • [Name] — paused [date]
+
+[Edit a rule] [Delete a rule] [View pending suggestions]
 ```
 
 ### Edit a Rule
-> "Edit the LinkedIn rule" / "Change the invoice forwarding rule"
 
-Re-open the rule builder with current values pre-filled. Walk through each step, showing current value and asking if they want to change.
+User says: "edit rule [name]" or picks from the list.
 
-### Pause/Resume
-> "Pause the quiet hours rule" / "Resume the LinkedIn rule"
+Walk through the same steps as creation, prefilled with current values. User can change any field (Type, Stakes, Scope, Trigger, Action, Exceptions, Status, Name).
 
-Toggle the rule's status between Active and Paused. Paused rules are skipped during triage.
+### Pause / Resume
+
+```
+"pause rule [name]"   →  Set Status: Paused. Rule stops applying.
+"resume rule [name]"  →  Set Status: Active.
+```
 
 ### Delete
-> "Delete the [rule name] rule"
 
-Confirm before deleting:
-> "Delete **Auto-junk LinkedIn notifications**? This has triggered 47 times. [Confirm / Cancel]"
+```
+"delete rule [name]" → Confirm: "Delete '[name]' permanently? [Yes / No]"
+On confirm: remove from rules.md. Log: "Rule deleted: [name]".
+```
+
+If the rule was tied to a folder (Type: folder), ask whether to also remove the folder from the inbox or keep it for manual use.
 
 ### View Suggestions
-> "Show rule suggestions" / "Any new rule ideas?"
 
-Present pending learned suggestions from `inbox-command-center/rule-suggestions.md`:
-> "Based on your recent triages, here are some rules I'd suggest:
-> 1. [suggestion] — [Enable / Dismiss]
-> 2. [suggestion] — [Enable / Dismiss]"
+User says: "show rule suggestions" / "what rules do you suggest" / "review pending rules"
+
+Read `rules-review-queue.md`. Walk user through each (one at a time):
+
+```
+Pending rule [1 of N]:
+
+  Type:    [X]
+  Stakes:  [Y]
+  Scope:   [Z]
+  
+  Trigger: [description]
+  Action:  [description]
+  
+  Why I'm suggesting this: [pattern reasoning]
+
+  [Approve] [Modify and approve] [Reject] [Skip for now]
+```
+
+For each:
+- **Approve** → save to `rules.md`, remove from queue, log to session log
+- **Modify** → enter edit flow with prefilled values
+- **Reject** → remove from queue, log "Rejected: [reason]"
+- **Skip** → leave in queue for next review
+
+After last suggestion: update `.meta.json.last_rule_review = today`.
+
+---
+
+## Notes for the skill
+
+- **Default stakes by action type** — see SKILL.md Rules Engine. Always show the suggested default before asking user to confirm/override.
+- **Default scope is per-inbox** — global is a deliberate choice. VIP-related rules are the only inherent globals.
+- **Auto-create folders silently** — when a folder rule references a folder not yet enabled in the target inbox, just create it
+- **Show diff on rule edits** — if user edits an existing rule, show before/after on the changed fields
+- **Append, don't rewrite** — when saving a new rule, append to rules.md without disturbing existing rules' formatting
+- **Log every rule action** — created, edited, paused, resumed, deleted — all to session log

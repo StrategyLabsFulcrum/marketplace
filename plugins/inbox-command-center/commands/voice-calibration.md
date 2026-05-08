@@ -1,325 +1,354 @@
 # Voice Calibration
 
-Refine your voice profile through multi-source analysis and A/B message comparison. Run during initial setup, anytime to improve how drafts sound, or as part of the mandatory monthly/bi-weekly/weekly voice review.
+Refine your voice profile through multi-source analysis (Fireflies primary) and A/B message comparison. Runs in three modes:
 
-Triggers on: "calibrate my voice", "refine my voice", "voice calibration", "drafts don't sound like me", "fix my voice profile", "voice review", "update my voice"
+1. **Initial setup** — full calibration from blank profile (called by `/setup-wizard`)
+2. **Mandatory periodic review** — monthly minimum, bi-weekly or weekly optional
+3. **Drift-triggered** — auto-fires at session end when 3+ substantial draft edits occur in one triage
 
 ## Before Starting
 
-0. **Resolve data path:** Check for iCloud sync first: `~/Library/Mobile Documents/com~apple~CloudDocs/inbox-command-center/config.md`. If found, use the iCloud path. Otherwise, fall back to `inbox-command-center/` locally.
-1. Load existing voice profile from `[data-path]/voice-profile.md`.
-   - If it exists: "Your current voice profile was last updated [date]. Let's refine it."
-   - If not: "No voice profile found. Run `/setup-wizard` first, or I can build one from scratch here."
-2. Load VIP contacts from `[data-path]/vip-contacts.md` for audience-specific scenarios.
-3. Check if this is a **scheduled review** (triggered by the mandatory monthly/bi-weekly/weekly cadence) or a **manual run**.
-   - If scheduled: Start with multi-source re-analysis (Step 0b) before A/B calibration.
-   - If manual: Skip re-analysis unless the user requests it, go straight to A/B calibration.
+1. **Read** `~/Inbox Command Center/voice-profile.md` (and `voice-profile-brand.md` if BKC connected)
+2. **Read** `.meta.json`:
+   - `last_fireflies_pull` — note when transcripts were last pulled
+   - `voice_drift_counter` — non-zero indicates drift since last review
+   - `schedules.voice_review_cadence`
+3. **Determine mode:**
+   - Called from `/setup-wizard` → initial mode
+   - Called by user explicitly → either targeted recalibration or full review (ask)
+   - Called automatically (cadence due OR drift-triggered) → review mode
 
----
-
-## Step 0b: Multi-Source Re-Analysis (scheduled reviews)
-
-When triggered by the mandatory review cadence, re-analyze all connected sources before A/B calibration:
-
-> "Time for your [monthly / bi-weekly / weekly] voice profile review. Let me re-analyze your recent communications first."
-
-### Source Analysis
-
-1. **Phone calls / Meeting transcripts** — Pull new transcripts since last review from Fireflies, Otter, Gong, Fathom, or Zoom.
-   > "Found [X] new transcripts since your last review. Analyzing for speech patterns, tone, and new phrases..."
-
-2. **Sent emails** — Analyze emails sent since last review.
-   > "Analyzed [X] sent emails. Detected [changes / no significant changes] in tone and phrasing."
-
-3. **Slack messages** — Analyze sent Slack messages since last review.
-   > "Analyzed [X] Slack messages across [X] channels. Your Slack tone has [shifted / stayed consistent]."
-
-4. **iMessage / SMS** — If connected, analyze sent messages since last review.
-   > "Analyzed [X] iMessages. Your casual communication style has [shifted / stayed consistent]."
-
-5. **Draft edits** — Compile all edits the user made to plugin-generated drafts since last review.
-   > "You edited [X] drafts since last review. Key corrections: [list top changes]."
-
-### Analysis Summary
+## Step 0: Mode Selection
 
 ```
-🎙️ VOICE RE-ANALYSIS COMPLETE
+Voice calibration — what kind of session?
 
-SOURCES ANALYZED:
-├── 🎙️ Transcripts: [X] new (calls, meetings)
-├── 📧 Sent emails: [X] new
-├── 💬 Slack messages: [X] new
-├── 📱 iMessages: [X] new
-├── ✏️ Draft edits: [X] corrections captured
-
-DETECTED CHANGES:
-├── [Change 1 — e.g., "Your email tone has shifted slightly more casual"]
-├── [Change 2 — e.g., "New phrase: 'let's circle back on this' — used 8 times"]
-├── [Change 3 — e.g., "Sign-off shift: 'Cheers' replacing 'Thanks' in casual emails"]
-└── [Change 4 — or "No significant changes detected"]
-
-PROFILE UPDATES:
-├── ✅ Updated: [list of profile sections updated automatically]
-├── ❓ Needs calibration: [areas where A/B testing would help]
-└── ⚠️ Conflict: [any contradictory signals — e.g., more formal in email but more casual in Slack]
-
-[Continue to A/B calibration] [Accept updates, skip calibration] [Show full analysis]
+  [ ] Full review (re-analyze all sources + A/B calibration, ~10-15 min)
+  [ ] Quick review (re-analyze sources, no A/B, ~3 min)
+  [ ] Targeted recalibration (5-pair A/B on specific scenarios, ~3 min)
+  [ ] Drift recalibration (5-pair A/B on scenarios that triggered edits, ~3 min)
 ```
 
-After re-analysis, proceed to A/B calibration focused on areas that need refinement.
+If invoked automatically by drift trigger, default to **Drift recalibration** with no menu.
+
+If invoked by cadence-due review, default to **Full review** unless user picks otherwise.
+
+If invoked from setup wizard, run full Phase A → Phase B → Phase C without menu.
+
+## Step 0b: Multi-Source Re-Analysis (Phase A)
+
+For Full or Quick review modes, re-analyze all connected sources. Source priority:
+
+### Source A: Fireflies transcripts (PRIMARY)
+
+```
+Pull Fireflies transcripts since last review:
+  mcp__claude_ai_Fireflies__fireflies_get_transcripts
+  date_range: [last_voice_review_date] → today
+  
+Extract per transcript:
+  - Greetings and openings
+  - Sign-offs and closings
+  - Decision-making language
+  - Tone shifts by audience (1:1 vs. group, internal vs. external)
+  - New phrases used multiple times
+  - Vocabulary patterns
+  - Sentence structure (short bursts vs. longer)
+  - Humor / casual register usage
+
+Weight: highest — this is the user's unscripted voice.
+```
+
+### Source B: Sent email (across all connected inboxes)
+
+```
+For each inbox in .meta.json.connected_inboxes:
+  Composio: GMAIL_FETCH_EMAILS or OUTLOOK_FETCH_MESSAGES
+  query: "from:me after:[last_voice_review_date]"
+  max_results: 100
+
+Extract:
+  - Greeting patterns by recipient type
+  - Sign-off patterns
+  - Average length per audience
+  - Tone range (formal ↔ casual)
+  - Common phrases / structures
+  - How user handles requests, follow-ups, difficult conversations
+```
+
+### Source C: Slack (if connected)
+
+```
+mcp__claude_ai_Slack__slack_search_users (for user's own ID)
+mcp__claude_ai_Slack__slack_search_public_and_private with from:me filter
+date: since last_voice_review_date
+
+Extract:
+  - Tone by channel (public / DM / thread)
+  - Emoji usage
+  - Length by context
+  - Feedback / question / acknowledgment patterns
+  - Team-facing vs. client-facing tone differences
+```
+
+### Source D: iMessage (if connected)
+
+```
+AppleScript pull of sent messages since last_voice_review_date
+
+Extract:
+  - Casual tone patterns
+  - Abbreviation / emoji usage
+  - Personal vs. professional contact tone
+  - Response patterns (length, speed, brevity)
+```
+
+### Source E: Draft edits (continuous)
+
+```
+Read voice corrections accumulated in contacts.md (under "Voice notes" sub-sections)
+since last review.
+
+These are direct, explicit signals of voice corrections. Highest signal-per-edit
+because they reflect what the user changed AWAY FROM in a generated draft.
+```
+
+## Analysis Summary
+
+After Phase A completes, present a summary to the user:
+
+```
+🎙️ Multi-source analysis since [last review date]:
+
+  ✓ Fireflies: [N] transcripts ([H] hours of audio)
+  ✓ Email: [N] sent messages across [M] inboxes
+  ✓ Slack: [N] messages across [C] channels
+  ✓ iMessage: [N] messages
+  ✓ Draft edits: [N] voice corrections captured
+
+DETECTED SHIFTS:
+  • Tone has shifted slightly more [casual / formal] in [context]
+  • New phrase: "[phrase]" — used [N] times in last [period]
+  • Sign-off change: "[new]" appearing more than "[old]"
+  • Greeting pattern: [observation]
+  • [Any other detected drift]
+
+[Areas where the profile seems outdated and could use A/B recalibration]:
+  - [Scenario / audience that drifted]
+  - [Scenario / audience that drifted]
+
+[Continue to A/B calibration] [Quick review only — skip A/B]
+```
+
+If Quick review mode, skip A/B and go straight to Save (Phase C).
+
+If drift-triggered mode, skip the menu — go straight to drift A/B (5 pairs scoped to drift scenarios).
 
 ---
 
 ## How A/B Calibration Works
 
-For each scenario, the plugin generates two message drafts (A and B) that differ in:
-- **Tone** — slightly more formal vs. slightly more casual
-- **Structure** — direct opening vs. context-first
-- **Length** — concise vs. more detailed
-- **Phrasing** — different word choices for the same idea
-- **Personality** — warmer vs. more businesslike
+The skill generates message pairs — Option A and Option B — for various scenarios. Each pair has the same intent but different tone, structure, or word choice. User picks which sounds more like them (or "neither" with explanation, or "both sound like me" to confirm a scenario is calibrated).
 
-The user picks which sounds more like them. Each choice updates the voice profile.
+Preferences accumulate in the voice profile. When the user says "both sound like me" on a pair, that scenario is dialed in — move to the next.
+
+### Pair format
+
+```
+─── A/B Pair [N] of [M] — Scenario: [description] ───
+
+OPTION A:
+[Generated message in style A]
+
+OPTION B:
+[Generated message in style B]
+
+Which sounds more like you?
+  [ ] A
+  [ ] B
+  [ ] Both — this scenario is calibrated, move on
+  [ ] Neither — let me explain why
+```
+
+After each choice, log preference to voice profile. If "Neither" with explanation, capture the explanation as a free-form correction note.
 
 ---
 
 ## Batch 1: Core Email Scenarios (10 pairs)
 
-> "I'll show you two versions of the same message. Pick the one that sounds more like you — or say 'neither' and tell me what's off."
+For initial setup or Full review modes, run 10 pairs covering:
 
-### Pair Format
+1. Responding to a client question
+2. Following up on a missed deadline
+3. Saying no to a meeting request
+4. Thanking someone for their work
+5. Introducing yourself to a new contact
+6. Asking for a favor
+7. Delivering bad news
+8. Quick acknowledgment
+9. Scheduling a call
+10. Handling a complaint
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SCENARIO 1 of 10: Responding to a client question
+Each pair generated with two distinct tonal approaches (e.g., direct vs. cushioned, brief vs. context-rich, warm vs. neutral).
 
-Context: A client asked about timeline for a deliverable that's
-running behind schedule.
+### After each choice
 
-OPTION A:
-───────
-Hey Sarah,
-
-Good question — we're running about a week behind on the mockups.
-The designer hit a snag with the asset exports but we're past it now.
-You should have the first round by Thursday.
-
-Let me know if that works or if we need to adjust.
-
-Thanks,
-[Name]
-
-OPTION B:
-───────
-Hi Sarah,
-
-Thanks for checking in on this. We ran into a delay on the mockup
-phase — our designer encountered an issue with asset exports that
-set us back about a week. That's been resolved and we're back on
-track.
-
-I'm targeting Thursday for the first round of mockups. Does that
-timeline work for you, or should we discuss reprioritizing?
-
-[Name]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Which sounds more like you? [A / B / Neither]
-```
-
-### 10 Core Scenarios
-
-| # | Scenario | What It Tests |
-|---|---------|---------------|
-| 1 | Responding to a client question | Professional tone, how they handle delays |
-| 2 | Following up on something overdue | Directness vs. diplomacy |
-| 3 | Saying no to a meeting request | Declining gracefully, boundary setting |
-| 4 | Thanking someone for their work | Warmth level, specificity of praise |
-| 5 | Introducing yourself to a new contact | First impression tone, formality level |
-| 6 | Asking for a favor or help | Vulnerability vs. directness |
-| 7 | Delivering bad news or a delay | Honesty style, accountability language |
-| 8 | Quick acknowledgment (got it, thanks) | Brevity tolerance, one-liner style |
-| 9 | Scheduling a call or meeting | Efficiency, how they propose times |
-| 10 | Handling a complaint or frustration | Empathy vs. problem-solving orientation |
-
-### After Each Choice
-
-Note the preference silently. After all 10:
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-BATCH 1 RESULTS — Here's what I'm picking up:
-
-✓ You prefer direct openings — you get to the point fast
-✓ You lean casual-professional — warm but not corporate
-✓ Your emails are concise — you rarely go past 4-5 sentences
-✓ You sign off with "Thanks, [Name]" — not "Best regards"
-✓ You take ownership of problems — "we're running behind" not "there was a delay"
-✓ You always include a clear next step
-✗ You don't use "I hope this finds you well" or long preambles
-✗ You don't over-apologize — you acknowledge and redirect
-
-Voice profile updated.
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
+Update voice profile:
+- If user picks A consistently with pattern X → reinforce X in profile
+- If user picks B consistently with pattern Y → reinforce Y
+- If user mixes → that scenario benefits from contextual choice; note both styles
 
 ---
 
 ## Batch 2: Channel-Specific (recommended)
 
-> "Now let's calibrate for different channels. Your tone might shift on Slack vs. iMessage vs. email vs. text."
+After Batch 1 refines the core email voice, run channel-specific pairs.
 
-### Slack Messages (5 pairs)
+### Slack messages (5 pairs)
 
-Test for:
-- Length (one-liner vs. short paragraph)
-- Emoji usage (yes/no, which ones)
-- Formality (hey vs. hi vs. no greeting)
-- Thread etiquette (respond in-thread vs. new message)
-- Reaction vs. response (thumbs up vs. "got it")
-
-```
-SCENARIO S1: Acknowledging a Slack message from a teammate
-
-Context: Your teammate shared a completed deliverable in Slack.
-
-OPTION A:
-"Nice work 👍 I'll review this afternoon"
-
-OPTION B:
-"Looks great, thanks for getting this done. I'll take a look this afternoon and follow up if I have questions."
-
-Which sounds more like you? [A / B / Neither]
-```
+Shorter, more casual scenarios:
+1. Quick yes/no to a teammate
+2. Reacting to someone's update
+3. Asking a teammate for help
+4. Channel announcement
+5. DM with a more formal external partner
 
 ### iMessage (5 pairs)
 
-Test for:
-- Tone difference from Slack (iMessage is often more personal)
-- Emoji and tapback usage
-- Response length for personal vs. professional iMessage contacts
-- How style shifts between 1:1 and group chats
-
 ```
-SCENARIO iM1: Responding to a friend/contact asking for a quick favor via iMessage
-
-OPTION A:
-"Yeah for sure — send me the details and I'll take a look tonight"
-
-OPTION B:
-"Sure thing! I'll check it out later today 👍"
-
-Which sounds more like you? [A / B / Neither]
+1. Quick check-in with spouse / close family
+2. Plan-making with a friend
+3. Brief professional reply over text
+4. Acknowledgment ("got it", "thanks", etc.)
+5. Apology / reschedule
 ```
 
-### SMS Messages (5 pairs)
+### SMS messages (5 pairs)
 
-Test for:
-- Abbreviation tolerance (thx vs. thanks, u vs. you)
-- Emoji/punctuation style
-- Response length
-- Formality level
+Same as iMessage but for non-iMessage SMS — slightly more formal default since users tend to write SMS more carefully.
 
-```
-SCENARIO T1: Confirming a meeting time via text
+### Formal / client email (5 pairs)
 
-OPTION A:
-"Sounds good, see you at 2"
+For users in client-facing or business-development roles. Longer, more structured:
+1. Proposal or pitch follow-up
+2. Sensitive client question
+3. Setting boundaries professionally
+4. Closing a deal / next steps
+5. Apologizing for a mistake
 
-OPTION B:
-"Perfect — 2pm works. See you there."
-
-Which sounds more like you? [A / B / Neither]
-```
-
-### Formal/Client Email (5 pairs)
-
-Test for:
-- How much more formal they go for clients vs. internal
-- Proposal/SOW language style
-- How they handle money conversations
-- Sign-off formality shift
-
-```
-SCENARIO F1: Sending a proposal to a potential client
-
-OPTION A:
-"Hi David,
-
-Great talking with you yesterday. Here's the proposal we discussed —
-I kept it straightforward so you can see exactly what you're getting
-and what it costs.
-
-Take a look when you get a chance and let me know your thoughts.
-Happy to jump on a call to walk through anything.
-
-[Name]"
-
-OPTION B:
-"David,
-
-Following up on our conversation. Attached is the proposal outlining
-scope, timeline, and investment. I've structured it around the three
-priorities you mentioned — lead gen, content, and reporting.
-
-Let me know if you'd like to discuss or if you have questions on
-any of the line items. I'm available Thursday or Friday for a call.
-
-All the best,
-[Name]"
-
-Which sounds more like you? [A / B / Neither]
-```
+If BKC is connected and user has a brand voice, these pairs use the brand voice profile (`voice-profile-brand.md`) rather than personal voice.
 
 ---
 
 ## Continue Until Calibrated
 
-After each batch, ask:
+After Batches 1 and 2:
 
-> "Want to do another round? I can generate more scenarios for:"
-> - Specific situations you encounter often
-> - A particular audience (e.g., "how I talk to my accountant")
-> - A specific channel that needs more refinement
-> - Tricky situations (negotiations, apologies, pitches)
->
-> Or if both options are sounding like you at this point, we can stop — your profile is dialed in.
+```
+You've completed [N] A/B pairs. Voice profile has been refined.
 
-**Completion signal:** When the user says "both sound like me" on 3+ consecutive pairs, or explicitly says they're satisfied:
+Want to continue with more pairs in any specific area?
 
-> "Voice profile calibrated. Here's your updated profile summary:"
-> [Show summary from voice-profile.md]
->
-> "I'll use this for all drafts going forward. If a draft ever feels off, just edit it — I'll learn from the changes. You can run `/voice-calibration` anytime to refine further."
+  [ ] Yes — pick an area:
+       [ ] Email (any scenario)
+       [ ] Slack
+       [ ] iMessage / SMS
+       [ ] Formal/client (brand voice)
+       [ ] Specific recipient (e.g., "more like Bryan")
+  [ ] No — done for now
+```
+
+If user picks "specific recipient": pull recent emails to that recipient + relevant Fireflies transcripts (if any), generate 5 recipient-targeted pairs.
 
 ---
 
 ## Targeted Recalibration
 
-When the user edits drafts during triage, track the changes. If the same type of edit happens 3+ times:
+If user picks "Targeted recalibration" mode, ask which area:
 
-> "I've noticed you keep making similar edits to [type] messages:
-> - You shortened my drafts 3 times this week
-> - You changed my greeting from 'Hi' to 'Hey' twice
->
-> Want to run a quick recalibration? I'll generate 3 pairs focused on [the pattern] to lock it in."
+```
+Which area needs recalibration?
 
-This keeps calibration lightweight and targeted rather than requiring a full re-run.
+  [ ] Email greetings
+  [ ] Email sign-offs
+  [ ] Slack tone
+  [ ] iMessage register
+  [ ] Brand / client-facing
+  [ ] Specific scenario (describe in your words)
+  [ ] Specific recipient
+```
+
+Generate 5 pairs scoped to the picked area. Run through them. Update voice profile. Done.
 
 ---
 
-## Save Voice Profile
+## Drift Recalibration
 
-After every calibration session, update `[data-path]/voice-profile.md`:
+Triggered automatically at session end when `voice_drift_counter >= 3` in `.meta.json`.
 
-1. Update the `A/B Calibration Results` section with new preferences
-2. Adjust any core style descriptions that changed
-3. Update channel-specific differences if new data
-4. Update the `Last updated` timestamp
-5. Add entry to the `Review History` table with sources analyzed, key changes, and A/B pairs tested
-6. Update config: set `voice_profile_last_reviewed` to today, calculate next review due date
-7. Confirm:
-   > "Voice profile updated. Next review due: [date].
-   > Sources analyzed: [X] transcripts, [X] emails, [X] Slack messages, [X] iMessages, [X] draft edits.
-   > Key changes: [brief summary].
-   > I'll remind you when your next review is due."
+```
+🎙️ Quick drift recalibration
+
+I noticed [N] substantial edits this session. Running a focused
+5-pair A/B on the scenarios where you edited.
+
+[Show pair 1 of 5]
+```
+
+How drift A/B picks scenarios:
+1. Read the session log for substantial-edit events
+2. Cluster edits by edit-type tag (tone / wording / structure / sign-off / cc)
+3. Pick the 5 most common drift dimensions
+4. Generate one A/B pair per drift dimension
+
+After 5 pairs:
+1. Update voice profile with new preferences
+2. Reset `voice_drift_counter` to 0 in `.meta.json`
+3. Log to session log:
+   ```
+   **HH:MM** — Drift A/B completed: 5 pairs, [N] preferences updated, drift counter reset
+   ```
+
+---
+
+## Phase C: Save Voice Profile
+
+After A/B calibration (or quick review without A/B):
+
+1. **Update `voice-profile.md`** with:
+   - All Phase A observations (drift detected, new phrases, sign-off changes, etc.)
+   - All A/B pair results
+   - Updated tone tables, signature phrases, NEVER list
+   - New entry in `## Review History` table:
+     ```
+     | 2026-05-08 | Fireflies 14, email 247, Slack 412, iMessage 89, edits 5 | Tone shifted casual; new sign-off detected | 5 pairs |
+     ```
+2. **Update `voice-profile-brand.md`** if brand-voice pairs ran
+3. **Update `.meta.json`:**
+   - `last_voice_review` = today
+   - `voice_drift_counter` = 0
+   - `next_voice_review_due` = today + cadence
+4. **Log to session log:**
+   ```
+   **HH:MM** — Voice review completed: [N] sources analyzed, [M] A/B pairs tested, profile updated
+   ```
+5. **Confirm:**
+   ```
+   ✓ Voice profile updated.
+   
+   Next mandatory review: [date] (cadence: [monthly/bi-weekly/weekly])
+   You can run a manual recalibration anytime by saying "calibrate my voice".
+   ```
+
+---
+
+## Notes for the skill
+
+- **Fireflies first** — always weight Fireflies transcripts as primary signal. Other sources reinforce or refine, they don't override.
+- **Edit-tracking is continuous** — drift counter increments during triage, not during calibration. Calibration just consumes the counter.
+- **Generate pairs in parallel** — when running a batch, generate all pairs in one or few tool calls to keep it fast
+- **Show pairs one at a time** — user attention drops after 3-4 simultaneous pairs; serial presentation works better
+- **"Both sound like me" is a real signal** — that scenario is dialed in; don't keep grinding it. Move on.
+- **Capture "Neither" explanations verbatim** — they're often the most useful corrections in the whole session
+- **For brand voice users** — formal/client-facing pairs should use `voice-profile-brand.md`; everything else uses personal voice
+- **Don't run drift recalibration during initial setup** — drift counter is 0 there; only fire it on subsequent sessions
