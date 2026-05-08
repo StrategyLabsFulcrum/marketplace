@@ -11,7 +11,7 @@ on:
       - 'plugins/competitive-landscape/**'
       - 'plugins/content-library/**'
       - 'plugins/customer-driven-optimizations/**'
-      - 'plugins/inbox-command-center/**'
+      # - 'plugins/inbox-command-center/**'  # Excluded during v1.4 development — re-add when v1.4 ships
       - 'plugins/lead-list-builder/**'
 
 jobs:
@@ -38,7 +38,7 @@ jobs:
             "competitive-landscape"
             "content-library"
             "customer-driven-optimizations"
-            "inbox-command-center"
+            # "inbox-command-center"  # Excluded during v1.4 development — re-add when v1.4 ships
             "lead-list-builder"
           )
 
