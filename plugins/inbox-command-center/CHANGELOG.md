@@ -1,5 +1,90 @@
 # Inbox Command Center — Changelog
 
+## v1.5.0
+
+### Headline
+
+Email moves from Composio (third-party broker) to the local **Himalaya CLI** over IMAP/SMTP. Credentials live in the macOS Keychain. Outlook personal accounts authenticate via OAuth2 against an Azure App Registration; Gmail accounts use app passwords. No more dependency on a hosted middleware layer for inbox read/write.
+
+### Breaking changes
+
+- **Composio is gone.** All `mcp__claude_ai_Composio__COMPOSIO_MULTI_EXECUTE_TOOL` calls and `GMAIL_*` / `OUTLOOK_*` tool slugs are removed throughout SKILL.md and command files. The plugin now shells out to `~/.cargo/bin/himalaya` via the `Bash` tool, with `2>/dev/null` suppressing IMAP debug warnings for clean JSON parsing.
+- **`.meta.json` schema changes** — `composio_connection_id` removed; `himalaya_alias` added. `fallback_mode` field removed (no separate fallback path in v1.5; either Himalaya is configured for an account or the inbox isn't connected). Workspace `alias` and Himalaya alias can differ — the former is the user-friendly name, the latter is the section name in `~/.config/himalaya/config.toml`.
+- **No more "fallback to native Gmail MCP" path** — every connected inbox uses the same Himalaya code path. The native Gmail MCP is no longer referenced by the plugin.
+- **Folder routing model** — ICC folders are now real IMAP folders (e.g. `ICC/Newsletters`) on both Gmail and Outlook. Gmail surfaces these as labels in its web UI; Outlook as subfolders. Single `himalaya message move` call shape handles both platforms.
+
+### Features lost (vs v1.4)
+
+These were Composio-backed and don't have a Himalaya equivalent:
+
+- WhatsApp, Teams, SMS/Twilio messaging connectors
+- Otter, Gong, Fathom, Zoom transcript sources (Fireflies via native MCP remains)
+- Outlook Calendar (Google Calendar via native MCP remains)
+- Outlook Tasks mirroring (Apple Reminders and Google Calendar mirrors remain)
+- Gmail-specific UI conveniences: 1000-message batch modify, label-id-based label management, `GMAIL_SEARCH_PEOPLE` people search
+
+Each of these can return in a future release via dedicated MCP servers as those become available.
+
+### New features
+
+- **Outlook OAuth2 via Azure App Registration** — personal `outlook.com` accounts now authenticate properly despite Microsoft's basic-auth deprecation. The setup-wizard documents the Azure app registration steps and uses `himalaya account doctor outlook --fix` to bootstrap refresh tokens stored in the macOS Keychain.
+- **All credentials in macOS Keychain** — Gmail app passwords keyed by service `himalaya-<alias>`; Outlook OAuth tokens keyed by service `outlook-imap-oauth2-*` and `outlook-smtp-oauth2-*`. Nothing in plaintext on disk.
+- **Faster local triage** — IMAP roundtrips are direct; no third-party proxy.
+- **Privacy posture improvement** — Composio (a third-party service) no longer touches mail content; everything runs through your Mac.
+
+### Tool surface for the skill
+
+Canonical Himalaya invocation pattern used throughout:
+
+```
+~/.cargo/bin/himalaya <subcommand> -a <himalaya_alias> -o json [other-flags] 2>/dev/null
+```
+
+| Operation | Subcommand | Notes |
+|---|---|---|
+| List envelopes | `envelope list -f <folder> -- <query>` | Output: `[{id, flags, subject, from, to, date, has_attachment}]` |
+| Read full message | `message read -f <folder> <ID>` | Returns headers + body |
+| Read full thread | `message thread -f <folder> <ID>` | All messages in thread |
+| Send message | `message send < /tmp/msg.eml` | RFC-822 input from temp file |
+| Save draft | `message save -f Drafts < /tmp/msg.eml` | Gmail: `[Gmail]/Drafts`; Outlook: `Drafts` |
+| Mark read | `flag add -f <folder> <ID> seen` | Or `flag remove ... seen` to mark unread |
+| Star / unstar | `flag add -f <folder> <ID> flagged` | `\Flagged` IMAP flag |
+| Archive (Gmail) | `message move -f INBOX <ID> "[Gmail]/All Mail"` | Removes from INBOX |
+| Archive (Outlook) | `message move -f INBOX <ID> Archive` | — |
+| Trash | `message move -f <folder> <ID> "[Gmail]/Trash"` (Gmail) / `"Deleted Items"` (Outlook) | Recoverable |
+| Permanent delete | `message delete -f <folder> <ID>` | high_stakes |
+| Move to folder | `message move -f INBOX <ID> "ICC/<Folder>"` | Same shape for Gmail + Outlook |
+| List folders | `folder list` | `[{name, desc}]` |
+| Create folder | `folder add "ICC/<Folder>"` | — |
+
+### Install requirements
+
+- **Himalaya CLI** built from cargo with `+oauth2 +keyring` features:
+  ```
+  cargo install himalaya --locked --features oauth2,keyring
+  ```
+  (The homebrew formula omits the oauth2 feature — do not use brew.)
+- **Rust toolchain** required for the install. Install rustup if not present:
+  ```
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
+  ```
+- **macOS Keychain** for credential storage (built into macOS, no install needed).
+- **Azure App Registration** for the outlook.com OAuth2 client — one-time, ~10 min in browser. See setup-wizard Step 0a.
+
+### Migration from v1.4
+
+A v1.4 → v1.5 migration flow will be triggered automatically when `.meta.json.version` is 1.4.x on session start. The migration:
+
+1. Detects each existing `composio_connection_id` in `connected_inboxes[]`
+2. Walks the user through Himalaya account setup for each
+3. Stores credentials in Keychain (Gmail app password or Outlook OAuth)
+4. Rewrites `connected_inboxes[]` with `himalaya_alias` fields
+5. Re-provisions enabled ICC folders via `himalaya folder add`
+6. Bumps `.meta.json.version` to 1.5.0
+7. Preserves a v1.4 backup at `.v1.4-backup/` for 30 days
+
+---
+
 ## v1.4.0
 
 ### Headline

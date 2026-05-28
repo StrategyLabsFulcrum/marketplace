@@ -71,24 +71,36 @@ Some metrics require live queries:
 
 ```
 For each inbox in connected_inboxes:
-  Composio: GMAIL_FETCH_EMAILS / OUTLOOK_FETCH_MESSAGES
-  query: "after:[period_start] before:[period_end]"
-  max_results: paginated as needed
-  
-Compute: total received, unread remaining, by-day distribution
+  Bash: ~/.cargo/bin/himalaya envelope list \
+          -a <himalaya_alias> -f INBOX -o json --page-size 500 \
+          -- 'after <period_start> and before <period_end>' 2>/dev/null
+
+Parse JSON; compute: total received, unread remaining (filter !flags.includes("Seen")),
+by-day distribution (group on envelope.date).
+
+For pages beyond 500: page through with the standard pagination flag or fetch
+larger pages — Himalaya supports up to several thousand per page on modern servers.
 ```
 
-For sent volume:
+For sent volume (read from the sent folder):
 ```
-  query: "from:me after:[period_start] before:[period_end]"
+  Bash: ~/.cargo/bin/himalaya envelope list \
+          -a <himalaya_alias> -f "[Gmail]/Sent Mail" -o json --page-size 500 \
+          -- 'after <period_start> and before <period_end>' 2>/dev/null
+  (For Outlook, use -f "Sent Items")
 ```
 
 #### Folder counts
 
 ```
 For each enabled folder per inbox:
-  Composio: GMAIL_FETCH_EMAILS with label filter
-  Compute: current count, items added in period, auto-actions executed
+  Bash: ~/.cargo/bin/himalaya envelope list \
+          -a <himalaya_alias> -f "ICC/<FolderName>" -o json --page-size 1 2>/dev/null
+  (Read the envelope-list response — Himalaya reports total folder size in the
+   pagination summary even when --page-size is 1.)
+
+Compute: current count, items added in period (filter envelopes by date),
+auto-actions executed (from session logs).
 ```
 
 ### Rule data
@@ -97,7 +109,7 @@ From `rules.md`, sum each rule's `Times triggered` field. Compare against pre-pe
 
 ### VIP data
 
-From session logs + Composio queries:
+From session logs + Himalaya queries:
 - VIP emails received (per VIP, per inbox)
 - VIP emails sent (per VIP)
 - Average response time per VIP
@@ -354,7 +366,7 @@ These can be requested mid-report or as standalone:
 
 ## Notes for the skill
 
-- **Source from session logs first** — they're cheap to read and don't hit Composio rate limits. Live queries supplement.
+- **Source from session logs first** — they're cheap to read and don't require IMAP round-trips. Live `himalaya envelope list` queries supplement.
 - **Cache rule trigger snapshots** in `.meta.json.rule_triggers_snapshot` so deltas work next period
 - **Don't double-count** — same email surfacing in cross-inbox VIP section AND per-inbox section is fine; just be consistent across reports
 - **Keep cross-inbox section unified** — VIPs, voice, Fireflies, global rules — these are properties of the user, not the inbox

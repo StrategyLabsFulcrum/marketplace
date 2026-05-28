@@ -17,7 +17,7 @@ Triggers on: "check my email", "triage", "what did I miss", "any new emails", "i
 
 3. **Detect user-edited workspace files** since last session (mtime check). Log observed edits to today's session log.
 
-4. **Confirm Composio connections** are alive — if any inbox shows expired session, prompt user to re-auth before triage starts.
+4. **Confirm Himalaya connectivity** is alive — for each connected inbox, run `~/.cargo/bin/himalaya envelope list -a <himalaya_alias> --page-size 1 -o json 2>/dev/null`. Non-zero exit or auth-rejected error → surface the specific account to the user (Gmail = app password issue, Outlook = OAuth token issue) and prompt for repair before triage starts.
 
 5. **Append session start** to `session-logs/[today].md`: `**HH:MM** — Session start. Workspace loaded: [N] inboxes, [X] todos, [Y] followups, [Z] pending rules.`
 
@@ -45,7 +45,7 @@ If user said "triage" / "all" / nothing specific: proceed to Step 1.5 (VIP cross
 
 If single inbox connected: proceed directly to Step 2 with that inbox.
 
-If in fallback mode: same as single inbox.
+(No fallback mode in v1.5 — every connected inbox uses the same Himalaya path.)
 
 ---
 
@@ -57,13 +57,27 @@ Before user picks a single inbox, scan ALL connected inboxes for VIP messages.
 
 ```
 vip_emails = []
+vip_addrs = collect addr field for every contact with [VIP] tag in contacts.md
+last_check_date = YYYY-MM-DD from time range parsing
 
 For each inbox in .meta.json.connected_inboxes:
-  Query (Composio):
-    GMAIL_FETCH_EMAILS / OUTLOOK_FETCH_MESSAGES
-    query: "is:unread after:[last_check] from:[any VIP email in contacts.md]"
-    max_results: 20
-    verbose: false (just headers)
+  himalaya_alias = inbox.himalaya_alias
+
+  # Strategy A — for small VIP lists (< ~20): loop per-sender
+  For each addr in vip_addrs:
+    Bash:
+      ~/.cargo/bin/himalaya envelope list \
+        -a <himalaya_alias> -f INBOX -o json --page-size 20 \
+        -- 'from <addr> and after <last_check_date>' 2>/dev/null
+    Parse JSON; keep envelopes where !flags.includes("Seen")
+
+  # Strategy B — for large VIP lists (>= ~20): fetch all unread once, filter client-side
+  # (Avoids running 20+ IMAP SEARCH queries against the same INBOX.)
+  Bash:
+    ~/.cargo/bin/himalaya envelope list \
+      -a <himalaya_alias> -f INBOX -o json --page-size 200 \
+      -- 'after <last_check_date>' 2>/dev/null
+  Parse; keep envelopes where !flags.includes("Seen") AND from.addr in vip_addrs
 
 For each VIP message found:
   - Cross-reference contacts.md for relationship + recent context
@@ -71,6 +85,8 @@ For each VIP message found:
        attach "📞 You spoke with [name] [date] ([topic])"
   - Append to vip_emails with inbox alias
 ```
+
+Run inboxes in parallel — each `himalaya envelope list` is independent, so multiple `Bash` tool calls can fire concurrently in one assistant turn.
 
 ### Surface results
 
@@ -105,36 +121,45 @@ If `len(vip_emails) == 0`: surface a one-liner ("No VIPs waiting across [N] inbo
 
 ## Step 2: Pull Messages
 
-Per the selected inbox(es), execute Composio fetch.
+Per the selected inbox(es), execute two parallel Himalaya envelope fetches via the `Bash` tool. Both fetches per inbox are independent so issue them in one assistant turn (multiple Bash tool calls).
 
-### Email — Composio fetch (per inbox)
+### Email — Himalaya fetch (per inbox)
 
-For each scoped inbox, run two parallel Composio fetches via `COMPOSIO_MULTI_EXECUTE_TOOL`:
+For each scoped inbox, fetch starred-unread + unread-inbox:
 
 ```
-[For Gmail inbox]
-Fetch 1 — Starred:
-  tool: GMAIL_FETCH_EMAILS
-  args:
-    query: "is:starred is:unread"
-    max_results: 20
-    verbose: true
-  connection_id: <from .meta.json.connected_inboxes[i]>
+[For Gmail account]
+Fetch A — Starred (read from Gmail's [Gmail]/Starred IMAP folder):
+  Bash: ~/.cargo/bin/himalaya envelope list \
+          -a <himalaya_alias> -f "[Gmail]/Starred" -o json --page-size 20 \
+          2>/dev/null
+  Parse JSON; keep envelopes where !flags.includes("Seen")
 
-Fetch 2 — Unread inbox:
-  tool: GMAIL_FETCH_EMAILS
-  args:
-    query: "in:inbox is:unread after:[YYYY/MM/DD]"
-    max_results: 50
-    verbose: true
-  connection_id: <from .meta.json.connected_inboxes[i]>
+Fetch B — Unread INBOX since last check:
+  Bash: ~/.cargo/bin/himalaya envelope list \
+          -a <himalaya_alias> -f INBOX -o json --page-size 50 \
+          -- 'after <YYYY-MM-DD>' 2>/dev/null
+  Parse JSON; keep envelopes where !flags.includes("Seen")
+
+[For Outlook account]
+Fetch A — Starred:
+  Bash: ~/.cargo/bin/himalaya envelope list \
+          -a outlook -f INBOX -o json --page-size 50 \
+          -- 'after <YYYY-MM-DD>' 2>/dev/null
+  Parse JSON; keep envelopes where flags.includes("Flagged") AND !flags.includes("Seen")
+  (Outlook doesn't expose a dedicated "Starred" folder via IMAP — filter the \Flagged
+   flag client-side.)
+
+Fetch B — Unread INBOX since last check:
+  Same Bash as above; keep envelopes where !flags.includes("Seen")
+  (Strategy: one fetch covers both flag and unread filters.)
 ```
 
-For Outlook inboxes, use `OUTLOOK_FETCH_MESSAGES` with equivalent filters.
+**Deduplicate by envelope `id`** within each inbox (Fetch A + Fetch B may overlap on starred-unread items in Gmail; for Outlook it's the same fetch).
 
-**Deduplicate by messageId.** Sort: starred first → most recent → oldest.
+Sort: starred first → most recent → oldest.
 
-**Tag each message with its inbox alias** (used in Step 6 batch presentation).
+**Tag each envelope with its inbox alias** (used in Step 6 batch presentation): append `inbox_alias: "<alias>"` to each parsed envelope object before passing downstream.
 
 ### Sequential mode (multi-inbox triage)
 
@@ -158,7 +183,7 @@ Run AppleScript to pull unread iMessages since last triage. Include 1:1 + group 
 
 ### Other messaging platforms (if connected)
 
-Each via Composio if configured (WhatsApp, Teams, SMS).
+(WhatsApp / Teams / other messaging platforms are not currently in scope for the Himalaya-based architecture — they'd be added later as separate MCP servers if/when needed.)
 
 ---
 
@@ -199,13 +224,30 @@ Total auto-processed: 33 messages
 
 ### Folder routing implementation
 
-For each rule with `Type: folder`, dispatch via the synthetic abstraction:
+For each rule with `Type: folder`, dispatch via a single Himalaya `message move` (same call shape for Gmail and Outlook — both are IMAP folders):
 
-- **Gmail:** `GMAIL_BATCH_MODIFY_MESSAGES` → `addLabelIds: [Label_ID for "ICC/[FolderName]"]`
-  - If label ID not cached, call `GMAIL_LIST_LABELS` first
-- **Outlook:** `OUTLOOK_MOVE_MESSAGE` → folder `Inbox/ICC/[FolderName]`
+```
+~/.cargo/bin/himalaya message move \
+  -a <himalaya_alias> -f INBOX <envelope.id> "ICC/<FolderName>" 2>/dev/null
+```
 
-If the target folder isn't enabled in this inbox AND the rule scope is global, auto-enable it (create label/subfolder, update `.meta.json.connected_inboxes[i].folders_enabled[]`) and route silently.
+Multiple messages routed to the same folder in one batch: issue one `message move` per envelope (Himalaya doesn't have a batch-move). For typical triage volumes (10s of messages per rule) this is fine; for hundreds, consider running them as parallel `Bash` calls.
+
+**Auto-provision missing folders.** Before the first move into a logical folder, check that it exists:
+
+```
+~/.cargo/bin/himalaya folder list -a <himalaya_alias> -o json 2>/dev/null
+```
+
+If `ICC/<FolderName>` is not in the result, create it:
+
+```
+~/.cargo/bin/himalaya folder add -a <himalaya_alias> "ICC/<FolderName>" 2>/dev/null
+```
+
+Then update `.meta.json.connected_inboxes[i].folders_enabled[]` to include the folder.
+
+If a global rule references a folder not enabled in some inbox, auto-enable + route silently.
 
 ### Log to session log
 
@@ -331,13 +373,13 @@ User responds with action codes per item. Process them per the table below.
 | Code | Action | Implementation |
 |---|---|---|
 | `draft` | Draft reply in voice | See Draft Actions below |
-| `reply` | Same as draft + send on confirmation | `GMAIL_REPLY_TO_THREAD` / `OUTLOOK_REPLY_MESSAGE` |
+| `reply` | Same as draft + send on confirmation | Assemble RFC-822 with `In-Reply-To` + `References` → `himalaya message send -a <alias> < /tmp/reply.eml 2>/dev/null` |
 | `remind [time]` | Add to todos.md + calendar event | See Remind Actions |
-| `read` | Mark as read | `GMAIL_BATCH_MODIFY_MESSAGES` removeLabelIds: ["UNREAD"] / Outlook equivalent |
-| `delete` | Move to trash | `GMAIL_MOVE_TO_TRASH` (recoverable) |
-| `archive` | Remove INBOX label | `GMAIL_BATCH_MODIFY_MESSAGES` removeLabelIds: ["INBOX"] |
+| `read` | Mark as read | `himalaya flag add -a <alias> -f INBOX <ID> seen 2>/dev/null` |
+| `delete` | Move to trash (recoverable) | Gmail: `himalaya message move -a <alias> -f INBOX <ID> "[Gmail]/Trash" 2>/dev/null` • Outlook: `himalaya message move -a outlook -f INBOX <ID> "Deleted Items" 2>/dev/null` |
+| `archive` | Remove from INBOX | Gmail: `himalaya message move -a <alias> -f INBOX <ID> "[Gmail]/All Mail" 2>/dev/null` • Outlook: `himalaya message move -a outlook -f INBOX <ID> Archive 2>/dev/null` |
 | `unsub` | Execute unsubscribe | See Unsubscribe Actions |
-| `dive` | Show full thread | `GMAIL_FETCH_MESSAGE_BY_THREAD_ID` |
+| `dive` | Show full thread | `himalaya message thread -a <alias> -f INBOX <ID> -o json 2>/dev/null` |
 | `delegate [name]` | Forward + add to followups.md | See Delegate Actions |
 | `skip` | Leave for later | No-op |
 | `rule` | Create a rule based on this message | Trigger /create-rule with prefilled context |
@@ -384,9 +426,21 @@ For `draft` (or `reply`):
    [Approve all & send] [Save all as drafts] [Edit individually] [Rewrite #X]
    ```
 
-4. **For Composio-connected inboxes:** "Send" → `GMAIL_REPLY_TO_THREAD` / `OUTLOOK_REPLY_MESSAGE`. Auto-matches sending account to receiving inbox.
+4. **Send:** assemble the reply as an RFC-822 message body in a temp file (e.g. `/tmp/reply-<id>.eml`) with `In-Reply-To: <original-message-id>` and `References: <original-references-chain>` headers — these preserve threading on both Gmail and Outlook. Then:
 
-5. **For native MCP fallback:** "Send" creates a draft via `GMAIL_CREATE_EMAIL_DRAFT`; user must send manually from Gmail. Prompt label: "Save as Draft" instead of "Send".
+   ```
+   ~/.cargo/bin/himalaya message send -a <himalaya_alias> < /tmp/reply-<id>.eml 2>/dev/null
+   ```
+
+   Sending account = receiving inbox (per the inbox alias the message came from).
+
+5. **Save as draft (instead of sending):**
+
+   ```
+   ~/.cargo/bin/himalaya message save -a <himalaya_alias> -f "[Gmail]/Drafts" < /tmp/reply-<id>.eml 2>/dev/null
+   ```
+
+   For Outlook, the drafts folder is typically `Drafts` (no `[Gmail]/` prefix).
 
 6. **Edit tracking:** when user edits before send, compute diff:
    - Tag edit type (tone / wording / structure / sign-off / cc)
@@ -425,11 +479,11 @@ For `unsub`, execute per `.meta.json.schedules.unsubscribe_mode`:
 
 #### `auto` (immediate)
 For each `unsub` assignment:
-1. Fetch full message via `GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID`
-2. Try List-Unsubscribe header:
-   - `mailto:` → send via `GMAIL_SEND_EMAIL`
-   - `https://` → execute GET/POST request
-3. If no header, scan body for unsubscribe link, attempt direct call (Composio) or open browser
+1. Fetch full message via `~/.cargo/bin/himalaya message read -a <alias> -f INBOX <ID> -o json 2>/dev/null`
+2. Parse the `List-Unsubscribe` header from the returned headers map:
+   - `mailto:<addr>` → write an empty message addressed to `<addr>` to `/tmp/unsub.eml` and `himalaya message send -a <alias> < /tmp/unsub.eml 2>/dev/null`
+   - `https://<url>` → `curl -sSL -X POST <url>` via Bash (some senders require POST; fall back to GET if 405)
+3. If no header, scan body for unsubscribe link. Attempt `curl` against extracted URL; otherwise surface URL to user to open in browser.
 4. If neither works, propose auto-junk rule
 
 Confirm in action summary:
@@ -464,8 +518,8 @@ For each successful unsubscribe:
 
 For `delegate [name]`:
 
-1. Resolve `[name]` to email via contacts.md or `GMAIL_SEARCH_PEOPLE`
-2. Forward via `GMAIL_REPLY_TO_THREAD` (forward variant) or `OUTLOOK_FORWARD_MESSAGE`
+1. Resolve `[name]` to email via `contacts.md` (no people-search fallback; if not found, ask user for the address)
+2. Assemble a forward message: fetch the original via `himalaya message read -a <alias> -f INBOX <ID> -o json 2>/dev/null`, prefix `Fwd: ` to the subject, embed the original body (with optional inline commentary), set `To: <delegate-addr>`. Write to `/tmp/fwd-<id>.eml` then `himalaya message send -a <alias> < /tmp/fwd-<id>.eml 2>/dev/null`.
 3. Append to `followups.md`:
    ```
    - [delegated-to-name] — re: [subject] — delegated [today] — waiting [N] days
@@ -508,7 +562,7 @@ After all messages handled across all scoped inboxes:
 ACROSS [N] INBOXES:
   📬 Processed: [X] emails
   📝 Drafts sent: [Y]
-  💾 Drafts saved: [Z]  (fallback mode only)
+  💾 Drafts saved: [Z]
   ⏰ Reminders set: [W]
   👥 Followups added: [V]
   🗑️ Trashed: [T]
@@ -642,13 +696,13 @@ Don't propose duplicates — check existing queue first.
 ## Notes for the skill
 
 - **Always confirm before sending** — never auto-send a draft without user approval
-- **Always confirm permanent delete** — `GMAIL_BATCH_DELETE_MESSAGES` is irreversible
-- **Preserve thread integrity** — always use `GMAIL_REPLY_TO_THREAD` with thread_id for replies
-- **Match sending account** — outgoing replies use the inbox the message arrived at
+- **Always confirm permanent delete** — `himalaya message delete` flips `\Deleted` and expunges; moving to Trash is the safe default
+- **Preserve thread integrity** — assemble replies with `In-Reply-To` + `References` headers from the original message; never send a bare reply
+- **Match sending account** — outgoing replies use the inbox the message arrived at (`himalaya_alias`)
 - **Edit tracking is continuous** — capture every diff, write to contacts.md
 - **Be decisive on categorization** — if it's junk, call it junk; user can override
 - **Keep FYI brief** — single line per item
 - **Cross-reference contacts.md before asking** — if the user has notes about a person, use them
 - **Log to session-logs/[today].md** continuously — not at end-of-session
 - **Update .meta.json incrementally** — don't batch counter increments
-- **Honor fallback mode** — if `.meta.json.fallback_mode: true`, route through native Gmail MCP instead of Composio; flag features that are disabled
+- **Always suppress stderr on Himalaya calls** — `2>/dev/null` is required for clean JSON parsing

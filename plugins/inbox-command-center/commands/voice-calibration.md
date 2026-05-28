@@ -63,9 +63,21 @@ Weight: highest — this is the user's unscripted voice.
 
 ```
 For each inbox in .meta.json.connected_inboxes:
-  Composio: GMAIL_FETCH_EMAILS or OUTLOOK_FETCH_MESSAGES
-  query: "from:me after:[last_voice_review_date]"
-  max_results: 100
+  himalaya_alias = inbox.himalaya_alias
+
+  # Gmail: read from [Gmail]/Sent Mail
+  # Outlook: read from "Sent Items"
+  sent_folder = "[Gmail]/Sent Mail" if inbox.platform == "gmail" else "Sent Items"
+
+  Bash:
+    ~/.cargo/bin/himalaya envelope list \
+      -a <himalaya_alias> -f "<sent_folder>" -o json --page-size 100 \
+      -- 'after <last_voice_review_date>' 2>/dev/null
+
+  For each envelope returned, fetch the full message body:
+    Bash:
+      ~/.cargo/bin/himalaya message read \
+        -a <himalaya_alias> -f "<sent_folder>" <envelope.id> -o json 2>/dev/null
 
 Extract:
   - Greeting patterns by recipient type
@@ -75,6 +87,8 @@ Extract:
   - Common phrases / structures
   - How user handles requests, follow-ups, difficult conversations
 ```
+
+The envelope list returns headers only; you need `message read` to access the body. Batch the reads as parallel `Bash` calls to keep this fast — 100 sequential reads would be slow over IMAP.
 
 ### Source C: Slack (if connected)
 

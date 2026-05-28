@@ -1,7 +1,7 @@
 ---
 name: inbox-manager
 description: >
-  Inbox Command Center for managing email (multi-account Gmail and Outlook via Composio),
+  Inbox Command Center for managing email (multi-account Gmail and Outlook via Himalaya CLI),
   Slack, iMessage, and messaging platforms. Use when the user mentions "check my email",
   "inbox", "triage", "what did I miss", "clean up my inbox", "draft a reply", "inbox zero",
   "unsubscribe", "email manager", "comms manager", "check Slack", "check iMessage",
@@ -16,13 +16,13 @@ description: >
 
 # Inbox Command Center
 
-An AI communications manager that triages email (multi-account via Composio), Slack, iMessage, and messaging platforms — categorizes messages, drafts replies in the user's authentic voice, manages calendar, tracks tasks via a hand-editable workspace folder, enforces smart rules with stakes and scope, and delivers scheduled briefings and reminders via the user's preferred channel.
+An AI communications manager that triages email (multi-account Gmail + Outlook via the local Himalaya CLI), Slack, iMessage, and messaging platforms — categorizes messages, drafts replies in the user's authentic voice, manages calendar, tracks tasks via a hand-editable workspace folder, enforces smart rules with stakes and scope, and delivers scheduled briefings and reminders via the user's preferred channel.
 
 ## How It Works
 
 The Inbox Command Center has eight layers:
 
-1. **Connection Layer** — Connects to email (Gmail/Outlook via Composio, multi-account), Slack/Calendar/Fireflies (native MCP), iMessage (AppleScript), and other tools.
+1. **Connection Layer** — Connects to email (Gmail and Outlook, multi-account, via the local Himalaya CLI over IMAP/SMTP), Slack/Calendar/Fireflies (native MCP), and iMessage (AppleScript).
 2. **Workspace Layer** — Reads and writes a hand-editable workspace folder at `~/Inbox Command Center/` containing todos, followups, contacts, rules, voice profile, and session logs.
 3. **Rules Layer** — Applies user-configured rules to auto-categorize, archive, forward, label, or escalate messages before triage. Each rule has type, stakes (low/high), and scope (per-inbox/global).
 4. **Triage Layer** — Categorizes remaining messages as RESPOND, FYI, JUNK, or UNSUBSCRIBE. Sequential per-inbox processing with rapid-fire action codes.
@@ -66,65 +66,71 @@ Then wait. Let the user drive.
 
 The plugin uses three connection types depending on the tool:
 
-### Composio (primary connection layer)
+### Himalaya CLI (primary email connection layer)
 
-For email (Gmail and Outlook, multi-account) and tools without native MCP support. All Composio calls go through `mcp__claude_ai_Composio__COMPOSIO_MULTI_EXECUTE_TOOL`.
+For email (Gmail and Outlook, multi-account) the plugin shells out to the local Himalaya CLI via the `Bash` tool. Himalaya talks IMAP/SMTP directly using credentials stored in the macOS Keychain — no third-party service is in the middle.
 
-**Gmail tools:**
+**Binary location:** `~/.cargo/bin/himalaya` (cargo-built with `+oauth2 +keyring`; the homebrew formula omits OAuth2 so don't use it).
 
-| Tool Slug | What It Does |
-|---|---|
-| `GMAIL_FETCH_EMAILS` | Search + fetch emails (any Gmail query syntax). Primary triage tool. |
-| `GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID` | Get full email by message ID |
-| `GMAIL_FETCH_MESSAGE_BY_THREAD_ID` | Get all messages in a thread |
-| `GMAIL_LIST_THREADS` | List threads matching a query |
-| `GMAIL_LIST_LABELS` | List all Gmail labels (needed for label IDs) |
-| `GMAIL_SEND_EMAIL` | Send a new email immediately |
-| `GMAIL_REPLY_TO_THREAD` | Reply within an existing thread |
-| `GMAIL_CREATE_EMAIL_DRAFT` | Create a draft (doesn't send) |
-| `GMAIL_UPDATE_DRAFT` / `GMAIL_SEND_DRAFT` | Update / send saved drafts |
-| `GMAIL_LIST_DRAFTS` / `GMAIL_GET_DRAFT` | Manage drafts |
-| `GMAIL_BATCH_MODIFY_MESSAGES` | Bulk add/remove labels (mark read, archive, etc.) up to 1000 at once |
-| `GMAIL_ADD_LABEL_TO_EMAIL` | Add/remove labels on a single message |
-| `GMAIL_MODIFY_THREAD_LABELS` | Add/remove labels on a thread |
-| `GMAIL_CREATE_LABEL` | Create custom Gmail label (used for synthetic ICC folders) |
-| `GMAIL_MOVE_TO_TRASH` | Move single message to trash (recoverable) |
-| `GMAIL_UNTRASH_MESSAGE` | Restore from trash |
-| `GMAIL_BATCH_DELETE_MESSAGES` | Permanently delete multiple messages (high_stakes — confirm always) |
-| `GMAIL_GET_ATTACHMENT` | Download an attachment |
-| `GMAIL_SEARCH_PEOPLE` | Search contacts by name or email |
+**Config:** `~/.config/himalaya/config.toml`. Each account is a TOML section keyed by alias. Aliases referenced from the workspace must match config aliases exactly.
 
-**Outlook / Microsoft 365 tools** (Composio's `OUTLOOK_*` and `OFFICE365_*` slugs):
-- `OUTLOOK_FETCH_MESSAGES`, `OUTLOOK_SEND_MESSAGE`, `OUTLOOK_REPLY_MESSAGE`, `OUTLOOK_CREATE_DRAFT`, `OUTLOOK_MOVE_MESSAGE` (folder routing), `OUTLOOK_DELETE_MESSAGE`, `OUTLOOK_FORWARD_MESSAGE`
+**Always-on flags:**
+- `-a <alias>` — selects the account (e.g., `-a strategylabs`, `-a unomastacos`, `-a outlook`)
+- `-o json` — produces machine-parseable output; redirect stderr to drop the noisy `imap_codec::response` WARN line
+- `-f <folder>` — selects the folder (default `INBOX`)
 
-**Other Composio connectors:**
-- Outlook Calendar (for Outlook users)
-- Otter.ai, Gong, Fathom (additional transcript sources)
+**Canonical invocation pattern (use in every Bash call):**
 
-**Session initialization:**
-- Call `COMPOSIO_MANAGE_CONNECTIONS` to start/check OAuth for an account
-- Use `COMPOSIO_WAIT_FOR_CONNECTIONS` while user completes browser flow
-- Use `COMPOSIO_GET_TOOL_SCHEMAS` if a tool's schema isn't yet loaded
+```
+~/.cargo/bin/himalaya <subcommand> -a <alias> -o json [other-flags] 2>/dev/null
+```
 
-**Tool usage rules:**
-- **Mark as read:** `GMAIL_BATCH_MODIFY_MESSAGES` → `removeLabelIds: ["UNREAD"]`
-- **Mark as unread:** `addLabelIds: ["UNREAD"]`
-- **Archive:** `removeLabelIds: ["INBOX"]`
-- **Star:** `GMAIL_ADD_LABEL_TO_EMAIL` → `add_label_ids: ["STARRED"]`
-- **Custom labels:** Must use label IDs (e.g., `Label_123`), NOT display names. Call `GMAIL_LIST_LABELS` first.
-- **Trash vs. permanent delete:** Default to `GMAIL_MOVE_TO_TRASH` (recoverable). Use `GMAIL_BATCH_DELETE_MESSAGES` only after explicit user confirmation — high_stakes.
-- **Thread replies:** Always use `GMAIL_REPLY_TO_THREAD` with thread_id to keep conversations intact.
-- **Message IDs:** Always use values from `GMAIL_FETCH_EMAILS` results. Never invent.
+The `2>/dev/null` is required — Himalaya emits IMAP debug warnings on stderr that will corrupt JSON parsing if mixed in.
+
+**Email operations:**
+
+| Operation | Himalaya invocation | Notes |
+|---|---|---|
+| List envelopes | `envelope list -a <alias> -f <folder> -o json --page-size N [-- <query>]` | Query language uses `from <pat>`, `to <pat>`, `before <yyyy-mm-dd>`, `after <yyyy-mm-dd>`, `not`, `and`, `or`. Output: array of `{id, flags, subject, from{name,addr}, to{name,addr}, date, has_attachment}`. |
+| Read full message | `message read -a <alias> -f <folder> <ID> -o json` | Returns headers + body. Use for VIP alerts, deep dives, List-Unsubscribe parsing. |
+| Read full thread | `message thread -a <alias> -f <folder> <ID> -o json` | Returns all messages in the thread. |
+| Reply to message | `message reply -a <alias> -f <folder> <ID>` (interactive) OR write a raw RFC-822 file + `message send -a <alias>` (programmatic) | For automation use the second form — write the reply body to a temp file via the `Write` tool, then `himalaya message send -a <alias> < /tmp/reply.eml`. Include In-Reply-To and References headers to preserve threading. |
+| Forward message | `message forward -a <alias> -f <folder> <ID>` (interactive) OR raw assemble + `message send` | Same pattern as reply. |
+| Send new message | Write RFC-822 to temp file, then `message send -a <alias> < /tmp/msg.eml` | Sending account = receiving account by default. |
+| Save as draft | `message save -a <alias> -f <Drafts-folder> < /tmp/msg.eml` | Gmail's drafts folder is `[Gmail]/Drafts`; Outlook's is typically `Drafts`. |
+| Mark as read | `flag add -a <alias> -f <folder> <ID> seen` | Or remove with `flag remove ... seen` for unread. |
+| Star / unstar | `flag add -a <alias> -f <folder> <ID> flagged` / `flag remove ... flagged` | `\Flagged` IMAP flag = Gmail's starred. |
+| Archive (Gmail) | `message move -a <alias> -f INBOX <ID> "[Gmail]/All Mail"` | Gmail-style archive = remove from INBOX, keep in All Mail. |
+| Archive (Outlook) | `message move -a outlook -f INBOX <ID> Archive` | Or platform-equivalent. |
+| Trash (recoverable) | `message move -a <alias> -f <folder> <ID> "[Gmail]/Trash"` / `message move -a outlook ... DeletedItems` | Recoverable from Trash/DeletedItems. |
+| Permanent delete | `message delete -a <alias> -f <folder> <ID>` after trashing, OR direct from current folder — **high_stakes, confirm always**. | Himalaya's `delete` flips the `\Deleted` flag + expunges. |
+| Route to folder | `message move -a <alias> -f INBOX <ID> "<target-folder>"` | See "Folder Routing" section below for Gmail vs. Outlook target naming. |
+| List folders | `folder list -a <alias> -o json` | Returns `[{name, desc}, ...]` — `desc` contains IMAP flags like `\All`, `\Sent`, `\Drafts`, `\Flagged`, `\Trash`. |
+| Create folder | `folder add -a <alias> <folder-name>` | Used to provision ICC/* labels on first triage. |
+
+**Search query syntax (Himalaya, not Gmail):**
+
+Himalaya's query language is positional and uses keywords. Build queries with `from <addr>`, `to <addr>`, `subject <text>`, `before <date>`, `after <date>`, `date <date>`, `not`, `and`, `or`. Examples:
+
+- "unread VIPs in last 24h": filter on `flags` field in JSON output (Himalaya doesn't have an `is:unread` query keyword — you fetch then filter client-side by checking `!flags.includes("Seen")`).
+- "from Bryan since May 1": `himalaya envelope list -a uno-mas -- 'from bryan@dpp.com and after 2026-05-01' -o json`
+- "starred unread": fetch from `[Gmail]/Starred` folder (Gmail) OR filter for `flags` containing `"Flagged"` AND not `"Seen"`.
+
+**Unread filtering:** there's no built-in "unread only" query operator. Fetch a page of envelopes from INBOX and filter client-side: `unread = envelopes.filter(e => !e.flags.includes("Seen"))`. For Gmail, `INBOX` only contains messages with the INBOX label, which is roughly equivalent to Gmail's `in:inbox`.
+
+**Threading:** Himalaya exposes thread reads via `message thread <ID>` but doesn't have a separate "list threads" command. To group envelopes into threads client-side, the skill can fetch envelopes and group by subject + In-Reply-To header (read individual messages for headers). For the common case (reply to a thread), use `message reply` or assemble a reply with `In-Reply-To: <original-message-id>` and `References: <thread-chain>`.
+
+**Permanent delete vs trash:** Default to moving to `[Gmail]/Trash` / `DeletedItems` (recoverable). Only call `himalaya message delete` on items already in Trash, or when user has explicitly confirmed permanent deletion of a specific batch — high_stakes.
 
 ### Native MCP
 
-Used where the native MCP feature surface is richer than Composio's wrapper:
+Used where the local-CLI surface doesn't apply at all (chat, calendar, transcripts):
 
 | Tool | Why native |
 |---|---|
-| Slack | Richer thread, canvas, scheduled-message support |
+| Slack | Native MCP — threads, canvases, scheduled messages, read/send |
 | Google Calendar | `suggest_time`, `respond_to_event`, native event creation |
-| Fireflies | Summaries, soundbites, analytics, sentiment beyond Composio's wrapper |
+| Fireflies | Summaries, soundbites, analytics, sentiment |
 
 Tool calls follow standard MCP patterns:
 - `mcp__claude_ai_Slack__slack_send_message`, `mcp__claude_ai_Slack__slack_read_channel`, etc.
@@ -133,18 +139,18 @@ Tool calls follow standard MCP patterns:
 
 ### AppleScript
 
-iMessage uses macOS AppleScript/Shortcuts integration. No Composio or MCP — direct shell access via the local Mac. Requires Messages app configured and iMessage account active.
+iMessage uses macOS AppleScript/Shortcuts integration. Direct shell access via the local Mac. Requires Messages app configured and iMessage account active.
 
-### Composio fallback path
+### Setup prerequisites (no fallback mode)
 
-If a user opts out of Composio, the skill operates in **fallback mode**:
-- Native Gmail MCP only (single account)
-- No Outlook
-- No multi-account
-- No Otter / Gong / Fathom
-- Slack, Calendar, Fireflies, iMessage still work
+Unlike the v1.4 Composio-based architecture, there is no separate fallback mode. The plugin requires:
 
-Fallback mode is flagged in `.meta.json.fallback_mode: true`. Triage start displays a warning: "You're in fallback mode — features X, Y, Z are unavailable. Run `/setup-wizard` to add Composio."
+1. `~/.cargo/bin/himalaya` exists and reports `+oauth2 +keyring` in `himalaya --version` (else: install via `cargo install himalaya --locked --features oauth2,keyring`)
+2. `~/.config/himalaya/config.toml` defines an account section for each connected inbox in `.meta.json.connected_inboxes[].alias`
+3. `himalaya account list` succeeds (validates config parse)
+4. For each account, `himalaya envelope list -a <alias> --page-size 1 -o json 2>/dev/null` returns a JSON array (validates auth — Keychain entries present, OAuth tokens valid)
+
+If any check fails, route the user to `/setup-wizard` rather than proceeding with partial connectivity.
 
 ## Workspace
 
@@ -172,28 +178,34 @@ All user data lives at `~/Inbox Command Center/` (iCloud-synced if iCloud Drive 
 
 ```json
 {
-  "version": "1.4.0",
-  "migrated_from": "1.3.0",
+  "version": "1.5.0",
+  "migrated_from": "1.4.0",
   "connected_inboxes": [
     {
-      "alias": "personal",
+      "alias": "strategylabs",
       "platform": "gmail",
       "account": "ramsey@strategylabs.us",
-      "composio_connection_id": "...",
+      "himalaya_alias": "strategylabs",
       "folders_enabled": ["Newsletters", "Receipts", "Low Priority"]
     },
     {
       "alias": "uno-mas",
       "platform": "gmail",
-      "account": "ramsey@unomastacos.com",
-      "composio_connection_id": "...",
+      "account": "ramsey@unomastacoshop.com",
+      "himalaya_alias": "unomastacos",
       "folders_enabled": ["Receipts", "Finance", "Low Priority"]
+    },
+    {
+      "alias": "outlook",
+      "platform": "outlook",
+      "account": "ramsey@outlook.com",
+      "himalaya_alias": "outlook",
+      "folders_enabled": ["Receipts", "Low Priority"]
     }
   ],
   "last_rule_review": "2026-05-01",
   "last_fireflies_pull": "2026-05-05",
   "session_count": 47,
-  "fallback_mode": false,
   "devices": ["MacBook Pro", "iMac"],
   "schedules": {
     "daily_briefing": {"time": "07:30", "days": "weekdays", "channel": "slack-dm", "enabled": true},
@@ -210,6 +222,8 @@ All user data lives at `~/Inbox Command Center/` (iCloud-synced if iCloud Drive 
   "reminder_delivery": {"channel": "slack-channel", "slack_channel": "#inbox-reminders"}
 }
 ```
+
+The `alias` field is the workspace-friendly name used in user-facing messages (e.g., "triage uno-mas"). The `himalaya_alias` field must match a section name in `~/.config/himalaya/config.toml` — they may be different (e.g., workspace alias "uno-mas" for Himalaya alias "unomastacos"). All shell-outs use the `himalaya_alias`.
 
 **`contacts.md`** — Per-recipient memory. Section per person; `[VIP]` tag in header marks priority. Auto-tracked timeline + manual notes.
 
@@ -329,11 +343,11 @@ When iCloud Drive is enabled, the workspace lives at `~/Library/Mobile Documents
 | `reports/` | Yes | Monthly reports available everywhere |
 | Apple Reminders | Already cloud | Independent iCloud sync |
 | Google Calendar / Sheets | Already cloud | Independent sync |
-| Composio account state | Already cloud | Stored server-side |
+| Himalaya OAuth tokens | Per-device | Stored in each device's local Keychain — re-auth required per new device |
 
 **Conflict handling:** iCloud creates conflict copies (e.g., `contacts 2.md`). On next session, skill detects conflict copies and prompts resolution with diff summary.
 
-**New device detection:** On first launch on a device not in `.meta.json.devices[]`, auto-add device name and verify Composio + native MCP connections (may need re-auth per device).
+**New device detection:** On first launch on a device not in `.meta.json.devices[]`, auto-add device name and verify the local Himalaya install plus native MCP connections. Each new device needs its own `~/.config/himalaya/config.toml` and Keychain entries (Gmail app passwords + Outlook OAuth tokens) — point user to `/setup-wizard` if missing.
 
 ## Rules Engine
 
@@ -448,21 +462,54 @@ Three categories: **delete**, **prioritization**, **organization**. Suggestions 
 
 ### Folder rules — synthetic abstraction
 
-Inbox Command Center defines 7 logical "buckets" that map to platform-native implementations:
+Inbox Command Center defines 7 logical "buckets". Under Himalaya/IMAP both Gmail and Outlook treat these as folders (Gmail surfaces labels as IMAP folders), so routing collapses to a single `message move` call per platform with platform-appropriate folder names:
 
-| Logical folder | Gmail | Outlook / IMAP |
+| Logical folder | Gmail (IMAP folder name) | Outlook (IMAP folder name) |
 |---|---|---|
-| Low Priority | Label `ICC/Low Priority` | Subfolder `Inbox/ICC/Low Priority` |
-| Newsletters | Label `ICC/Newsletters` | Subfolder `Inbox/ICC/Newsletters` |
-| Receipts & Orders | Label `ICC/Receipts` | Subfolder `Inbox/ICC/Receipts` |
-| Finance | Label `ICC/Finance` | Subfolder `Inbox/ICC/Finance` |
-| Automated/Bot | Label `ICC/Bot` | Subfolder `Inbox/ICC/Bot` |
-| Pending Review | Label `ICC/Pending` | Subfolder `Inbox/ICC/Pending` |
-| Delegated | Label `ICC/Delegated` | Subfolder `Inbox/ICC/Delegated` |
+| Low Priority | `ICC/Low Priority` | `ICC/Low Priority` |
+| Newsletters | `ICC/Newsletters` | `ICC/Newsletters` |
+| Receipts & Orders | `ICC/Receipts` | `ICC/Receipts` |
+| Finance | `ICC/Finance` | `ICC/Finance` |
+| Automated/Bot | `ICC/Bot` | `ICC/Bot` |
+| Pending Review | `ICC/Pending` | `ICC/Pending` |
+| Delegated | `ICC/Delegated` | `ICC/Delegated` |
 
-The skill abstraction `route_to_folder(inbox_id, message_id, folder_alias)` dispatches to the right tool per platform (`GMAIL_BATCH_MODIFY_MESSAGES` add label, or `OUTLOOK_MOVE_MESSAGE`).
+Gmail-specific (built-in IMAP folders):
 
-**Per-inbox enablement.** Setup wizard asks per-inbox which folders to enable. Folders auto-create on the platform when enabled. Tracked in `.meta.json.connected_inboxes[i].folders_enabled[]`.
+| Logical action | Gmail folder | Notes |
+|---|---|---|
+| Archive | `[Gmail]/All Mail` | "Archive" = remove from INBOX (which removes the INBOX label), message remains in All Mail |
+| Trash | `[Gmail]/Trash` | Recoverable |
+| Starred (read) | `[Gmail]/Starred` | Read-only view of `\Flagged` items; star/unstar via `flag add/remove flagged` |
+| Sent | `[Gmail]/Sent Mail` | Listed for voice profile analysis |
+| Drafts | `[Gmail]/Drafts` | Save composed-but-not-sent messages |
+
+Outlook-specific:
+
+| Logical action | Outlook folder |
+|---|---|
+| Archive | `Archive` |
+| Trash | `Deleted Items` (display may render as `DeletedItems` or localized) |
+| Sent | `Sent Items` |
+| Drafts | `Drafts` |
+
+**Routing implementation.** A single helper pattern handles all platforms:
+
+```
+himalaya message move -a <himalaya_alias> -f <source-folder> <ID> "<target-folder>" 2>/dev/null
+```
+
+Source folder is usually `INBOX`. Target folder is the platform-specific name from the tables above.
+
+**Provisioning.** On first triage in an inbox, check that the enabled `ICC/*` folders exist via `himalaya folder list -a <alias> -o json 2>/dev/null`. For any folder in `.meta.json.connected_inboxes[i].folders_enabled[]` that's missing, create it with:
+
+```
+himalaya folder add -a <himalaya_alias> "ICC/<FolderName>" 2>/dev/null
+```
+
+Gmail propagates these as labels visible in the web UI; Outlook as subfolders under the account root.
+
+**Per-inbox enablement.** Setup wizard asks per-inbox which folders to enable. Provisioning happens lazily — first routing operation creates any missing folder. Tracked in `.meta.json.connected_inboxes[i].folders_enabled[]`.
 
 **Default folder behavior:**
 
@@ -669,11 +716,18 @@ For multi-account users: "Which inbox today, or all of them?" Default behavior:
 Before user picks a single inbox, scan ALL connected inboxes for VIP messages.
 
 ```
+vip_emails_per_addr = group(contacts.md VIPs by email_addr)
+
 For each inbox in connected_inboxes:
-  GMAIL_FETCH_EMAILS / OUTLOOK_FETCH_MESSAGES with query:
-    "is:unread after:[last_check] from:[any VIP email in contacts.md]"
-  → collect VIP messages across inboxes
+  For each VIP email addr:
+    Bash: ~/.cargo/bin/himalaya envelope list \
+            -a <himalaya_alias> -f INBOX -o json --page-size 20 \
+            -- 'from <vip_addr> and after <last_check_date>' 2>/dev/null
+  → parse JSON results, filter to envelopes where !flags.includes("Seen")
+  → collect into vip_emails list with inbox alias tag
 ```
+
+Note: Himalaya queries one sender at a time per IMAP SEARCH, so this loops per VIP. With typical VIP lists (<20 people) this is fine. For larger VIP lists, fall back to fetching all unread for the time window and filtering client-side.
 
 Surface results:
 
@@ -690,26 +744,27 @@ If user handles VIPs first, run VIP Immediate Alert flow for each (full body + p
 
 ### Step 2: Pull Messages
 
-Per the selected inbox(es), execute Composio fetch. Two parallel fetches:
+Per the selected inbox(es), execute two Himalaya fetches via the `Bash` tool. These are independent so run them in parallel (two Bash tool calls in one assistant turn):
 
 ```
-COMPOSIO_MULTI_EXECUTE_TOOL with two calls:
-  Fetch 1 — Starred:
-    GMAIL_FETCH_EMAILS / OUTLOOK_FETCH_MESSAGES
-    query: "is:starred is:unread"
-    max_results: 20
-    verbose: true
+Fetch A — Starred unread (Gmail-style: read from [Gmail]/Starred or filter \Flagged):
+  ~/.cargo/bin/himalaya envelope list \
+    -a <himalaya_alias> -f "[Gmail]/Starred" -o json --page-size 20 \
+    2>/dev/null
+  (For Outlook, fetch from INBOX and filter envelopes where flags includes "Flagged".)
 
-  Fetch 2 — Unread inbox:
-    GMAIL_FETCH_EMAILS / OUTLOOK_FETCH_MESSAGES
-    query: "in:inbox is:unread after:[date]"
-    max_results: 50
-    verbose: true
+Fetch B — Unread INBOX since last check:
+  ~/.cargo/bin/himalaya envelope list \
+    -a <himalaya_alias> -f INBOX -o json --page-size 50 \
+    -- 'after <YYYY-MM-DD>' 2>/dev/null
+  → parse JSON; client-side filter to envelopes where !flags.includes("Seen")
 ```
 
-Deduplicate by messageId. Sort by most recent first.
+Deduplicate by envelope `id`. Sort: starred → newest first.
 
 If multi-inbox sequential: tag each message with its inbox alias.
+
+**Parsing tip:** because Himalaya emits IMAP debug warnings on stderr, always pipe stderr to /dev/null when capturing JSON. The stdout is a clean JSON array.
 
 ### Step 3: Apply Rules and Route to Folders
 
@@ -781,14 +836,14 @@ After 10: "Ready for the next batch, or want to take action on these first?"
 
 | Code | Action | Implementation |
 |---|---|---|
-| `draft` | Draft a reply in user's voice | Compose; sending account auto-matches receiving inbox |
-| `reply` | Same as draft + send on confirmation | `GMAIL_REPLY_TO_THREAD` / `OUTLOOK_REPLY_MESSAGE` |
-| `remind [time]` | Add to todos.md + calendar event | Append + `mcp__claude_ai_Google_Calendar__create_event` |
-| `read` | Mark as read | `GMAIL_BATCH_MODIFY_MESSAGES` removeLabelIds: ["UNREAD"] |
-| `delete` | Move to trash | `GMAIL_MOVE_TO_TRASH` (recoverable) |
-| `unsub` | Execute unsubscribe | List-Unsubscribe header → body link → fallback rule |
-| `dive` | Show full email/thread | `GMAIL_FETCH_MESSAGE_BY_THREAD_ID` |
-| `delegate [name]` | Forward + add to followups.md | `GMAIL_REPLY_TO_THREAD` (forward variant) + append |
+| `draft` | Draft a reply in user's voice | Compose; assemble RFC-822 with `In-Reply-To` + `References` headers. Save via `himalaya message save -a <alias> -f "[Gmail]/Drafts" < /tmp/reply.eml` (Gmail) or `-f Drafts` (Outlook). |
+| `reply` | Same as draft + send on confirmation | After user approves: `himalaya message send -a <alias> < /tmp/reply.eml 2>/dev/null`. Sending account = receiving inbox. |
+| `remind [time]` | Add to todos.md + calendar event | Append to `todos.md` + `mcp__claude_ai_Google_Calendar__create_event` |
+| `read` | Mark as read | `himalaya flag add -a <alias> -f INBOX <ID> seen 2>/dev/null` |
+| `delete` | Move to trash | `himalaya message move -a <alias> -f INBOX <ID> "[Gmail]/Trash" 2>/dev/null` (Gmail) or `... "Deleted Items"` (Outlook). Recoverable. |
+| `unsub` | Execute unsubscribe | Fetch full message with `himalaya message read -a <alias> -f INBOX <ID> -o json 2>/dev/null`, parse `List-Unsubscribe` header from headers field. See Unsubscribe Workflow section. |
+| `dive` | Show full email/thread | `himalaya message thread -a <alias> -f INBOX <ID> -o json 2>/dev/null` |
+| `delegate [name]` | Forward + add to followups.md | Resolve `[name]` to email via contacts.md. Assemble forward RFC-822 + `himalaya message send -a <alias>`. Append entry to `followups.md`. |
 | `skip` | Leave in inbox | No-op |
 | `rule` | Create a rule based on this email | Trigger `/create-rule` flow |
 
@@ -823,14 +878,14 @@ When the user assigns `unsub`, execute the unsubscribe — don't just flag it.
 ### Execution methods (priority order)
 
 **1. List-Unsubscribe header (one-click)**
-- Fetch full message via `GMAIL_FETCH_MESSAGE_BY_MESSAGE_ID`
-- Parse the `List-Unsubscribe` header
-- `mailto:` → send via `GMAIL_SEND_EMAIL` to the unsubscribe address
-- `https://` → execute GET/POST request
+- Fetch full message via `himalaya message read -a <alias> -f <folder> <ID> -o json 2>/dev/null`
+- Parse the `List-Unsubscribe` header from the returned headers map
+- `mailto:` → assemble an empty message addressed to the unsubscribe URL, then `himalaya message send -a <alias> < /tmp/unsub.eml 2>/dev/null`
+- `https://` → execute GET/POST via `curl` (also via the `Bash` tool)
 
 **2. Body link extraction**
 - If no header, scan body for "unsubscribe", "manage preferences", "opt out", "email preferences"
-- Extract URL; for Composio-connected accounts attempt direct call, otherwise open in browser
+- Extract URL; attempt direct `curl` call, otherwise surface the URL to the user to open in browser
 
 **3. Auto-junk fallback**
 - No mechanism found → create rule: auto-junk all future from sender
@@ -853,7 +908,7 @@ Same v1.3 behavior. macOS AppleScript/Shortcuts integration. Categorization, act
 
 ## Calendar Triage
 
-Same v1.3 behavior via native Google Calendar MCP. For Outlook users, use Composio's Outlook Calendar slugs.
+Same v1.3 behavior via native Google Calendar MCP. (Outlook Calendar is not currently supported — Himalaya is mail-only. If Outlook calendar coverage is needed, treat that as a future addition via a separate MCP server or the Microsoft Graph API.)
 
 Flags: ❓ UNRESPONDED / ⚠️ CONFLICTS / 🏃 MARATHON / 📋 PREP NEEDED.
 
@@ -884,7 +939,7 @@ Canonical store: `todos.md` + `followups.md`. Replaces v1.3's four-backend model
 Optional one-way mirroring (workspace → external):
 - **Apple Reminders** for time-bound items, mirrored to "Inbox Tasks" list (Mac users)
 - **Google Calendar event** for any item with a due date (so the OS reminds you)
-- **Outlook Tasks** for Outlook users (via Composio)
+- (Outlook Tasks mirroring is not currently supported via Himalaya — Apple Reminders or Google Calendar are the available external mirrors)
 
 Mirroring is opt-in during setup wizard. Workspace remains canonical — if external and workspace diverge, workspace wins.
 
@@ -1032,7 +1087,7 @@ ACTIONS DUE
 ├── Stale follow-ups: [N] > 7 days (in followups.md)
 ```
 
-**Source data:** primary feed is `session-logs/YYYY-MM-DD.md` files within the report period; supplemented by current state queries (folder counts via Composio, rule trigger counts from `rules.md`).
+**Source data:** primary feed is `session-logs/YYYY-MM-DD.md` files within the report period; supplemented by current state queries (folder counts via `himalaya envelope list -a <alias> -f <folder> -o json --page-size 1` reading the `count` from the result envelope, rule trigger counts from `rules.md`).
 
 Stored at `~/Inbox Command Center/reports/[YYYY-MM].md`. Optionally delivered via Slack DM / iMessage / email per `.meta.json.schedules.inbox_report_cadence`.
 
@@ -1061,10 +1116,11 @@ If `installed_version == "1.3.0"` (or `migrated_from` is unset and old workspace
 | Error | Behavior |
 |---|---|
 | No results | Treat as valid empty state. Widen query / date range. |
-| Composio rate limit (429/403) | Back off and retry; surface to user if persistent. |
-| Invalid Gmail label IDs | Call `GMAIL_LIST_LABELS` first to refresh. |
-| Composio session expired | Re-run `COMPOSIO_MANAGE_CONNECTIONS` for the affected connector. |
-| Tool schema not loaded | Call `COMPOSIO_GET_TOOL_SCHEMAS` for the slug before executing. |
+| Himalaya stderr WARN line leaks into JSON | Always run with `2>/dev/null`. If JSON parse fails, re-run with stderr suppressed. |
+| Himalaya not found / wrong version | Run `~/.cargo/bin/himalaya --version`. If missing or missing `+oauth2 +keyring`, route user to `/setup-wizard` for `cargo install himalaya --locked --features oauth2,keyring`. |
+| Gmail IMAP auth failed | App password missing or revoked. Re-store via `security add-generic-password -U -a <email> -s himalaya-<alias> -w '<16-char-app-password>'`. |
+| Outlook OAuth expired / `cannot get oauth2 access token from global keyring` | Re-bootstrap with `himalaya account doctor outlook --fix` in a TTY (must be run in user's terminal, not via Bash tool). Answer "No" to reset prompt unless tokens are corrupted. |
+| Folder not found (`folder add failed`) | Some IMAP servers require parent folders to exist first. Create parents before children (e.g., `ICC` before `ICC/Newsletters`). |
 | Workspace file missing on session start | Tell user to run setup-wizard. Don't recreate from scratch — they may have data in iCloud not yet synced. |
 | iCloud conflict copy detected | Prompt user with diff summary, ask which version to keep. |
 | Filesystem MCP unavailable | Tell user to check Claude config. Workspace is read-only without it. |

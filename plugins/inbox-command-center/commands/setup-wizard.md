@@ -35,105 +35,105 @@ After migration, skip to Step 18 (Workspace Tour) unless the user explicitly opt
 
 ---
 
-## Step 0a: Composio Account
+## Step 0a: Verify Himalaya Install
 
-Composio is the primary connection layer for Gmail, Outlook, and several other tools. It provides full inbox control: read, search, draft, send, archive, label, trash — across Gmail and Outlook, with multi-account support.
+Inbox Command Center uses the local **Himalaya CLI** as the email connection layer — it talks IMAP/SMTP directly with credentials stored in the macOS Keychain. No third-party email broker.
+
+Run a series of checks via the `Bash` tool. Each must pass before continuing:
 
 ```
-Step 0a — Composio Account
+Step 0a — Himalaya install check
 
-Inbox Command Center uses Composio for full inbox management:
-read, search, draft, send, archive, label, trash. It supports
-multiple Gmail and Outlook accounts per user, plus connectors for
-Otter, Gong, and Fathom.
+1. Binary present:
+   Bash: ls ~/.cargo/bin/himalaya 2>/dev/null && ~/.cargo/bin/himalaya --version
 
-Do you have Composio access?
+   PASS: prints version line containing "+oauth2 +keyring"
+   FAIL — not found: prompt user to install
+     → curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable --profile minimal
+     → cargo install himalaya --locked --features oauth2,keyring
+     → Add `. "$HOME/.cargo/env"` to ~/.zshrc if missing
+   FAIL — missing features: same install command rebuilds with correct features.
 
-  [ ] Yes — I have a Composio account already
-       → Proceed to email OAuth (Step 1)
-       
-  [ ] No, but I'm at Strategy Labs
-       → Email scott@strategylabs.us to be added to the SL team
-         Composio account.
-       → I'll wait. Type "ready" once Scott confirms access.
-       
-  [ ] No, I'll set up my own Composio account
-       → Walk through composio.dev signup (~3 min):
-         1. Open https://composio.dev
-         2. Sign up with email or Google
-         3. Verify email
-         4. Return here and type "ready"
-       
-  [ ] Skip — use limited fallback
-       ⚠️ Warning: fallback mode loses Outlook, multi-account, and
-          Otter/Gong/Fathom. Native Gmail MCP only, single account.
-       → Sets .meta.json.fallback_mode: true
-       → Skip to Step 1 with native MCP path
+2. Config file present and parses:
+   Bash: ~/.cargo/bin/himalaya account list -o json 2>/dev/null
+
+   PASS: prints a JSON array of account objects
+   FAIL — config missing: prompt user to create ~/.config/himalaya/config.toml
+     (offer to walk through it — see the Himalaya account documentation)
+   FAIL — parse error: surface the parse error verbatim, prompt to fix.
+
+3. macOS Keychain access:
+   Bash: security list-keychains 2>&1 | head -3
+
+   PASS: prints at least one keychain path
+   FAIL: keychain issues are rare; surface error and direct user to Keychain Access.app.
 ```
 
-If user chooses fallback, every subsequent step that depends on Composio is bypassed with a note about what's unavailable.
-
-If Composio is set up, run a sanity check: call `mcp__claude_ai_Composio__COMPOSIO_MANAGE_CONNECTIONS` to confirm the account is reachable.
+If any check fails, halt the wizard with a clear "install/fix step" and the exact command to run. Do not proceed to Step 1 with broken connectivity.
 
 ---
 
-## Step 1: Connect Email
+## Step 1: Map Himalaya Accounts to Workspace Inboxes
 
-Connect one or more Gmail and/or Outlook accounts via Composio.
+Each section in `~/.config/himalaya/config.toml` is an "account" in Himalaya's language. The plugin needs to map each Himalaya account to a workspace inbox alias.
 
 ```
-Step 1 — Connect Email
+Step 1 — Map your Himalaya accounts
 
-Which platform(s) would you like to connect?
+I see the following accounts in your Himalaya config:
 
-  [ ] Gmail only
-  [ ] Outlook / Microsoft 365 only
-  [ ] Both
-  [ ] Coming in v1.5: iCloud Mail, Generic IMAP
+  [from himalaya account list -o json]
+  • strategylabs (IMAP+SMTP, default)
+  • unomastacos  (IMAP+SMTP)
+  • outlook      (IMAP+SMTP)
 
-Then I'll loop through OAuth for each account you want to add.
+For each, I need:
+  - Workspace alias  (short name for triage — e.g. "personal", "uno-mas")
+  - Platform         (gmail | outlook | other)
+  - Email address    (auto-detected from himalaya config.toml `email` field)
 ```
 
-### OAuth flow per account
+### Per-account flow
 
-For each inbox:
+For each Himalaya account:
 
-1. Call `mcp__claude_ai_Composio__COMPOSIO_MANAGE_CONNECTIONS` with the platform (`gmail` or `outlook`)
-2. Display the OAuth URL; ask user to complete in browser
-3. Use `COMPOSIO_WAIT_FOR_CONNECTIONS` until success (or timeout)
-4. Sanity check: call `GMAIL_FETCH_EMAILS` (or Outlook equivalent) with `max_results: 1`
-5. Ask the user for an alias for this inbox: `"What should I call this inbox? (e.g. 'personal', 'uno-mas', 'work')"`
-6. Append to `.meta.json.connected_inboxes[]`:
+1. Read the account's `email` and `backend.host` from `~/.config/himalaya/config.toml` to pre-fill platform detection:
+   - `backend.host = imap.gmail.com` → `platform: gmail`
+   - `backend.host = outlook.office365.com` → `platform: outlook`
+   - anything else → ask user
+2. Prompt for a workspace alias: `"What should I call this inbox in triage? (e.g. 'personal', 'uno-mas', 'work')"`
+3. Verify connectivity with a real fetch:
+   ```
+   Bash: ~/.cargo/bin/himalaya envelope list -a <himalaya_alias> --page-size 1 -o json 2>/dev/null
+   ```
+   PASS: returns a JSON array (even if empty)
+   FAIL — Gmail auth rejected: app password missing or wrong. Direct user to (re)generate at https://myaccount.google.com/apppasswords and re-store with `security add-generic-password -U -a <email> -s himalaya-<alias> -w '<16chars>'`.
+   FAIL — Outlook OAuth missing: direct user to run `himalaya account doctor outlook --fix` in their terminal (this is the only step that requires interactive TTY).
+4. Append to `.meta.json.connected_inboxes[]`:
    ```json
    {
      "alias": "personal",
      "platform": "gmail",
      "account": "ramsey@strategylabs.us",
-     "composio_connection_id": "[from Composio]",
+     "himalaya_alias": "strategylabs",
      "folders_enabled": []
    }
    ```
 
 After each account: "Add another inbox? [Yes / No, continue]"
 
-Loop until user says no. After last inbox, confirm:
+After all accounts confirmed:
 
 ```
 ✓ Connected inboxes:
-  - personal (gmail) — ramsey@strategylabs.us
-  - uno-mas (gmail) — ramsey@unomastacos.com
-  - ms365   (outlook) — ramsey@...
+  - personal (gmail)   — ramsey@strategylabs.us       (himalaya: strategylabs)
+  - uno-mas (gmail)    — ramsey@unomastacoshop.com    (himalaya: unomastacos)
+  - outlook (outlook)  — ramsey@outlook.com           (himalaya: outlook)
 
 Total: 3 inboxes
 ```
 
-### Fallback path (native Gmail MCP)
-
-If user is in fallback mode: skip Composio OAuth. Use the native Gmail MCP only. Single account assumed (user's primary Gmail). Set:
-```json
-"connected_inboxes": [{"alias": "primary", "platform": "gmail", "account": "...", "connection": "native-mcp"}],
-"fallback_mode": true
-```
+If the user wants to add a Himalaya account that doesn't yet exist in config.toml: provide the canonical block to paste into config.toml (one for Gmail with app password, one for Outlook with OAuth2) and walk through Keychain storage. Re-verify with `himalaya account list` before continuing.
 
 ---
 
@@ -175,15 +175,14 @@ Requires Messages app configured on this Mac.
 ### Other messaging platforms
 
 ```
-Step 2c — Other Platforms (Optional)
+Step 2c — Other Platforms
 
-  [ ] WhatsApp — via Composio
-  [ ] Teams — via Composio
-  [ ] SMS / Twilio — via Composio
-  [ ] None
+Not currently supported in v1.5 — WhatsApp / Teams / SMS connectors
+required Composio. These would return in a future release via dedicated
+MCP servers.
+
+  [ ] None (only option)
 ```
-
-Each runs through `COMPOSIO_MANAGE_CONNECTIONS` for the relevant connector if Composio is enabled.
 
 ---
 
@@ -192,17 +191,16 @@ Each runs through `COMPOSIO_MANAGE_CONNECTIONS` for the relevant connector if Co
 ```
 Step 3 — Connect Calendar
 
-  [ ] Google Calendar (native MCP — recommended for Gmail users)
-  [ ] Outlook Calendar (Composio — recommended for Outlook users)
-  [ ] Both
+  [ ] Google Calendar (native MCP)
   [ ] Skip
+
+Outlook Calendar is not currently supported in v1.5 (the previous
+Composio path is gone, and Himalaya is mail-only). If you primarily
+use Outlook Calendar, skip for now — it'll return via a Microsoft
+Graph MCP server in a future release.
 ```
 
 For Google Calendar: standard MCP OAuth. Test with `mcp__claude_ai_Google_Calendar__list_calendars`.
-
-For Outlook Calendar: `COMPOSIO_MANAGE_CONNECTIONS` with the calendar connector. Test with the equivalent list call.
-
-If user has multiple connected email inboxes, default the calendar to match the primary inbox's platform but allow override.
 
 ---
 
@@ -244,19 +242,18 @@ If yes:
 
 If skipped: nudge on next 3 triages ("You haven't connected Fireflies yet — voice profile will improve significantly when you do").
 
-### Other transcript sources (Optional)
+### Other transcript sources
 
 ```
 Step 4b — Other Transcript Sources
 
-  [ ] Otter.ai — via Composio
-  [ ] Gong — via Composio
-  [ ] Fathom — via Composio
-  [ ] Zoom (cloud recordings) — via Composio
-  [ ] None
-```
+Not currently supported in v1.5 — Otter / Gong / Fathom / Zoom
+connectors required Composio. Fireflies (native MCP) remains the
+primary transcript source. Others would return via dedicated MCP
+servers in a future release.
 
-These supplement Fireflies but don't replace it. Each runs through Composio OAuth.
+  [ ] None (only option)
+```
 
 ---
 
@@ -392,7 +389,7 @@ Save to `.meta.json.schedules.vip_digest`.
 
 ## Step 7a: Strategy Labs VIP Defaults (SL deployment only)
 
-If the user is on the SL team Composio account or otherwise identifies as Strategy Labs:
+If the user identifies as Strategy Labs (e.g., a `@strategylabs.us` email in `.meta.json.connected_inboxes[]`):
 
 ```
 Step 7a — Strategy Labs VIP Defaults (Optional)
@@ -457,8 +454,16 @@ For each enabled folder, I'll create the platform-native equivalent
 ```
 
 For each enabled folder, execute:
-- Gmail: `GMAIL_CREATE_LABEL` with name `ICC/[Folder Name]`
-- Outlook: create subfolder `Inbox/ICC/[Folder Name]` via Composio
+```
+Bash: ~/.cargo/bin/himalaya folder add -a <himalaya_alias> "ICC/<Folder Name>" 2>/dev/null
+```
+
+This works for both Gmail (Gmail surfaces the folder as a label visible in the web UI) and Outlook (creates a subfolder under the account root).
+
+If the parent `ICC` folder doesn't exist yet, create it first:
+```
+Bash: ~/.cargo/bin/himalaya folder add -a <himalaya_alias> "ICC" 2>/dev/null
+```
 
 Update `.meta.json.connected_inboxes[i].folders_enabled[]`.
 
@@ -565,9 +570,10 @@ Mirror time-bound todos to an external system?
   [ ] Apple Reminders (recommended for Mac users)
        → Mirror to "Inbox Tasks" list
   [ ] Google Calendar events (any todo with a due date creates an event)
-  [ ] Outlook Tasks (for Outlook users — via Composio)
   [ ] None — workspace files only
   [ ] Multiple
+
+(Outlook Tasks mirroring is not currently supported — required Composio.)
 ```
 
 Mirroring is one-way: workspace → external. The workspace remains canonical.
@@ -690,7 +696,9 @@ Show the user a summary of everything configured:
 Step 11 — Setup Summary
 
 CONNECTIONS
-  ✓ Composio: 3 inboxes (personal, uno-mas, ms365)
+  ✓ Himalaya: 3 inboxes (personal, uno-mas, outlook)
+       — Gmail accounts via app password (Keychain)
+       — Outlook account via OAuth2 (Keychain refresh token)
   ✓ Slack
   ✓ Google Calendar
   ✓ Fireflies (30d pulled, weekly schedule)
@@ -776,7 +784,7 @@ Try these:
   • "create a rule"             — guided rule builder
   • "show inbox report"         — generate a report on demand
 
-Welcome to v1.4.
+Welcome to v1.5.
 ```
 
 ---
@@ -802,7 +810,7 @@ If user runs `/setup-wizard` after initial setup is complete:
 
 ## Error Recovery
 
-If the wizard is interrupted (browser tab closed during OAuth, network error, etc.):
+If the wizard is interrupted (terminal closed during `himalaya account doctor outlook --fix`, network error, etc.):
 
 1. State is preserved in `.meta.json.setup_state` — which step was reached, which substeps completed
 2. On next launch, resume from last completed step: "Picking up where we left off — you were at Step [X]. Continue?"
@@ -813,5 +821,6 @@ If the wizard is interrupted (browser tab closed during OAuth, network error, et
 - **Always confirm before writing** any file the user might already have populated
 - **Show diffs** when modifying existing config
 - **Log every step** to today's session log: `**HH:MM** — Setup wizard: completed Step [X]`
-- **Sanity-check connections** with a test call after each OAuth before moving on
+- **Sanity-check connections** with a test `himalaya envelope list ... --page-size 1` after each account setup before moving on
+- **Outlook OAuth bootstrap requires TTY** — `himalaya account doctor outlook --fix` must run in the user's terminal, not via the Bash tool. The skill instructs the user, then verifies via a non-interactive `envelope list` test.
 - **Don't skip Fireflies** without flagging the voice quality regression
