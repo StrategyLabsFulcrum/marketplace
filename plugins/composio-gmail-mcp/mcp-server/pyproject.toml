@@ -1,0 +1,12 @@
+[project]
+name = "composio-gmail-mcp"
+version = "0.1.0"
+description = "Multi-account Gmail MCP server via Composio"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp[cli]>=1.0.0",
+    "composio-core>=0.7.0",
+]
+
+[project.scripts]
+composio-gmail-mcp = "server:main"
